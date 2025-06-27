@@ -60,3 +60,21 @@ export interface Program {
   image: string;
   brochureUrl?: string;
 }
+
+export interface Exam {
+  id: string;
+  title: string;
+  description: string;
+  date: Date;
+  duration: string;
+  course: string;
+  location: string;
+}
+
+export interface Feedback {
+  id: string;
+  userId: string;
+  content: string;
+  rating: number;
+  date: Date;
+}

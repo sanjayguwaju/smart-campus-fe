@@ -23,6 +23,9 @@ import Notices from './pages/Admin/Notices';
 import AdminPrograms from './pages/Admin/Programs';
 import Analytics from './pages/Admin/Analytics';
 import Settings from './pages/Admin/Settings';
+import AttendancePage from './pages/Attendance';
+import ExamPage from './pages/Exam';
+import FeedbackPage from './pages/Feedback';
 
 function App() {
   return (
@@ -98,6 +101,8 @@ function App() {
           <Route path="faq" element={<FAQ />} />
           <Route path="blog" element={<Blog />} />
           <Route path="contact" element={<Contact />} />
+          <Route path="exam" element={<ExamPage />} />
+          <Route path="feedback" element={<FeedbackPage />} />
         </Route>
       </Routes>
     </Router>

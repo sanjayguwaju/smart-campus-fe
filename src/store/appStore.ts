@@ -1,11 +1,13 @@
 import { create } from 'zustand';
-import { Event, Notice, BlogPost, Program } from '../types';
+import { Event, Notice, BlogPost, Program, Exam, Feedback } from '../types';
 
 interface AppState {
   events: Event[];
   notices: Notice[];
   blogPosts: BlogPost[];
   programs: Program[];
+  exams: Exam[];
+  feedbacks: Feedback[];
   addEvent: (event: Omit<Event, 'id'>) => void;
   updateEvent: (id: string, event: Partial<Event>) => void;
   deleteEvent: (id: string) => void;
@@ -13,6 +15,8 @@ interface AppState {
   addNotice: (notice: Omit<Notice, 'id'>) => void;
   updateNotice: (id: string, notice: Partial<Notice>) => void;
   deleteNotice: (id: string) => void;
+  addExam: (exam: Omit<Exam, 'id'>) => void;
+  addFeedback: (feedback: Omit<Feedback, 'id'>) => void;
 }
 
 const mockEvents: Event[] = [
@@ -92,11 +96,35 @@ const mockPrograms: Program[] = [
   }
 ];
 
+const mockExams: Exam[] = [
+  {
+    id: '1',
+    title: 'Math Final',
+    description: 'Final exam for Mathematics',
+    date: new Date('2024-06-10'),
+    duration: '3 hours',
+    course: 'Mathematics',
+    location: 'Room 101',
+  },
+];
+
+const mockFeedbacks: Feedback[] = [
+  {
+    id: '1',
+    userId: '1',
+    content: 'Great event!',
+    rating: 5,
+    date: new Date('2024-05-01'),
+  },
+];
+
 export const useAppStore = create<AppState>((set, get) => ({
   events: mockEvents,
   notices: mockNotices,
   blogPosts: [],
   programs: mockPrograms,
+  exams: mockExams,
+  feedbacks: mockFeedbacks,
   addEvent: (event) => {
     const newEvent: Event = {
       ...event,
@@ -151,5 +179,19 @@ export const useAppStore = create<AppState>((set, get) => ({
     set((state) => ({
       notices: state.notices.filter((notice) => notice.id !== id),
     }));
+  },
+  addExam: (exam) => {
+    const newExam: Exam = {
+      ...exam,
+      id: Date.now().toString(),
+    };
+    set((state) => ({ exams: [...state.exams, newExam] }));
+  },
+  addFeedback: (feedback) => {
+    const newFeedback: Feedback = {
+      ...feedback,
+      id: Date.now().toString(),
+    };
+    set((state) => ({ feedbacks: [...state.feedbacks, newFeedback] }));
   },
 }));
