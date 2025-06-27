@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { Event, Notice, BlogPost, Program, Exam, Feedback } from '../types';
-import { fetchPrograms } from '../api';
+import { fetchPrograms, createProgram, updateProgram, deleteProgram, joinProgram } from '../api';
 import { useAuthStore } from './authStore';
 
 interface AppState {
@@ -20,6 +20,10 @@ interface AppState {
   addExam: (exam: Omit<Exam, 'id'>) => void;
   addFeedback: (feedback: Omit<Feedback, 'id'>) => void;
   loadPrograms: () => Promise<void>;
+  createProgram: (program: Omit<Program, 'id'>) => Promise<void>;
+  updateProgram: (id: string, program: Partial<Program>) => Promise<void>;
+  deleteProgram: (id: string) => Promise<void>;
+  joinProgram: (id: string) => Promise<void>;
 }
 
 const mockEvents: Event[] = [
@@ -199,8 +203,27 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
   loadPrograms: async () => {
     const token = useAuthStore.getState().token;
-    const response = await fetchPrograms(token || undefined);
-    const programs = Array.isArray(response) ? response : (Array.isArray(response.data) ? response.data : []);
+    const programs = await fetchPrograms(token || undefined);
     set({ programs });
+  },
+  createProgram: async (program) => {
+    const token = useAuthStore.getState().token;
+    await createProgram(program, token!);
+    await get().loadPrograms();
+  },
+  updateProgram: async (id, program) => {
+    const token = useAuthStore.getState().token;
+    await updateProgram(id, program, token!);
+    await get().loadPrograms();
+  },
+  deleteProgram: async (id) => {
+    const token = useAuthStore.getState().token;
+    await deleteProgram(id, token!);
+    await get().loadPrograms();
+  },
+  joinProgram: async (id) => {
+    const token = useAuthStore.getState().token;
+    await joinProgram(id, token!);
+    await get().loadPrograms();
   },
 }));
