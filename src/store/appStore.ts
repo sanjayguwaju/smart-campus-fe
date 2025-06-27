@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 import { Event, Notice, BlogPost, Program, Exam, Feedback } from '../types';
+import { fetchPrograms } from '../api';
+import { useAuthStore } from './authStore';
 
 interface AppState {
   events: Event[];
@@ -17,6 +19,7 @@ interface AppState {
   deleteNotice: (id: string) => void;
   addExam: (exam: Omit<Exam, 'id'>) => void;
   addFeedback: (feedback: Omit<Feedback, 'id'>) => void;
+  loadPrograms: () => Promise<void>;
 }
 
 const mockEvents: Event[] = [
@@ -122,7 +125,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   events: mockEvents,
   notices: mockNotices,
   blogPosts: [],
-  programs: mockPrograms,
+  programs: [],
   exams: mockExams,
   feedbacks: mockFeedbacks,
   addEvent: (event) => {
@@ -193,5 +196,10 @@ export const useAppStore = create<AppState>((set, get) => ({
       id: Date.now().toString(),
     };
     set((state) => ({ feedbacks: [...state.feedbacks, newFeedback] }));
+  },
+  loadPrograms: async () => {
+    const token = useAuthStore.getState().token;
+    const programs = await fetchPrograms(token || undefined);
+    set({ programs });
   },
 }));

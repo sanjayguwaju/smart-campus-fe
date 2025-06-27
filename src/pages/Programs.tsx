@@ -1,16 +1,34 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GraduationCap, Clock, BookOpen, Users, Download, Search, Filter, ChevronDown, Star, Award, Calendar, MapPin } from 'lucide-react';
 import { useAppStore } from '../store/appStore';
+import { useAuthStore } from '../store/authStore';
 import { Program } from '../types';
 
 const Programs: React.FC = () => {
-  const { programs } = useAppStore();
+  const { programs, loadPrograms } = useAppStore();
+  const { isAuthenticated } = useAuthStore();
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedLevel, setSelectedLevel] = useState<string>('all');
   const [selectedDepartment, setSelectedDepartment] = useState<string>('all');
   const [showFilters, setShowFilters] = useState(false);
   const [selectedProgram, setSelectedProgram] = useState<Program | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    loadPrograms()
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false));
+  }, [loadPrograms, isAuthenticated, navigate]);
 
   const levels = [
     { value: 'all', label: 'All Levels' },
@@ -57,6 +75,13 @@ const Programs: React.FC = () => {
     };
     return icons[level as keyof typeof icons] || GraduationCap;
   };
+
+  if (loading) {
+    return <div className="max-w-4xl mx-auto py-8 text-center text-lg">Loading programs...</div>;
+  }
+  if (error) {
+    return <div className="max-w-4xl mx-auto py-8 text-center text-red-600">{error}</div>;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">

@@ -4,6 +4,7 @@ import { User } from '../types';
 
 interface AuthState {
   user: User | null;
+  token: string | null;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
@@ -44,29 +45,40 @@ export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
       user: null,
+      token: null,
       isAuthenticated: false,
       login: async (email: string, password: string) => {
-        // Mock authentication - in real app, this would be an API call
-        const user = mockUsers.find(u => u.email === email);
-        if (user && password === 'password123') {
-          set({ user, isAuthenticated: true });
+        try {
+          const res = await fetch('http://localhost:5000/api/v1/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password }),
+          });
+          if (!res.ok) return false;
+          const data = await res.json();
+          set({ user: data.data.user, token: data.data.token, isAuthenticated: true });
           return true;
+        } catch (err) {
+          return false;
         }
-        return false;
       },
       logout: () => {
-        set({ user: null, isAuthenticated: false });
+        set({ user: null, token: null, isAuthenticated: false });
       },
       register: async (userData) => {
-        // Mock registration
-        const newUser: User = {
-          ...userData,
-          id: Date.now().toString(),
-          createdAt: new Date(),
-        };
-        mockUsers.push(newUser);
-        set({ user: newUser, isAuthenticated: true });
-        return true;
+        try {
+          const res = await fetch('http://localhost:5000/api/v1/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(userData),
+          });
+          if (!res.ok) return false;
+          const data = await res.json();
+          set({ user: data.user, token: data.token, isAuthenticated: true });
+          return true;
+        } catch (err) {
+          return false;
+        }
       },
       updateUser: (userData) => {
         const currentUser = get().user;

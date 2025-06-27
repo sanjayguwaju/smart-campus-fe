@@ -15,6 +15,8 @@ interface RegisterForm {
   studentId?: string;
   employeeId?: string;
   agreeTerms: boolean;
+  firstName: string;
+  lastName: string;
 }
 
 const Register: React.FC = () => {
@@ -37,15 +39,19 @@ const Register: React.FC = () => {
   const onSubmit = async (data: RegisterForm) => {
     setRegisterError('');
     try {
-      const success = await registerUser({
-        name: data.name,
+      const name = `${data.firstName} ${data.lastName}`.trim();
+      const payload: any = {
+        name,
         email: data.email,
+        password: data.password,
         role: data.role,
         department: data.department,
         studentId: data.role === 'student' ? data.studentId : undefined,
-        employeeId: data.role === 'faculty' ? data.employeeId : undefined,
-      });
-      
+      };
+      if (data.role === 'faculty') {
+        payload.facultyId = data.employeeId || '';
+      }
+      const success = await registerUser(payload);
       if (success) {
         navigate('/');
       } else {
@@ -99,23 +105,44 @@ const Register: React.FC = () => {
 
             <div className="space-y-4">
               <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                  Full Name
+                <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1">
+                  First Name
                 </label>
                 <input
-                  {...register('name', {
-                    required: 'Full name is required',
+                  {...register('firstName', {
+                    required: 'First name is required',
                     minLength: {
                       value: 2,
-                      message: 'Name must be at least 2 characters',
+                      message: 'First name must be at least 2 characters',
                     },
                   })}
                   type="text"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  placeholder="Enter your full name"
+                  placeholder="Enter your first name"
                 />
-                {errors.name && (
-                  <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>
+                {errors.firstName && (
+                  <p className="mt-1 text-sm text-red-600">{errors.firstName.message}</p>
+                )}
+              </div>
+
+              <div>
+                <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-1">
+                  Last Name
+                </label>
+                <input
+                  {...register('lastName', {
+                    required: 'Last name is required',
+                    minLength: {
+                      value: 2,
+                      message: 'Last name must be at least 2 characters',
+                    },
+                  })}
+                  type="text"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  placeholder="Enter your last name"
+                />
+                {errors.lastName && (
+                  <p className="mt-1 text-sm text-red-600">{errors.lastName.message}</p>
                 )}
               </div>
 
