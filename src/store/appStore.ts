@@ -199,7 +199,8 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
   loadPrograms: async () => {
     const token = useAuthStore.getState().token;
-    const programs = await fetchPrograms(token || undefined);
+    const response = await fetchPrograms(token || undefined);
+    const programs = Array.isArray(response) ? response : (Array.isArray(response.data) ? response.data : []);
     set({ programs });
   },
 }));

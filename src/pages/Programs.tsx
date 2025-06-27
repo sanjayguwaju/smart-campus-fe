@@ -76,11 +76,17 @@ const Programs: React.FC = () => {
     return icons[level as keyof typeof icons] || GraduationCap;
   };
 
+  if (!isAuthenticated) {
+    return <div className="max-w-4xl mx-auto py-8 text-center text-lg">You must be logged in to view programs.</div>;
+  }
   if (loading) {
     return <div className="max-w-4xl mx-auto py-8 text-center text-lg">Loading programs...</div>;
   }
   if (error) {
     return <div className="max-w-4xl mx-auto py-8 text-center text-red-600">{error}</div>;
+  }
+  if (!programs || programs.length === 0) {
+    return <div className="max-w-4xl mx-auto py-8 text-center text-gray-600">No programs found.</div>;
   }
 
   return (
