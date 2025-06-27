@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { Event, Notice, BlogPost, Program, Exam, Feedback } from '../types';
-import { fetchPrograms, createProgram, updateProgram, deleteProgram, joinProgram } from '../api';
+import { fetchPrograms, createProgram, updateProgram, deleteProgram, joinProgram, fetchEvents, deleteEvent as deleteEventApi, createEvent, updateEvent } from '../api';
 import { useAuthStore } from './authStore';
 
 interface AppState {
@@ -10,52 +10,22 @@ interface AppState {
   programs: Program[];
   exams: Exam[];
   feedbacks: Feedback[];
-  addEvent: (event: Omit<Event, 'id'>) => void;
+  addEvent: (event: Omit<Event, 'id'>) => Promise<void>;
   updateEvent: (id: string, event: Partial<Event>) => void;
-  deleteEvent: (id: string) => void;
+  deleteEvent: (id: string) => Promise<void>;
   rsvpEvent: (eventId: string, userId: string) => void;
   addNotice: (notice: Omit<Notice, 'id'>) => void;
   updateNotice: (id: string, notice: Partial<Notice>) => void;
   deleteNotice: (id: string) => void;
   addExam: (exam: Omit<Exam, 'id'>) => void;
   addFeedback: (feedback: Omit<Feedback, 'id'>) => void;
+  loadEvents: () => Promise<void>;
   loadPrograms: () => Promise<void>;
   createProgram: (program: Omit<Program, 'id'>) => Promise<void>;
   updateProgram: (id: string, program: Partial<Program>) => Promise<void>;
   deleteProgram: (id: string) => Promise<void>;
   joinProgram: (id: string) => Promise<void>;
 }
-
-const mockEvents: Event[] = [
-  {
-    id: '1',
-    title: 'AI & Machine Learning Workshop',
-    description: 'Hands-on workshop on artificial intelligence and machine learning fundamentals.',
-    date: new Date(2024, 11, 15),
-    time: '10:00 AM',
-    location: 'Tech Center Auditorium',
-    category: 'workshop',
-    organizer: 'Computer Science Department',
-    maxAttendees: 50,
-    currentAttendees: 23,
-    rsvpUsers: [],
-    image: 'https://images.pexels.com/photos/8386440/pexels-photo-8386440.jpeg?auto=compress&cs=tinysrgb&w=800'
-  },
-  {
-    id: '2',
-    title: 'Annual Sports Day',
-    description: 'Join us for our annual sports day with various competitions and fun activities.',
-    date: new Date(2024, 11, 20),
-    time: '9:00 AM',
-    location: 'Sports Complex',
-    category: 'sports',
-    organizer: 'Sports Committee',
-    maxAttendees: 200,
-    currentAttendees: 156,
-    rsvpUsers: [],
-    image: 'https://images.pexels.com/photos/1552252/pexels-photo-1552252.jpeg?auto=compress&cs=tinysrgb&w=800'
-  }
-];
 
 const mockNotices: Notice[] = [
   {
@@ -126,30 +96,26 @@ const mockFeedbacks: Feedback[] = [
 ];
 
 export const useAppStore = create<AppState>((set, get) => ({
-  events: mockEvents,
+  events: [],
   notices: mockNotices,
   blogPosts: [],
   programs: [],
   exams: mockExams,
   feedbacks: mockFeedbacks,
-  addEvent: (event) => {
-    const newEvent: Event = {
-      ...event,
-      id: Date.now().toString(),
-    };
-    set((state) => ({ events: [...state.events, newEvent] }));
+  addEvent: async (event) => {
+    const token = useAuthStore.getState().token;
+    await createEvent(event, token!);
+    await get().loadEvents();
   },
-  updateEvent: (id, eventData) => {
-    set((state) => ({
-      events: state.events.map((event) =>
-        event.id === id ? { ...event, ...eventData } : event
-      ),
-    }));
+  updateEvent: async (id, eventData) => {
+    const token = useAuthStore.getState().token;
+    await updateEvent(id, eventData, token!);
+    await get().loadEvents();
   },
-  deleteEvent: (id) => {
-    set((state) => ({
-      events: state.events.filter((event) => event.id !== id),
-    }));
+  deleteEvent: async (id) => {
+    const token = useAuthStore.getState().token;
+    await deleteEventApi(id, token!);
+    await get().loadEvents();
   },
   rsvpEvent: (eventId, userId) => {
     set((state) => ({
@@ -200,6 +166,11 @@ export const useAppStore = create<AppState>((set, get) => ({
       id: Date.now().toString(),
     };
     set((state) => ({ feedbacks: [...state.feedbacks, newFeedback] }));
+  },
+  loadEvents: async () => {
+    const token = useAuthStore.getState().token;
+    const events = await fetchEvents(token || undefined);
+    set({ events });
   },
   loadPrograms: async () => {
     const token = useAuthStore.getState().token;

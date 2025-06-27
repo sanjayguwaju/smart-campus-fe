@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X, GraduationCap, User, LogOut } from 'lucide-react';
@@ -9,6 +9,7 @@ const Header: React.FC = () => {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const location = useLocation();
   const { user, isAuthenticated, logout } = useAuthStore();
+  const [isMoreOpen, setIsMoreOpen] = useState(false);
 
   const navigation = [
     { name: 'Home', href: '/' },
@@ -32,6 +33,19 @@ const Header: React.FC = () => {
     logout();
     setIsUserMenuOpen(false);
   };
+
+  // Close the More dropdown when clicking outside
+  useEffect(() => {
+    if (!isMoreOpen) return;
+    const handleClick = (e: MouseEvent) => {
+      const dropdown = document.getElementById('more-dropdown');
+      if (dropdown && !dropdown.contains(e.target as Node)) {
+        setIsMoreOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [isMoreOpen]);
 
   return (
     <header className="bg-white shadow-lg sticky top-0 z-50">
@@ -58,22 +72,30 @@ const Header: React.FC = () => {
                 {item.name}
               </Link>
             ))}
-            <div className="relative group">
-              <button className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 flex items-center">
+            <div className="relative" id="more-dropdown">
+              <button
+                className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 flex items-center"
+                aria-haspopup="true"
+                aria-expanded={isMoreOpen}
+                onClick={() => setIsMoreOpen((open) => !open)}
+              >
                 More
                 <svg className="ml-1 h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
               </button>
-              <div className="absolute left-0 mt-2 w-40 bg-white rounded-md shadow-lg py-1 z-50 opacity-0 group-hover:opacity-100 group-focus:opacity-100 pointer-events-none group-hover:pointer-events-auto group-focus:pointer-events-auto transition-opacity">
-                {secondaryLinks.map((item) => (
-                  <Link
-                    key={item.name}
-                    to={item.href}
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                  >
-                    {item.name}
-                  </Link>
-                ))}
-              </div>
+              {isMoreOpen && (
+                <div className="absolute left-0 mt-2 w-40 bg-white rounded-md shadow-lg py-1 z-50">
+                  {secondaryLinks.map((item) => (
+                    <Link
+                      key={item.name}
+                      to={item.href}
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      onClick={() => setIsMoreOpen(false)}
+                    >
+                      {item.name}
+                    </Link>
+                  ))}
+                </div>
+              )}
             </div>
           </nav>
 

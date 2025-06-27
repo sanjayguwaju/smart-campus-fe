@@ -8,17 +8,28 @@ export interface User {
   studentId?: string;
   employeeId?: string;
   createdAt: Date;
+  _id?: string;
 }
 
 export interface Event {
+  _id?: string;
   id: string;
   title: string;
   description: string;
-  date: Date;
-  time: string;
-  location: string;
+  date?: Date;
+  startDate?: string;
+  endDate?: string;
+  startTime: string;
+  endTime: string;
+  location: {
+    venue: string;
+    room?: string;
+    building?: string;
+    campus?: string;
+  };
   category: 'workshop' | 'lecture' | 'sports' | 'cultural' | 'general';
-  organizer: string;
+  eventType: 'academic' | 'cultural' | 'sports' | 'technical' | 'social' | 'workshop' | 'seminar' | 'conference' | 'other';
+  organizer: string | Partial<User>;
   maxAttendees?: number;
   currentAttendees: number;
   rsvpUsers: string[];
@@ -51,7 +62,13 @@ export interface BlogPost {
 
 export interface Program {
   id: string;
-  name: string;
+  title: string;
+  code: string;
+  instructor: string;
+  credits: number;
+  semester: 'Fall' | 'Spring' | 'Summer' | 'Winter';
+  year: number;
+  maxStudents: number;
   department: string;
   level: 'undergraduate' | 'postgraduate' | 'professional';
   duration: string;

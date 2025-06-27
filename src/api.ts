@@ -71,4 +71,54 @@ export async function fetchFaculty(token: string) {
   return res.json();
 }
 
+export async function fetchEvents(token?: string) {
+  const res = await fetch(`${API_BASE_URL}/events`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  if (!res.ok) throw new Error('Failed to fetch events');
+  const response = await res.json();
+  // Return the events array from the nested data object
+  if (Array.isArray(response.data?.events)) return response.data.events;
+  if (Array.isArray(response.data)) return response.data;
+  if (Array.isArray(response)) return response;
+  return [];
+}
+
+export async function deleteEvent(id: string, token: string) {
+  const res = await fetch(`${API_BASE_URL}/events/${id}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  if (!res.ok) throw new Error('Failed to delete event');
+  return res.json();
+}
+
+export async function createEvent(event: any, token: string) {
+  const res = await fetch(`${API_BASE_URL}/events`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(event),
+  });
+  if (!res.ok) throw new Error('Failed to create event');
+  return res.json();
+}
+
+export async function updateEvent(id: string, event: any, token: string) {
+  const res = await fetch(`${API_BASE_URL}/events/${id}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(event),
+  });
+  if (!res.ok) throw new Error('Failed to update event');
+  return res.json();
+}
+
 // Add more API functions as needed. 

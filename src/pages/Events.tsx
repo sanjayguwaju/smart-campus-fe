@@ -1,17 +1,44 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, Clock, MapPin, Users, Filter, Search, Heart, Share2, ChevronDown } from 'lucide-react';
+import { Calendar, Clock, MapPin, Users, Filter, Search, Heart, Share2, ChevronDown, Plus, Edit, Trash2 } from 'lucide-react';
 import { useAppStore } from '../store/appStore';
 import { useAuthStore } from '../store/authStore';
 import { Event } from '../types';
 
+const eventTypes = [
+  'academic', 'cultural', 'sports', 'technical', 'social', 'workshop', 'seminar', 'conference', 'other'
+];
+const eventCategories = [
+  'student', 'faculty', 'admin', 'public', 'invitation-only'
+];
+
+const defaultForm = {
+  title: '',
+  description: '',
+  startDate: '',
+  endDate: '',
+  startTime: '',
+  endTime: '',
+  location: { venue: '' },
+  category: 'public',
+  eventType: 'academic',
+  organizer: '',
+  maxAttendees: '',
+  image: '',
+};
+
 const Events: React.FC = () => {
-  const { events, rsvpEvent } = useAppStore();
+  const { events, rsvpEvent, loadEvents, addEvent, updateEvent, deleteEvent } = useAppStore();
   const { user, isAuthenticated } = useAuthStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'date' | 'popularity'>('date');
   const [showFilters, setShowFilters] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [editEvent, setEditEvent] = useState<Event | null>(null);
+  const [form, setForm] = useState<any>(defaultForm);
+  const [modalError, setModalError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const categories = [
     { value: 'all', label: 'All Events' },
@@ -31,7 +58,11 @@ const Events: React.FC = () => {
     })
     .sort((a, b) => {
       if (sortBy === 'date') {
-        return new Date(a.date).getTime() - new Date(b.date).getTime();
+        const aDate = a.date || a.startDate;
+        const bDate = b.date || b.startDate;
+        const aTime = aDate ? new Date(aDate).getTime() : 0;
+        const bTime = bDate ? new Date(bDate).getTime() : 0;
+        return aTime - bTime;
       }
       return b.currentAttendees - a.currentAttendees;
     });
@@ -44,13 +75,26 @@ const Events: React.FC = () => {
     rsvpEvent(eventId, user.id);
   };
 
-  const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    }).format(date);
+  const formatDate = (date?: Date | string) => {
+    if (!date) return '';
+    if (typeof date === 'string') {
+      if (!date) return '';
+      return new Intl.DateTimeFormat('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      }).format(new Date(date));
+    }
+    if (date instanceof Date) {
+      return new Intl.DateTimeFormat('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      }).format(date);
+    }
+    return '';
   };
 
   const getCategoryColor = (category: string) => {
@@ -64,9 +108,195 @@ const Events: React.FC = () => {
     return colors[category as keyof typeof colors] || colors.general;
   };
 
+  const isFacultyOrAdmin = user && (user.role === 'faculty' || user.role === 'admin');
+
+  const openCreateModal = () => {
+    setEditEvent(null);
+    setForm({ ...defaultForm, organizer: user?.id || '' });
+    setShowModal(true);
+    setModalError(null);
+  };
+
+  const openEditModal = (event: Event) => {
+    setEditEvent(event);
+    setForm({
+      title: event.title || '',
+      description: event.description || '',
+      startDate: event.startDate ? new Date(event.startDate).toISOString().slice(0, 10) : '',
+      endDate: event.endDate ? new Date(event.endDate).toISOString().slice(0, 10) : '',
+      startTime: event.startTime || '',
+      endTime: event.endTime || '',
+      location: { venue: event.location?.venue || '' },
+      category: event.category || 'public',
+      eventType: event.eventType || 'academic',
+      organizer: event.organizer || user?.id || '',
+      maxAttendees: event.maxAttendees || '',
+      image: event.image || '',
+    });
+    setShowModal(true);
+    setModalError(null);
+  };
+
+  const handleModalChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    if (name.startsWith('location.')) {
+      setForm((prev: any) => ({ ...prev, location: { ...prev.location, [name.split('.')[1]]: value } }));
+    } else {
+      setForm((prev: any) => ({ ...prev, [name]: value }));
+    }
+  };
+
+  const handleModalSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setModalError(null);
+    setLoading(true);
+    try {
+      const payload = {
+        title: form.title,
+        description: form.description,
+        startDate: form.startDate,
+        endDate: form.endDate,
+        startTime: form.startTime,
+        endTime: form.endTime,
+        location: { venue: form.location.venue },
+        category: form.category,
+        eventType: form.eventType,
+        organizer: typeof form.organizer === 'object' && form.organizer !== null
+          ? form.organizer._id || form.organizer.id || ''
+          : form.organizer,
+        maxAttendees: form.maxAttendees ? Number(form.maxAttendees) : undefined,
+        image: form.image,
+        currentAttendees: 0,
+        rsvpUsers: [],
+      };
+      if (editEvent) {
+        await updateEvent(editEvent._id || editEvent.id, payload);
+      } else {
+        await addEvent(payload);
+      }
+      setShowModal(false);
+      setForm(defaultForm);
+      setEditEvent(null);
+      await loadEvents();
+    } catch (err: any) {
+      setModalError(err.message || 'Failed to save event');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (window.confirm('Are you sure you want to delete this event?')) {
+      setLoading(true);
+      try {
+        await deleteEvent(id);
+        await loadEvents();
+      } catch (err: any) {
+        alert(err.message || 'Failed to delete event');
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  const modal = showModal && (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto relative p-0">
+        <div className="sticky top-0 z-20 bg-white flex items-center justify-between px-8 py-4 border-b border-gray-200 rounded-t-lg">
+          <h2 className="text-2xl font-bold">{editEvent ? 'Edit Event' : 'Create Event'}</h2>
+          <button
+            onClick={() => setShowModal(false)}
+            className="text-3xl text-gray-400 hover:text-gray-600 font-bold focus:outline-none"
+            aria-label="Close"
+          >
+            &times;
+          </button>
+        </div>
+        <div className="px-8 py-6">
+          {modalError && <div className="mb-4 text-red-600">{modalError}</div>}
+          <form onSubmit={handleModalSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                <input name="title" value={form.title} onChange={handleModalChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg" required />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <textarea name="description" value={form.description} onChange={handleModalChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg" required />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                <input name="startDate" type="date" value={form.startDate} onChange={handleModalChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg" required />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+                <input name="endDate" type="date" value={form.endDate} onChange={handleModalChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg" required />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Start Time</label>
+                <input name="startTime" type="time" value={form.startTime} onChange={handleModalChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg" required />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">End Time</label>
+                <input name="endTime" type="time" value={form.endTime} onChange={handleModalChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg" required />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Venue</label>
+                <input name="location.venue" value={form.location.venue} onChange={handleModalChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg" required />
+              </div>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                <select name="category" value={form.category} onChange={handleModalChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg" required>
+                  {eventCategories.map(cat => <option key={cat} value={cat}>{cat.charAt(0).toUpperCase() + cat.slice(1).replace('-', ' ')}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Event Type</label>
+                <select name="eventType" value={form.eventType} onChange={handleModalChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg" required>
+                  {eventTypes.map(type => <option key={type} value={type}>{type.charAt(0).toUpperCase() + type.slice(1)}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Max Attendees</label>
+                <input name="maxAttendees" type="number" min={1} value={form.maxAttendees} onChange={handleModalChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Image</label>
+                <input name="image" type="text" value={form.image} onChange={handleModalChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+              </div>
+            </div>
+            <div className="col-span-1 md:col-span-2 text-right pt-2">
+              <button type="submit" className="px-8 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors duration-200" disabled={loading}>
+                {editEvent ? 'Update' : 'Create'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+
+  useEffect(() => {
+    loadEvents();
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Create Event Button (Top Right) */}
+        {isFacultyOrAdmin && (
+          <div className="mb-6 flex justify-end">
+            <button
+              onClick={openCreateModal}
+              className="inline-flex items-center px-5 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors duration-200"
+            >
+              <Plus className="h-5 w-5 mr-2" /> Create Event
+            </button>
+          </div>
+        )}
+
         {/* Header Section */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -235,15 +465,23 @@ const Events: React.FC = () => {
                   <div className="space-y-2 mb-4">
                     <div className="flex items-center text-sm text-gray-500">
                       <Calendar className="h-4 w-4 mr-2 text-blue-600" />
-                      {formatDate(event.date)}
+                      {(() => {
+                        let dateStr = '';
+                        if (typeof event.date === 'string' && event.date) dateStr = event.date;
+                        else if (typeof event.startDate === 'string' && event.startDate) dateStr = event.startDate;
+                        if (!dateStr || typeof dateStr !== 'string') return '';
+                        return dateStr ? formatDate(dateStr) : '';
+                      })()}
                     </div>
                     <div className="flex items-center text-sm text-gray-500">
                       <Clock className="h-4 w-4 mr-2 text-blue-600" />
-                      {event.time}
+                      {event.startTime && event.endTime
+                        ? `${event.startTime} - ${event.endTime}`
+                        : event.startTime || event.endTime || ''}
                     </div>
                     <div className="flex items-center text-sm text-gray-500">
                       <MapPin className="h-4 w-4 mr-2 text-blue-600" />
-                      {event.location}
+                      {event.location?.venue}
                     </div>
                     <div className="flex items-center text-sm text-gray-500">
                       <Users className="h-4 w-4 mr-2 text-blue-600" />
@@ -254,7 +492,17 @@ const Events: React.FC = () => {
                   {/* Organizer */}
                   <div className="mb-4">
                     <p className="text-sm text-gray-500">
-                      Organized by <span className="font-medium text-gray-700">{event.organizer}</span>
+                      Organized by <span className="font-medium text-gray-700">{
+                        typeof event.organizer === 'object' && event.organizer !== null
+                          ? ('firstName' in event.organizer && 'lastName' in event.organizer && event.organizer.firstName && event.organizer.lastName
+                              ? `${event.organizer.firstName} ${event.organizer.lastName}`
+                              : ('email' in event.organizer && event.organizer.email)
+                                ? event.organizer.email
+                                : ('_id' in event.organizer && event.organizer._id)
+                                  ? event.organizer._id
+                                  : 'Unknown')
+                          : event.organizer
+                      }</span>
                     </p>
                   </div>
 
@@ -273,17 +521,17 @@ const Events: React.FC = () => {
                       )}
                     </div>
                     <button
-                      onClick={() => handleRSVP(event.id)}
+                      onClick={() => handleRSVP(event._id || event.id)}
                       disabled={event.maxAttendees ? event.currentAttendees >= event.maxAttendees : false}
                       className={`px-6 py-2 rounded-lg font-semibold transition-colors duration-200 ${
-                        user && event.rsvpUsers.includes(user.id)
+                        user && Array.isArray(event.rsvpUsers) && event.rsvpUsers.includes(user.id)
                           ? 'bg-green-600 text-white hover:bg-green-700'
                           : event.maxAttendees && event.currentAttendees >= event.maxAttendees
                           ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                           : 'bg-blue-600 text-white hover:bg-blue-700'
                       }`}
                     >
-                      {user && event.rsvpUsers.includes(user.id)
+                      {user && Array.isArray(event.rsvpUsers) && event.rsvpUsers.includes(user.id)
                         ? 'Registered'
                         : event.maxAttendees && event.currentAttendees >= event.maxAttendees
                         ? 'Full'
@@ -291,6 +539,24 @@ const Events: React.FC = () => {
                       }
                     </button>
                   </div>
+
+                  {/* Edit/Delete Buttons */}
+                  {isFacultyOrAdmin && (
+                    <div className="flex space-x-2 mt-4">
+                      <button
+                        onClick={() => openEditModal(event)}
+                        className="flex-1 bg-yellow-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-yellow-600 transition-colors duration-200"
+                      >
+                        <Edit className="h-4 w-4 mr-1" /> Edit
+                      </button>
+                      <button
+                        onClick={() => handleDelete(event._id || event.id)}
+                        className="flex-1 bg-red-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-red-700 transition-colors duration-200"
+                      >
+                        <Trash2 className="h-4 w-4 mr-1" /> Delete
+                      </button>
+                    </div>
+                  )}
                 </div>
               </motion.div>
             ))}
@@ -331,6 +597,9 @@ const Events: React.FC = () => {
           </button>
         </motion.div>
       </div>
+
+      {/* Modal */}
+      {modal}
     </div>
   );
 };

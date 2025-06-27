@@ -6,13 +6,6 @@ import { useAppStore } from '../store/appStore';
 import { useAuthStore } from '../store/authStore';
 import { Program } from '../types';
 
-// TEMP: Render a simple test button at the very top for debugging
-const TestButton = () => (
-  <button style={{ position: 'fixed', top: 10, left: 10, zIndex: 9999, background: 'red', color: 'white', padding: '10px 20px', fontWeight: 'bold' }}>
-    TEST BUTTON
-  </button>
-);
-
 const Programs: React.FC = () => {
   const { programs, loadPrograms, createProgram, updateProgram, deleteProgram, joinProgram } = useAppStore();
   const { isAuthenticated, user } = useAuthStore();
@@ -75,7 +68,7 @@ const Programs: React.FC = () => {
 
   const filteredPrograms = Array.isArray(programs) ? programs.filter(program => {
     if (!program || typeof program !== 'object') return false;
-    const name = program.name || '';
+    const name = program.title || '';
     const description = program.description || '';
     const department = program.department || '';
     const matchesSearch = name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -156,7 +149,7 @@ const Programs: React.FC = () => {
   const openEditModal = (program: Program) => {
     setEditProgram(program);
     setForm({
-      title: program.name || '',
+      title: program.title || '',
       code: program.code || '',
       instructor: program.instructor || '',
       credits: program.credits || 1,
@@ -166,7 +159,6 @@ const Programs: React.FC = () => {
       department: program.department || '',
       level: program.level || 'undergraduate',
       duration: program.duration || '',
-      startDate: program.startDate || '',
       description: program.description || '',
       prerequisites: program.prerequisites || [],
       image: program.image || '',
@@ -193,7 +185,7 @@ const Programs: React.FC = () => {
         code: form.code,
         instructor: form.instructor,
         credits: form.credits,
-        semester: form.semester,
+        semester: form.semester as 'Fall' | 'Spring' | 'Summer' | 'Winter',
         year: form.year,
         maxStudents: form.maxStudents,
         department: form.department,
@@ -319,10 +311,6 @@ const Programs: React.FC = () => {
                 <input name="duration" value={form.duration} onChange={handleModalChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg" required />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
-                <input name="startDate" type="date" value={form.startDate} onChange={handleModalChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg" required />
-              </div>
-              <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
                 <textarea name="description" value={form.description} onChange={handleModalChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg" required />
               </div>
@@ -393,11 +381,6 @@ const Programs: React.FC = () => {
   return (
     <>
       {modal}
-      <TestButton />
-      {/* DEBUG: Show current user role and isFacultyOrAdmin */}
-      <div style={{ background: '#ffeeba', color: '#856404', padding: '10px', borderRadius: '6px', margin: '16px 0', fontWeight: 'bold', textAlign: 'center' }}>
-        Debug: user.role = {user?.role?.toString() || 'N/A'} | isFacultyOrAdmin = {isFacultyOrAdmin ? 'true' : 'false'}
-      </div>
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header Section */}
@@ -553,23 +536,18 @@ const Programs: React.FC = () => {
                 <div key={program.id} className="bg-white rounded-lg shadow p-6 flex flex-col">
                   <div className="flex items-center mb-4">
                     <GraduationCap className="h-8 w-8 text-blue-500 mr-2" />
-                    <h2 className="text-xl font-semibold">{program.name}</h2>
+                    <h2 className="text-xl font-semibold">{program.title}</h2>
                   </div>
                   <div className="text-gray-600 mb-2">{program.department}</div>
                   <div className="text-gray-500 mb-2">Level: {program.level}</div>
                   <div className="text-gray-500 mb-2">Duration: {program.duration}</div>
-                  <div className="flex-1 text-gray-700 mb-4">{program.description}</div>
-                  {program.brochureUrl && (
-                    <a
-                      href={program.brochureUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors text-sm"
-                    >
-                      <Download className="h-4 w-4 mr-1" /> Download Brochure
-                    </a>
-                  )}
-                  {/* CRUD Buttons for Faculty/Admin */}
+                  <div className="flex-1 text-gray-700 mb-4 line-clamp-2">{program.description}</div>
+                  <button
+                    onClick={() => setSelectedProgram(program)}
+                    className="mt-2 bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors duration-200"
+                  >
+                    Details
+                  </button>
                   {isFacultyOrAdmin && (
                     <div className="flex space-x-2 mt-4">
                       <button
@@ -586,7 +564,6 @@ const Programs: React.FC = () => {
                       </button>
                     </div>
                   )}
-                  {/* Join Button for Students */}
                   {isStudent && (
                     <button
                       onClick={() => handleJoin(program.id)}
@@ -676,8 +653,8 @@ const Programs: React.FC = () => {
                 >
                   <div className="relative">
                     <img
-                      src={selectedProgram.image}
-                      alt={selectedProgram.name}
+                      src={selectedProgram.image || 'https://via.placeholder.com/600x200?text=No+Image'}
+                      alt={selectedProgram.title || 'Program'}
                       className="w-full h-64 object-cover"
                     />
                     <button
@@ -694,13 +671,15 @@ const Programs: React.FC = () => {
                     <div className="flex items-center justify-between mb-6">
                       <div>
                         <h2 className="text-3xl font-bold text-gray-900 mb-2">
-                          {selectedProgram.name}
+                          {selectedProgram.title || 'Untitled Program'}
                         </h2>
                         <div className="flex items-center space-x-4">
-                          <span className={`px-3 py-1 rounded-full text-sm font-semibold border ${getLevelColor(selectedProgram.level)}`}>
-                            {selectedProgram.level.charAt(0).toUpperCase() + selectedProgram.level.slice(1)}
+                          <span className={`px-3 py-1 rounded-full text-sm font-semibold border ${getLevelColor(selectedProgram.level || 'undergraduate')}`}>
+                            {(selectedProgram.level && typeof selectedProgram.level === 'string')
+                              ? selectedProgram.level.charAt(0).toUpperCase() + selectedProgram.level.slice(1)
+                              : 'N/A'}
                           </span>
-                          <span className="text-gray-600">{selectedProgram.department}</span>
+                          <span className="text-gray-600">{selectedProgram.department || 'N/A'}</span>
                         </div>
                       </div>
                     </div>
@@ -709,17 +688,17 @@ const Programs: React.FC = () => {
                       <div>
                         <h3 className="text-xl font-semibold text-gray-900 mb-4">Program Overview</h3>
                         <p className="text-gray-700 leading-relaxed mb-6">
-                          {selectedProgram.description}
+                          {selectedProgram.description || 'No description available.'}
                         </p>
 
                         <div className="space-y-3">
                           <div className="flex items-center">
                             <Clock className="h-5 w-5 text-blue-600 mr-3" />
-                            <span className="text-gray-700">Duration: {selectedProgram.duration}</span>
+                            <span className="text-gray-700">Duration: {selectedProgram.duration || 'N/A'}</span>
                           </div>
                           <div className="flex items-center">
                             <MapPin className="h-5 w-5 text-blue-600 mr-3" />
-                            <span className="text-gray-700">Department: {selectedProgram.department}</span>
+                            <span className="text-gray-700">Department: {selectedProgram.department || 'N/A'}</span>
                           </div>
                           <div className="flex items-center">
                             <Calendar className="h-5 w-5 text-blue-600 mr-3" />
@@ -731,12 +710,16 @@ const Programs: React.FC = () => {
                       <div>
                         <h3 className="text-xl font-semibold text-gray-900 mb-4">Prerequisites</h3>
                         <div className="space-y-2 mb-6">
-                          {selectedProgram.prerequisites.map((prereq, idx) => (
-                            <div key={idx} className="flex items-center">
-                              <div className="w-2 h-2 bg-blue-600 rounded-full mr-3"></div>
-                              <span className="text-gray-700">{prereq}</span>
-                            </div>
-                          ))}
+                          {Array.isArray(selectedProgram.prerequisites) && selectedProgram.prerequisites.length > 0 ? (
+                            selectedProgram.prerequisites.map((prereq, idx) => (
+                              <div key={idx} className="flex items-center">
+                                <div className="w-2 h-2 bg-blue-600 rounded-full mr-3"></div>
+                                <span className="text-gray-700">{typeof prereq === 'string' ? prereq : (prereq?.title || prereq?.code || 'Unknown')}</span>
+                              </div>
+                            ))
+                          ) : (
+                            <span className="text-gray-500">No prerequisites listed.</span>
+                          )}
                         </div>
 
                         <div className="space-y-4">
