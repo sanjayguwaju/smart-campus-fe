@@ -9,7 +9,7 @@ import ViewBlogModal from '../../components/Admin/ViewBlogModal';
 
 const AdminBlog: React.FC = () => {
   const { user } = useAuthStore();
-  const { blogsQuery, createBlog, updateBlog, deleteBlog } = useBlogs();
+  const { blogsQuery, createBlog, updateBlog, deleteBlog, publishBlog, unpublishBlog } = useBlogs();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
@@ -21,7 +21,7 @@ const AdminBlog: React.FC = () => {
     content: '',
     summary: '',
     tags: '',
-    published: false,
+    status: 'draft' as 'draft' | 'published' | 'archived',
     credits: '',
   });
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -36,7 +36,7 @@ const AdminBlog: React.FC = () => {
     setForm((prev) => ({ ...prev, title, slug: title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') }));
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
     if (type === 'checkbox' && e.target instanceof HTMLInputElement) {
       setForm((prev) => ({ ...prev, [name]: (e.target as HTMLInputElement).checked }));
@@ -68,7 +68,7 @@ const AdminBlog: React.FC = () => {
 
   const resetForm = () => {
     setForm({
-      title: '', slug: '', author: user?.displayName || user?.fullName || '', coverImage: undefined, content: '', summary: '', tags: '', published: false, credits: '',
+      title: '', slug: '', author: user?.displayName || user?.fullName || '', coverImage: undefined, content: '', summary: '', tags: '', status: 'draft', credits: '',
     });
     setErrors({});
     setIsEdit(false);
@@ -84,7 +84,8 @@ const AdminBlog: React.FC = () => {
     formData.append('author', form.author);
     formData.append('content', form.content);
     formData.append('summary', form.summary);
-    formData.append('published', String(form.published));
+    formData.append('status', form.status);
+    formData.append('isPublished', String(form.status === 'published'));
     formData.append('credits', form.credits);
     if (form.coverImage) {
       formData.append('coverImage', form.coverImage);
@@ -107,7 +108,7 @@ const AdminBlog: React.FC = () => {
       content: post.content,
       summary: post.summary,
       tags: post.tags.join(', '),
-      published: post.published,
+      status: post.status,
       credits: post.credits || '',
     });
     setIsEdit(true);
@@ -138,8 +139,9 @@ const AdminBlog: React.FC = () => {
       (post.tags && post.tags.some(tag => tag.toLowerCase().includes(search)));
     const matchesStatus =
       statusFilter === 'all' ||
-      (statusFilter === 'published' && post.published) ||
-      (statusFilter === 'draft' && !post.published);
+      (statusFilter === 'published' && post.status === 'published') ||
+      (statusFilter === 'draft' && post.status === 'draft') ||
+      (statusFilter === 'archived' && post.status === 'archived');
     return matchesSearch && matchesStatus;
   });
 
@@ -215,9 +217,18 @@ const AdminBlog: React.FC = () => {
                 <label className="block text-sm font-medium">Tags (comma separated)</label>
                 <input name="tags" value={form.tags} onChange={handleChange} className="w-full border rounded px-3 py-2" />
               </div>
-              <div className="flex items-center gap-2">
-                <input type="checkbox" name="published" checked={form.published} onChange={handleChange} />
-                <label className="text-sm">Published</label>
+              <div>
+                <label className="block text-sm font-medium">Status</label>
+                <select
+                  name="status"
+                  value={form.status}
+                  onChange={handleChange}
+                  className="w-full border rounded px-3 py-2"
+                >
+                  <option value="draft">Draft</option>
+                  <option value="published">Published</option>
+                  <option value="archived">Archived</option>
+                </select>
               </div>
               <div>
                 <label className="block text-sm font-medium">Credits (optional)</label>
@@ -244,6 +255,7 @@ const AdminBlog: React.FC = () => {
                   <span className="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded-full">{post.tags[0]}</span>
                   <span className="text-xs text-gray-400">•</span>
                   <span className="text-xs text-gray-500">{post.createdAt ? new Date(post.createdAt).toLocaleDateString() : ''}</span>
+                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${post.status === 'published' ? 'bg-green-100 text-green-800' : post.status === 'archived' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'}`}>{post.status.charAt(0).toUpperCase() + post.status.slice(1)}</span>
                 </div>
                 <h2 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2">{post.title}</h2>
                 <p className="text-sm text-gray-600 mb-4 line-clamp-3">{post.summary}</p>
@@ -257,6 +269,23 @@ const AdminBlog: React.FC = () => {
                 </div>
               </div>
               <div className="flex gap-2 mt-2 justify-end">
+                {post.status === 'published' ? (
+                  <button
+                    title="Unpublish"
+                    className="bg-red-600 text-white font-bold rounded-full px-4 py-1 hover:bg-red-700 transition"
+                    onClick={() => unpublishBlog.mutate(post._id!)}
+                  >
+                    Unpublish
+                  </button>
+                ) : (
+                  <button
+                    title="Publish"
+                    className="bg-blue-600 text-white font-bold rounded-full px-4 py-1 hover:bg-blue-700 transition"
+                    onClick={() => publishBlog.mutate(post._id!)}
+                  >
+                    Publish
+                  </button>
+                )}
                 <button
                   title="View"
                   className="p-2 rounded-full hover:bg-gray-100 text-blue-600"
