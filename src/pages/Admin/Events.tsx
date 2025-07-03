@@ -1,22 +1,41 @@
-import React, { useState, useEffect } from 'react';
-import { Search, Plus, Edit, Trash2, ChevronLeft, ChevronRight, Calendar, MapPin, Users, Eye, X } from 'lucide-react';
-import { toast } from 'react-hot-toast';
-import { useEvents, usePublishEvent, useUnpublishEvent } from '../../api/hooks/useEvents';
-import { Event } from '../../api/types/events';
-import AddEventModal from '../../components/Admin/AddEventModal';
-import EditEventModal from '../../components/Admin/EditEventModal';
-import DeleteEventModal from '../../components/Admin/DeleteEventModal';
-import LoadingSpinner from '../../components/Layout/LoadingSpinner';
+import React, { useState, useEffect } from "react";
+import {
+  Search,
+  Plus,
+  Edit,
+  Trash2,
+  ChevronLeft,
+  ChevronRight,
+  Calendar,
+  MapPin,
+  Users,
+  Eye,
+  X,
+} from "lucide-react";
+import { toast } from "react-hot-toast";
+import {
+  useEvents,
+  usePublishEvent,
+  useUnpublishEvent,
+} from "../../api/hooks/useEvents";
+import { Event } from "../../api/types/events";
+import AddEventModal from "../../components/Admin/AddEventModal";
+import EditEventModal from "../../components/Admin/EditEventModal";
+import DeleteEventModal from "../../components/Admin/DeleteEventModal";
+import LoadingSpinner from "../../components/Layout/LoadingSpinner";
 
 const Events: React.FC = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [eventTypeFilter, setEventTypeFilter] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [eventTypeFilter, setEventTypeFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
-  const [deletingEvent, setDeletingEvent] = useState<{ id: string; title: string } | null>(null);
+  const [deletingEvent, setDeletingEvent] = useState<{
+    id: string;
+    title: string;
+  } | null>(null);
   const [viewedEvent, setViewedEvent] = useState<Event | null>(null);
 
   // Debounce searchTerm
@@ -28,12 +47,16 @@ const Events: React.FC = () => {
     return () => clearTimeout(handler);
   }, [searchTerm]);
 
-  const { data: eventsData, isLoading, error } = useEvents({
+  const {
+    data: eventsData,
+    isLoading,
+    error,
+  } = useEvents({
     page: currentPage,
     limit: 10,
     search: debouncedSearch,
     eventType: eventTypeFilter,
-    status: statusFilter
+    status: statusFilter,
   });
 
   const publishEventMutation = usePublishEvent();
@@ -53,67 +76,65 @@ const Events: React.FC = () => {
   const handlePublish = async (event: Event) => {
     try {
       await publishEventMutation.mutateAsync(event._id);
-      toast.success('Event published successfully');
+      toast.success("Event published successfully");
     } catch (error) {
-      console.error('Failed to publish event:', error);
-      toast.error('Failed to publish event. Please try again.');
+      console.error("Failed to publish event:", error);
+      toast.error("Failed to publish event. Please try again.");
     }
   };
 
   const handleUnpublish = async (event: Event) => {
     try {
       await unpublishEventMutation.mutateAsync(event._id);
-      toast.success('Event unpublished successfully');
+      toast.success("Event unpublished successfully");
     } catch (error) {
-      console.error('Failed to unpublish event:', error);
-      toast.error('Failed to unpublish event. Please try again.');
+      console.error("Failed to unpublish event:", error);
+      toast.error("Failed to unpublish event. Please try again.");
     }
   };
 
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
-      case 'published':
-        return 'bg-green-100 text-green-800';
-      case 'draft':
-        return 'bg-gray-100 text-gray-800';
-      case 'cancelled':
-        return 'bg-red-100 text-red-800';
-      case 'completed':
-        return 'bg-blue-100 text-blue-800';
-      case 'postponed':
-        return 'bg-yellow-100 text-yellow-800';
+      case "published":
+        return "bg-green-100 text-green-800";
+      case "draft":
+        return "bg-gray-100 text-gray-800";
+      case "cancelled":
+        return "bg-red-100 text-red-800";
+      case "completed":
+        return "bg-blue-100 text-blue-800";
+      case "postponed":
+        return "bg-yellow-100 text-yellow-800";
       default:
-        return 'bg-gray-100 text-gray-800';
+        return "bg-gray-100 text-gray-800";
     }
   };
 
-
-
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
     });
   };
 
   const formatTime = (timeString: string) => {
-    return new Date(`2000-01-01T${timeString}`).toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit'
+    return new Date(`2000-01-01T${timeString}`).toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
   const eventTypeColors: Record<string, string> = {
-    academic: 'bg-blue-50 text-blue-700',
-    cultural: 'bg-purple-50 text-purple-700',
-    sports: 'bg-green-50 text-green-700',
-    technical: 'bg-orange-50 text-orange-700',
-    social: 'bg-pink-50 text-pink-700',
-    workshop: 'bg-indigo-50 text-indigo-700',
-    seminar: 'bg-teal-50 text-teal-700',
-    conference: 'bg-red-50 text-red-700',
-    other: 'bg-gray-50 text-gray-700',
+    academic: "bg-blue-50 text-blue-700",
+    cultural: "bg-purple-50 text-purple-700",
+    sports: "bg-green-50 text-green-700",
+    technical: "bg-orange-50 text-orange-700",
+    social: "bg-pink-50 text-pink-700",
+    workshop: "bg-indigo-50 text-indigo-700",
+    seminar: "bg-teal-50 text-teal-700",
+    conference: "bg-red-50 text-red-700",
+    other: "bg-gray-50 text-gray-700",
   };
 
   if (isLoading) {
@@ -206,7 +227,13 @@ const Events: React.FC = () => {
               </div>
             )}
             <div className="flex items-center justify-between mb-4">
-              <span className={`px-3 py-1 rounded-full text-xs font-semibold ${eventTypeColors[event.eventType] || 'bg-gray-50 text-gray-700'} border border-gray-200`}>{event.eventType}</span>
+              <span
+                className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                  eventTypeColors[event.eventType] || "bg-gray-50 text-gray-700"
+                } border border-gray-200`}
+              >
+                {event.eventType}
+              </span>
               {!event.isPublished ? (
                 <button
                   onClick={() => handlePublish(event)}
@@ -225,31 +252,60 @@ const Events: React.FC = () => {
                 </button>
               ) : null}
             </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-1 line-clamp-2">{event.title}</h3>
-            <p className="text-gray-500 mb-4 line-clamp-3 text-sm">{event.shortDescription || event.description}</p>
+            <h3 className="text-xl font-bold text-gray-900 mb-1 line-clamp-2">
+              {event.title}
+            </h3>
+            <p className="text-gray-500 mb-4 line-clamp-3 text-sm">
+              {event.shortDescription || event.description}
+            </p>
             <div className="space-y-2 mb-5">
               <div className="flex items-center text-sm text-gray-600">
                 <Calendar className="h-4 w-4 mr-2" />
-                {formatDate(event.startDate)} {formatTime(event.startTime)} - {formatDate(event.endDate)} {formatTime(event.endTime)}
+                {formatDate(event.startDate)} {formatTime(event.startTime)} -{" "}
+                {formatDate(event.endDate)} {formatTime(event.endTime)}
               </div>
               <div className="flex items-center text-sm text-gray-600">
                 <MapPin className="h-4 w-4 mr-2" />
-                {[event.location.venue, event.location.room, event.location.building, event.location.campus].filter(Boolean).join(', ')}
+                {[
+                  event.location.venue,
+                  event.location.room,
+                  event.location.building,
+                  event.location.campus,
+                ]
+                  .filter(Boolean)
+                  .join(", ")}
               </div>
               <div className="flex items-center text-sm text-gray-600">
                 <Users className="h-4 w-4 mr-2" />
-                {event.currentAttendees} / {event.maxAttendees || '∞'} attendees
+                {event.currentAttendees} / {event.maxAttendees || "∞"} attendees
               </div>
               <div className="flex items-center text-sm text-gray-600">
-                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeColor(event.status)} border border-gray-200`}>{event.status}</span>
-                <span className={`ml-2 inline-flex px-2 py-1 text-xs font-semibold rounded-full ${event.isPublished ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'} border border-gray-200`}>
-                  {event.isPublished ? 'Published' : 'Unpublished'}
+                <span
+                  className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeColor(
+                    event.status
+                  )} border border-gray-200`}
+                >
+                  {event.status}
+                </span>
+                <span
+                  className={`ml-2 inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                    event.isPublished
+                      ? "bg-green-100 text-green-800"
+                      : "bg-gray-100 text-gray-800"
+                  } border border-gray-200`}
+                >
+                  {event.isPublished ? "Published" : "Unpublished"}
                 </span>
               </div>
             </div>
             <hr className="my-3" />
             <div className="flex items-center justify-between mt-auto">
-              <span className="text-xs text-gray-400">Created by {event.organizer?.fullName || event.organizer?.email || 'Unknown'}</span>
+              <span className="text-xs text-gray-400">
+                Created by{" "}
+                {event.organizer?.fullName ||
+                  event.organizer?.email ||
+                  "Unknown"}
+              </span>
               <div className="flex items-center space-x-2">
                 <button
                   className="text-blue-600 hover:text-blue-900"
@@ -300,15 +356,16 @@ const Events: React.FC = () => {
           <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
             <div>
               <p className="text-sm text-gray-700">
-                Showing{' '}
-                <span className="font-medium">{(currentPage - 1) * pagination.limit + 1}</span>
-                {' '}to{' '}
+                Showing{" "}
+                <span className="font-medium">
+                  {(currentPage - 1) * pagination.limit + 1}
+                </span>{" "}
+                to{" "}
                 <span className="font-medium">
                   {Math.min(currentPage * pagination.limit, pagination.total)}
-                </span>
-                {' '}of{' '}
-                <span className="font-medium">{pagination.total}</span>
-                {' '}results
+                </span>{" "}
+                of <span className="font-medium">{pagination.total}</span>{" "}
+                results
               </p>
             </div>
             <div>
@@ -320,19 +377,21 @@ const Events: React.FC = () => {
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </button>
-                {Array.from({ length: pagination.pages }, (_, i) => i + 1).map((page) => (
-                  <button
-                    key={page}
-                    onClick={() => setCurrentPage(page)}
-                    className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                      page === currentPage
-                        ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
-                        : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
-                    }`}
-                  >
-                    {page}
-                  </button>
-                ))}
+                {Array.from({ length: pagination.pages }, (_, i) => i + 1).map(
+                  (page) => (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                        page === currentPage
+                          ? "z-10 bg-blue-50 border-blue-500 text-blue-600"
+                          : "bg-white border-gray-300 text-gray-500 hover:bg-gray-50"
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  )
+                )}
                 <button
                   onClick={() => setCurrentPage(currentPage + 1)}
                   disabled={currentPage === pagination.pages}
@@ -361,29 +420,94 @@ const Events: React.FC = () => {
             <p className="text-gray-600 mb-4">{viewedEvent.description}</p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
-                <div className="mb-2"><span className="font-semibold">Type:</span> {viewedEvent.eventType}</div>
-                <div className="mb-2"><span className="font-semibold">Category:</span> {viewedEvent.category}</div>
-                <div className="mb-2"><span className="font-semibold">Status:</span> <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeColor(viewedEvent.status)} border border-gray-200`}>{viewedEvent.status}</span></div>
-                <div className="mb-2 flex items-center"><Calendar className="h-4 w-4 mr-2" /> <span><span className="font-semibold">Start:</span> {formatDate(viewedEvent.startDate)} {formatTime(viewedEvent.startTime)}</span></div>
-                <div className="mb-2 flex items-center"><Calendar className="h-4 w-4 mr-2" /> <span><span className="font-semibold">End:</span> {formatDate(viewedEvent.endDate)} {formatTime(viewedEvent.endTime)}</span></div>
-                <div className="mb-2 flex items-center"><MapPin className="h-4 w-4 mr-2" /> <span>{[viewedEvent.location.venue, viewedEvent.location.room, viewedEvent.location.building, viewedEvent.location.campus].filter(Boolean).join(', ')}</span></div>
+                <div className="mb-2">
+                  <span className="font-semibold">Type:</span>{" "}
+                  {viewedEvent.eventType}
+                </div>
+                <div className="mb-2">
+                  <span className="font-semibold">Category:</span>{" "}
+                  {viewedEvent.category}
+                </div>
+                <div className="mb-2">
+                  <span className="font-semibold">Status:</span>{" "}
+                  <span
+                    className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeColor(
+                      viewedEvent.status
+                    )} border border-gray-200`}
+                  >
+                    {viewedEvent.status}
+                  </span>
+                </div>
+                <div className="mb-2 flex items-center">
+                  <Calendar className="h-4 w-4 mr-2" />{" "}
+                  <span>
+                    <span className="font-semibold">Start:</span>{" "}
+                    {formatDate(viewedEvent.startDate)}{" "}
+                    {formatTime(viewedEvent.startTime)}
+                  </span>
+                </div>
+                <div className="mb-2 flex items-center">
+                  <Calendar className="h-4 w-4 mr-2" />{" "}
+                  <span>
+                    <span className="font-semibold">End:</span>{" "}
+                    {formatDate(viewedEvent.endDate)}{" "}
+                    {formatTime(viewedEvent.endTime)}
+                  </span>
+                </div>
+                <div className="mb-2 flex items-center">
+                  <MapPin className="h-4 w-4 mr-2" />{" "}
+                  <span>
+                    {[
+                      viewedEvent.location.venue,
+                      viewedEvent.location.room,
+                      viewedEvent.location.building,
+                      viewedEvent.location.campus,
+                    ]
+                      .filter(Boolean)
+                      .join(", ")}
+                  </span>
+                </div>
               </div>
               <div>
-                <div className="mb-2"><span className="font-semibold">Organizer:</span> {viewedEvent.organizer?.fullName || viewedEvent.organizer?.email || 'Unknown'}</div>
-                {viewedEvent.coOrganizers && viewedEvent.coOrganizers.length > 0 && (
-                  <div className="mb-2">
-                    <span className="font-semibold">Co-Organizers:</span>
-                    <ul className="list-disc list-inside ml-2">
-                      {viewedEvent.coOrganizers.map((co, idx) => (
-                        <li key={co._id || idx}>{co.fullName || co.email}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-                <div className="mb-2 flex items-center"><Users className="h-4 w-4 mr-2" /> <span>{viewedEvent.currentAttendees} / {viewedEvent.maxAttendees || '∞'} attendees</span></div>
-                <div className="mb-2"><span className="font-semibold">Registration:</span> {viewedEvent.isRegistrationRequired ? (viewedEvent.isRegistrationOpen ? 'Open' : 'Closed') : 'Not required'}</div>
+                <div className="mb-2">
+                  <span className="font-semibold">Organizer:</span>{" "}
+                  {viewedEvent.organizer?.fullName ||
+                    viewedEvent.organizer?.email ||
+                    "Unknown"}
+                </div>
+                {viewedEvent.coOrganizers &&
+                  viewedEvent.coOrganizers.length > 0 && (
+                    <div className="mb-2">
+                      <span className="font-semibold">Co-Organizers:</span>
+                      <ul className="list-disc list-inside ml-2">
+                        {viewedEvent.coOrganizers.map((co, idx) => (
+                          <li key={co._id || idx}>{co.fullName || co.email}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                <div className="mb-2 flex items-center">
+                  <Users className="h-4 w-4 mr-2" />{" "}
+                  <span>
+                    {viewedEvent.currentAttendees} /{" "}
+                    {viewedEvent.maxAttendees || "∞"} attendees
+                  </span>
+                </div>
+                <div className="mb-2">
+                  <span className="font-semibold">Registration:</span>{" "}
+                  {viewedEvent.isRegistrationRequired
+                    ? viewedEvent.isRegistrationOpen
+                      ? "Open"
+                      : "Closed"
+                    : "Not required"}
+                </div>
                 {viewedEvent.registrationDeadline && (
-                  <div className="mb-2"><span className="font-semibold">Registration Deadline:</span> {formatDate(viewedEvent.registrationDeadline)}</div>
+                  <div className="mb-2">
+                    <span className="font-semibold">
+                      Registration Deadline:
+                    </span>{" "}
+                    {formatDate(viewedEvent.registrationDeadline)}
+                  </div>
                 )}
               </div>
             </div>
@@ -392,7 +516,12 @@ const Events: React.FC = () => {
                 <span className="font-semibold">Tags:</span>
                 <div className="flex flex-wrap gap-2 mt-1">
                   {viewedEvent.tags.map((tag, idx) => (
-                    <span key={idx} className="px-2 py-1 bg-gray-100 rounded text-xs text-gray-700">{tag}</span>
+                    <span
+                      key={idx}
+                      className="px-2 py-1 bg-gray-100 rounded text-xs text-gray-700"
+                    >
+                      {tag}
+                    </span>
                   ))}
                 </div>
               </div>
@@ -402,7 +531,16 @@ const Events: React.FC = () => {
                 <span className="font-semibold">Attachments:</span>
                 <ul className="list-disc list-inside ml-2">
                   {viewedEvent.attachments.map((att, idx) => (
-                    <li key={att.url || idx}><a href={att.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">{att.name || att.url}</a></li>
+                    <li key={att.url || idx}>
+                      <a
+                        href={att.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 underline"
+                      >
+                        {att.name || att.url}
+                      </a>
+                    </li>
                   ))}
                 </ul>
               </div>
@@ -411,13 +549,32 @@ const Events: React.FC = () => {
               <div className="mb-4">
                 <span className="font-semibold">Contact Info:</span>
                 <div className="ml-2">
-                  {viewedEvent.contactInfo.email && <div>Email: {viewedEvent.contactInfo.email}</div>}
-                  {viewedEvent.contactInfo.phone && <div>Phone: {viewedEvent.contactInfo.phone}</div>}
-                  {viewedEvent.contactInfo.website && <div>Website: <a href={viewedEvent.contactInfo.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">{viewedEvent.contactInfo.website}</a></div>}
+                  {viewedEvent.contactInfo.email && (
+                    <div>Email: {viewedEvent.contactInfo.email}</div>
+                  )}
+                  {viewedEvent.contactInfo.phone && (
+                    <div>Phone: {viewedEvent.contactInfo.phone}</div>
+                  )}
+                  {viewedEvent.contactInfo.website && (
+                    <div>
+                      Website:{" "}
+                      <a
+                        href={viewedEvent.contactInfo.website}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 underline"
+                      >
+                        {viewedEvent.contactInfo.website}
+                      </a>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
-            <div className="text-xs text-gray-400 mt-4">Created at: {formatDate(viewedEvent.createdAt)} | Updated at: {formatDate(viewedEvent.updatedAt)}</div>
+            <div className="text-xs text-gray-400 mt-4">
+              Created at: {formatDate(viewedEvent.createdAt)} | Updated at:{" "}
+              {formatDate(viewedEvent.updatedAt)}
+            </div>
           </div>
         </div>
       )}
@@ -437,11 +594,11 @@ const Events: React.FC = () => {
       <DeleteEventModal
         isOpen={!!deletingEvent}
         onClose={() => setDeletingEvent(null)}
-        eventId={deletingEvent?.id || ''}
-        eventTitle={deletingEvent?.title || ''}
+        eventId={deletingEvent?.id || ""}
+        eventTitle={deletingEvent?.title || ""}
       />
     </div>
   );
 };
 
-export default Events; 
+export default Events;

@@ -10,4 +10,5 @@ export interface Program {
   brochureUrl?: string;
   createdAt?: string;
   updatedAt?: string;
+  isPublished: boolean;
 } 

@@ -1,7 +1,7 @@
 import { apiClient } from '../config/axios';
 
 export interface BlogPost {
-  _id?: string;
+  _id: string;
   title: string;
   slug: string;
   author: string;
@@ -14,6 +14,7 @@ export interface BlogPost {
   attachments?: string[];
   createdAt?: string;
   updatedAt?: string;
+  isPublished: boolean;
 }
 
 export const getBlogs = () => apiClient.get('/blogs');

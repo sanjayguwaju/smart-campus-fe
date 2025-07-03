@@ -16,6 +16,7 @@ export interface Notice {
   author: string | NoticeAuthor;
   pinned?: boolean;
   [key: string]: any;
+  isPublished: boolean;
 }
 
 export interface NoticesResponse {
