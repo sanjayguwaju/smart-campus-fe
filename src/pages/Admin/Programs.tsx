@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Search, Edit, Trash2, Eye, Filter, GraduationCap, Clock, BookOpen } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Eye, Filter, GraduationCap, Clock, BookOpen, CheckCircle, Pencil, Layers, Award, Star } from 'lucide-react';
 import { usePrograms } from '../../api/hooks/usePrograms';
 import { Program } from '../../api/types/programs';
 import AddProgramModal from '../../components/Admin/AddProgramModal';
@@ -7,6 +7,7 @@ import EditProgramModal from '../../components/Admin/EditProgramModal';
 import DeleteProgramModal from '../../components/Admin/DeleteProgramModal';
 import LoadingSpinner from '../../components/Layout/LoadingSpinner';
 import { AxiosResponse } from 'axios';
+import SummaryCard from '../../components/Admin/SummaryCard';
 
 const Programs: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -27,6 +28,14 @@ const Programs: React.FC = () => {
   console.log('Programs:', programs);
   const isLoading = programsQuery.isLoading;
   const error = programsQuery.error;
+
+  // Summary metrics
+  const totalPrograms = programs.length;
+  const publishedPrograms = programs.filter(p => p.isPublished).length;
+  const draftPrograms = programs.filter(p => p.status === 'draft').length;
+  const undergradPrograms = programs.filter(p => p.level === 'undergraduate').length;
+  const postgradPrograms = programs.filter(p => p.level === 'postgraduate').length;
+  const professionalPrograms = programs.filter(p => p.level === 'professional').length;
 
   const filteredPrograms = programs.filter((program: Program) => {
     const matchesSearch = program.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -110,6 +119,16 @@ const Programs: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 mb-8">
+        <SummaryCard value={totalPrograms} label="Total Programs" color="text-blue-600" icon={<Layers className="text-blue-400" />} />
+        <SummaryCard value={publishedPrograms} label="Published" color="text-green-600" icon={<CheckCircle className="text-green-400" />} />
+        <SummaryCard value={draftPrograms} label="Draft" color="text-gray-600" icon={<Pencil className="text-gray-400" />} />
+        <SummaryCard value={undergradPrograms} label="Undergraduate" color="text-blue-500" icon={<GraduationCap className="text-blue-400" />} />
+        <SummaryCard value={postgradPrograms} label="Postgraduate" color="text-purple-600" icon={<Award className="text-purple-400" />} />
+        <SummaryCard value={professionalPrograms} label="Professional" color="text-yellow-600" icon={<Star className="text-yellow-400" />} />
+      </div>
+
       {/* Page header */}
       <div className="flex justify-between items-center">
         <div>
@@ -184,7 +203,7 @@ const Programs: React.FC = () => {
               <div key={program._id} className="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow">
                 {/* Program Image */}
                 <img
-                  src={program.image && program.image.startsWith('http') ? program.image : 'https://via.placeholder.com/400x200?text=No+Image'}
+                  src={program.image && program.image.startsWith('http') ? program.image : 'https://images.pexels.com/photos/1595391/pexels-photo-1595391.jpeg?auto=compress&cs=tinysrgb&w=800'}
                   alt={program.name}
                   className="w-full h-40 object-cover rounded-t-lg mb-4"
                 />

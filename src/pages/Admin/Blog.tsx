@@ -6,6 +6,8 @@ import { useBlogs } from '../../api/hooks/useBlogs';
 import { BlogPost } from '../../api/services/blogService';
 import { Eye, Pencil, Trash2, Filter, Search } from 'lucide-react';
 import ViewBlogModal from '../../components/Admin/ViewBlogModal';
+import SummaryCard from '../../components/Admin/SummaryCard';
+import { FileText, CheckCircle } from 'lucide-react';
 
 const AdminBlog: React.FC = () => {
   const { user } = useAuthStore();
@@ -130,6 +132,11 @@ const AdminBlog: React.FC = () => {
   const isLoading = blogsQuery.isLoading;
   const error = blogsQuery.error;
 
+  // Summary metrics
+  const totalBlogs = posts.length;
+  const publishedBlogs = posts.filter((p: BlogPost) => p.published).length;
+  const draftBlogs = posts.filter((p: BlogPost) => !p.published).length;
+
   const filteredPosts = posts.filter((post: BlogPost) => {
     const search = searchTerm.toLowerCase();
     const matchesSearch =
@@ -145,6 +152,12 @@ const AdminBlog: React.FC = () => {
 
   return (
     <div className="space-y-8">
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-8">
+        <SummaryCard value={totalBlogs} label="Total Blogs" color="text-blue-600" icon={<FileText className="text-blue-400" />} />
+        <SummaryCard value={publishedBlogs} label="Published" color="text-green-600" icon={<CheckCircle className="text-green-400" />} />
+        <SummaryCard value={draftBlogs} label="Draft" color="text-gray-600" icon={<Pencil className="text-gray-400" />} />
+      </div>
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold text-gray-900">Blog Management</h1>
         <button onClick={() => { resetForm(); setIsModalOpen(true); }} className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">Create Blog Post</button>
