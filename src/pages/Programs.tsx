@@ -39,16 +39,16 @@ const Programs: React.FC = () => {
     .filter(program => {
       const matchesSearch =
         program.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        program.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        program.department.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesLevel = selectedLevel === 'all' || program.level === selectedLevel;
-      const matchesDepartment = selectedDepartment === 'all' || program.department === selectedDepartment;
-      return matchesSearch && matchesLevel && matchesDepartment;
+                         program.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         program.department.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesLevel = selectedLevel === 'all' || program.level === selectedLevel;
+    const matchesDepartment = selectedDepartment === 'all' || program.department === selectedDepartment;
+    return matchesSearch && matchesLevel && matchesDepartment;
     })
     .sort((a, b) => {
       if (sortBy === 'name') return a.name.localeCompare(b.name);
       return a.department.localeCompare(b.department);
-    });
+  });
 
   const getLevelColor = (level: string) => {
     const colors = {
@@ -103,8 +103,8 @@ const Programs: React.FC = () => {
           className="text-center mb-12"
         >
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-            Academic Programs
-          </h1>
+              Academic Programs
+            </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
             Discover our diverse academic programs designed to empower your future. Find the right path for your ambitions.
           </p>
@@ -236,32 +236,32 @@ const Programs: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           <AnimatePresence>
             {filteredPrograms.map((program, index) => (
-              <motion.div
+                <motion.div
                 key={program._id}
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -30 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                whileHover={{ y: -5 }}
-                className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer"
-                onClick={() => setSelectedProgram(program)}
-              >
-                {/* Program Image */}
-                <div className="relative h-48 overflow-hidden">
-                  <img
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -30 }}
+                  transition={{ duration: 0.6, delay: index * 0.1 }}
+                  whileHover={{ y: -5 }}
+                  className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer"
+                  onClick={() => setSelectedProgram(program)}
+                >
+                  {/* Program Image */}
+                  <div className="relative h-48 overflow-hidden">
+                    <img
                     src={getProgramImage(program)}
-                    alt={program.name}
-                    className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                      alt={program.name}
+                      className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;
                       target.src = 'https://images.pexels.com/photos/1595391/pexels-photo-1595391.jpeg?auto=compress&cs=tinysrgb&w=800';
                     }}
-                  />
-                  <div className="absolute top-4 left-4">
+                    />
+                    <div className="absolute top-4 left-4">
                     <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getLevelColor(program.level)}`}>
-                      {program.level.charAt(0).toUpperCase() + program.level.slice(1)}
-                    </span>
-                  </div>
+                        {program.level.charAt(0).toUpperCase() + program.level.slice(1)}
+                      </span>
+                    </div>
                   <div className="absolute top-4 right-4 flex space-x-2">
                     <button className="p-2 bg-white bg-opacity-90 rounded-full hover:bg-opacity-100 transition-all duration-200">
                       <Heart className="h-4 w-4 text-gray-600" />
@@ -270,43 +270,43 @@ const Programs: React.FC = () => {
                       <Share2 className="h-4 w-4 text-gray-600" />
                     </button>
                   </div>
-                </div>
+                  </div>
 
-                {/* Program Content */}
-                <div className="p-6">
-                  <h3 className="text-xl font-bold text-gray-900 mb-2 line-clamp-2">
-                    {program.name}
-                  </h3>
-                  <p className="text-gray-600 mb-4 line-clamp-3 leading-relaxed">
-                    {program.description}
-                  </p>
+                  {/* Program Content */}
+                  <div className="p-6">
+                    <h3 className="text-xl font-bold text-gray-900 mb-2 line-clamp-2">
+                      {program.name}
+                    </h3>
+                    <p className="text-gray-600 mb-4 line-clamp-3 leading-relaxed">
+                      {program.description}
+                    </p>
 
-                  {/* Program Details */}
-                  <div className="space-y-2 mb-4">
+                    {/* Program Details */}
+                    <div className="space-y-2 mb-4">
                     <div className="flex items-center text-sm text-gray-500">
                       <Calendar className="h-4 w-4 mr-2 text-blue-600" />
                       {program.createdAt ? new Intl.DateTimeFormat('en-US', {
                         year: 'numeric', month: 'long', day: 'numeric',
                       }).format(new Date(program.createdAt)) : 'Date Unavailable'}
                     </div>
-                    <div className="flex items-center text-sm text-gray-500">
-                      <Clock className="h-4 w-4 mr-2 text-blue-600" />
-                      Duration: {program.duration}
-                    </div>
-                    <div className="flex items-center text-sm text-gray-500">
+                      <div className="flex items-center text-sm text-gray-500">
+                        <Clock className="h-4 w-4 mr-2 text-blue-600" />
+                        Duration: {program.duration}
+                      </div>
+                      <div className="flex items-center text-sm text-gray-500">
                       <MapPin className="h-4 w-4 mr-2 text-blue-600" />
                       {program.department}
+                      </div>
+                      <div className="flex items-center text-sm text-gray-500">
+                        <Users className="h-4 w-4 mr-2 text-blue-600" />
+                        Level: {program.level.charAt(0).toUpperCase() + program.level.slice(1)}
+                      </div>
                     </div>
-                    <div className="flex items-center text-sm text-gray-500">
-                      <Users className="h-4 w-4 mr-2 text-blue-600" />
-                      Level: {program.level.charAt(0).toUpperCase() + program.level.slice(1)}
-                    </div>
-                  </div>
 
-                  {/* Prerequisites */}
-                  <div className="mb-4">
-                    <h4 className="text-sm font-semibold text-gray-700 mb-2">Prerequisites:</h4>
-                    <div className="flex flex-wrap gap-2">
+                    {/* Prerequisites */}
+                    <div className="mb-4">
+                      <h4 className="text-sm font-semibold text-gray-700 mb-2">Prerequisites:</h4>
+                      <div className="flex flex-wrap gap-2">
                       {program.prerequisites && program.prerequisites.length > 0 ? (
                         program.prerequisites.slice(0, 2).map((prereq, idx) => (
                           <span
@@ -320,19 +320,19 @@ const Programs: React.FC = () => {
                         <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">None</span>
                       )}
                       {program.prerequisites && program.prerequisites.length > 2 && (
-                        <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
-                          +{program.prerequisites.length - 2} more
-                        </span>
-                      )}
+                          <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
+                            +{program.prerequisites.length - 2} more
+                          </span>
+                        )}
+                      </div>
                     </div>
-                  </div>
 
-                  {/* Action Buttons */}
-                  <div className="flex space-x-2">
-                    <button className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors duration-200">
-                      Apply Now
-                    </button>
-                    {program.brochureUrl && (
+                    {/* Action Buttons */}
+                    <div className="flex space-x-2">
+                      <button className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors duration-200">
+                        Apply Now
+                      </button>
+                      {program.brochureUrl && (
                       <a
                         href={program.brochureUrl}
                         target="_blank"
@@ -341,10 +341,10 @@ const Programs: React.FC = () => {
                       >
                         Download
                       </a>
-                    )}
+                      )}
+                    </div>
                   </div>
-                </div>
-              </motion.div>
+                </motion.div>
             ))}
           </AnimatePresence>
         </div>
@@ -377,9 +377,9 @@ const Programs: React.FC = () => {
           <p className="text-blue-100 mb-6 max-w-2xl mx-auto">
             Join thousands of students who have transformed their careers through our world-class programs. Get personalized guidance from our admissions team.
           </p>
-          <button className="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-blue-50 transition-colors duration-200">
-            Schedule Consultation
-          </button>
+            <button className="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-blue-50 transition-colors duration-200">
+              Schedule Consultation
+            </button>
         </motion.div>
       </div>
 
@@ -402,7 +402,7 @@ const Programs: React.FC = () => {
             >
               <div className="relative">
                 <img
-                  src={getProgramImage(selectedProgram)}
+                  src={selectedProgram.image && selectedProgram.image.startsWith('http') ? selectedProgram.image : 'https://images.pexels.com/photos/1595391/pexels-photo-1595391.jpeg?auto=compress&cs=tinysrgb&w=800'}
                   alt={selectedProgram.name}
                   className="w-full h-64 object-cover"
                   onError={(e) => {
@@ -433,11 +433,11 @@ const Programs: React.FC = () => {
                     <div className="flex items-center mb-2 text-gray-600">
                       <Clock className="h-5 w-5 mr-2 text-blue-600" />
                       Duration: {selectedProgram.duration}
-                    </div>
+                  </div>
                     <div className="flex items-center mb-2 text-gray-600">
                       <MapPin className="h-5 w-5 mr-2 text-blue-600" />
                       {selectedProgram.department}
-                    </div>
+                </div>
                     <div className="flex items-center mb-2 text-gray-600">
                       <Users className="h-5 w-5 mr-2 text-blue-600" />
                       Level: {selectedProgram.level.charAt(0).toUpperCase() + selectedProgram.level.slice(1)}
