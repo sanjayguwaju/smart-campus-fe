@@ -19,13 +19,10 @@ const Programs: React.FC = () => {
   // Correctly type the Axios response
   const { programsQuery, createProgram, updateProgram, deleteProgram, publishProgram, unpublishProgram } = usePrograms();
 
-  // Type guard for backend response
-  function isBackendProgramsResponse(obj: any): obj is { success: boolean; message: string; data: Program[] } {
-    return obj && Array.isArray(obj.data);
-  }
   let programs: Program[] = [];
-  if (programsQuery.data && isBackendProgramsResponse((programsQuery.data as any).data)) {
-    programs = (programsQuery.data as any).data.data;
+  const backendData = programsQuery.data?.data;
+  if (backendData && typeof backendData === 'object' && 'data' in backendData && Array.isArray((backendData as any).data)) {
+    programs = (backendData as { data: Program[] }).data;
   }
   console.log('Programs:', programs);
   const isLoading = programsQuery.isLoading;
@@ -185,6 +182,12 @@ const Programs: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredPrograms.map((program: Program) => (
               <div key={program._id} className="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                {/* Program Image */}
+                <img
+                  src={program.image && program.image.startsWith('http') ? program.image : 'https://via.placeholder.com/400x200?text=No+Image'}
+                  alt={program.name}
+                  className="w-full h-40 object-cover rounded-t-lg mb-4"
+                />
                 <div className="p-6">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">

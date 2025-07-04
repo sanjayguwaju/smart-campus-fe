@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Program } from '../../api/types/programs';
+import ImageUpload from '../common/ImageUpload';
 
 interface EditProgramModalProps {
   isOpen: boolean;
@@ -114,8 +115,11 @@ const EditProgramModal: React.FC<EditProgramModalProps> = ({ isOpen, onClose, pr
             <button type="button" onClick={addPrerequisite} className="text-blue-600 text-xs mt-1">+ Add Prerequisite</button>
           </div>
           <div>
-            <label className="block text-sm font-medium">Image URL</label>
-            <input name="image" value={form.image || ''} onChange={handleChange} className="w-full border rounded px-3 py-2" />
+            <label className="block text-sm font-medium">Image</label>
+            <ImageUpload
+              onImageUpload={(url) => setForm((prev) => ({ ...prev, image: url }))}
+              currentImage={form.image && form.image.startsWith('http') ? form.image : undefined}
+            />
           </div>
           <div>
             <label className="block text-sm font-medium">Brochure URL</label>
