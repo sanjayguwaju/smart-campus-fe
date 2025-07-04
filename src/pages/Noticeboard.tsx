@@ -4,7 +4,7 @@ import { Bell, Search, Filter, Calendar, User, Pin, AlertTriangle, BookOpen, Gra
 import { useNotices } from '../api/hooks/useNotices';
 
 const Noticeboard: React.FC = () => {
-  const { data: noticesData, isLoading, error } = useNotices();
+  const { data: noticesData } = useNotices();
   const noticesRaw = noticesData?.data?.notices || [];
   const notices = noticesRaw.map((notice: any) => ({
     ...notice,
@@ -84,14 +84,6 @@ const Noticeboard: React.FC = () => {
     return colors[category] || colors.general;
   };
 
-  const getPriorityColor = (priority: string) => {
-    const colors: Record<string, string> = {
-      high: 'bg-red-500',
-      medium: 'bg-yellow-500',
-      low: 'bg-green-500',
-    };
-    return colors[priority] || colors.low;
-  };
 
   const toggleNoticeExpansion = (noticeId: string) => {
     setExpandedNotice(expandedNotice === noticeId ? null : noticeId);
