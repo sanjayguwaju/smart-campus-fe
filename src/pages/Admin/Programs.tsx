@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, Edit, Trash2, Eye, Filter, GraduationCap, Clock, BookOpen, CheckCircle, Pencil, Layers, Award, Star } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Filter, GraduationCap, Clock, BookOpen, CheckCircle, Pencil, Layers, Award, Star } from 'lucide-react';
 import { usePrograms } from '../../api/hooks/usePrograms';
 import { Program } from '../../api/types/programs';
 import AddProgramModal from '../../components/Admin/AddProgramModal';
 import EditProgramModal from '../../components/Admin/EditProgramModal';
 import DeleteProgramModal from '../../components/Admin/DeleteProgramModal';
 import LoadingSpinner from '../../components/Layout/LoadingSpinner';
-import { AxiosResponse } from 'axios';
 import SummaryCard from '../../components/Admin/SummaryCard';
 import { getDepartments } from '../../api/services/departmentService';
 
@@ -35,9 +34,9 @@ const Programs: React.FC = () => {
   const totalPrograms = programs.length;
   const publishedPrograms = programs.filter(p => p.isPublished).length;
   const draftPrograms = programs.filter(p => p.status === 'draft').length;
-  const undergradPrograms = programs.filter(p => p.level === 'undergraduate').length;
-  const postgradPrograms = programs.filter(p => p.level === 'postgraduate').length;
-  const professionalPrograms = programs.filter(p => p.level === 'professional').length;
+  const undergradPrograms = programs.filter(p => p.level.toLowerCase() === 'undergraduate').length;
+  const postgradPrograms = programs.filter(p => p.level.toLowerCase() === 'postgraduate').length;
+  const professionalPrograms = programs.filter(p => p.level.toLowerCase() === 'professional').length;
 
   useEffect(() => {
     getDepartments().then(res => {
@@ -51,8 +50,9 @@ const Programs: React.FC = () => {
   const filteredPrograms = programs.filter((program: Program) => {
     const matchesSearch = program.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          program.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesLevel = levelFilter === 'all' || program.level === levelFilter;
-    const matchesDepartment = departmentFilter === 'all' || program.department === departmentFilter;
+    const matchesLevel = levelFilter === 'all' || program.level.toLowerCase() === levelFilter;
+    const departmentId = typeof program.department === 'string' ? program.department : program.department._id;
+    const matchesDepartment = departmentFilter === 'all' || departmentId === departmentFilter;
     return matchesSearch && matchesLevel && matchesDepartment;
   });
 
@@ -231,7 +231,10 @@ const Programs: React.FC = () => {
                       <div className="space-y-2">
                         <div className="flex items-center text-sm text-gray-500">
                           <GraduationCap className="h-4 w-4 mr-2" />
-                          {departmentMap[program.department]}
+                          {(() => {
+                            const departmentId = typeof program.department === 'string' ? program.department : program.department._id;
+                            return departmentMap[departmentId];
+                          })()}
                         </div>
                         <div className="flex items-center text-sm text-gray-500">
                           <Clock className="h-4 w-4 mr-2" />
