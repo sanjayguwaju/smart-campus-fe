@@ -21,5 +21,15 @@ export const useBlogs = () => {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['blogs'] })
   });
 
-  return { blogsQuery, createBlog, updateBlog, deleteBlog };
+  const publishBlog = useMutation({
+    mutationFn: blogService.publishBlog,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['blogs'] })
+  });
+
+  const unpublishBlog = useMutation({
+    mutationFn: blogService.unpublishBlog,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['blogs'] })
+  });
+
+  return { blogsQuery, createBlog, updateBlog, deleteBlog, publishBlog, unpublishBlog };
 }; 

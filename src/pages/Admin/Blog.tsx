@@ -8,22 +8,35 @@ import { Eye, Pencil, Trash2, Filter, Search } from 'lucide-react';
 import ViewBlogModal from '../../components/Admin/ViewBlogModal';
 import SummaryCard from '../../components/Admin/SummaryCard';
 import { FileText, CheckCircle } from 'lucide-react';
+import ImageUpload from '../../components/common/ImageUpload';
 
 const AdminBlog: React.FC = () => {
   const { user } = useAuthStore();
-  const { blogsQuery, createBlog, updateBlog, deleteBlog } = useBlogs();
+  const { blogsQuery, createBlog, updateBlog, deleteBlog, publishBlog, unpublishBlog } = useBlogs();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<{
+    title: string;
+    slug: string;
+    author: string;
+    coverImage: string | File | undefined;
+    content: string;
+    summary: string;
+    tags: string;
+    published: boolean;
+    status: 'draft' | 'published';
+    credits: string;
+  }>({
     title: '',
     slug: '',
     author: user?.displayName || user?.fullName || '',
-    coverImage: undefined as File | undefined,
+    coverImage: undefined,
     content: '',
     summary: '',
     tags: '',
     published: false,
+    status: 'draft',
     credits: '',
   });
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -38,18 +51,18 @@ const AdminBlog: React.FC = () => {
     setForm((prev) => ({ ...prev, title, slug: title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') }));
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
-    if (type === 'checkbox' && e.target instanceof HTMLInputElement) {
-      setForm((prev) => ({ ...prev, [name]: (e.target as HTMLInputElement).checked }));
+    if (name === 'status') {
+      setForm((prev) => ({
+        ...prev,
+        status: value as 'draft' | 'published',
+        published: value === 'published',
+      }));
+    } else if (type === 'checkbox' && e.target instanceof HTMLInputElement) {
+      setForm((prev) => ({ ...prev, [name]: (e.target as HTMLInputElement).checked, status: name === 'published' && (e.target as HTMLInputElement).checked ? 'published' : 'draft' }));
     } else {
       setForm((prev) => ({ ...prev, [name]: value }));
-    }
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setForm((prev) => ({ ...prev, coverImage: e.target.files![0] }));
     }
   };
 
@@ -70,7 +83,7 @@ const AdminBlog: React.FC = () => {
 
   const resetForm = () => {
     setForm({
-      title: '', slug: '', author: user?.displayName || user?.fullName || '', coverImage: undefined, content: '', summary: '', tags: '', published: false, credits: '',
+      title: '', slug: '', author: user?.displayName || user?.fullName || '', coverImage: undefined, content: '', summary: '', tags: '', published: false, status: 'draft', credits: '',
     });
     setErrors({});
     setIsEdit(false);
@@ -80,6 +93,7 @@ const AdminBlog: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
+    console.log('Submitting blog with coverImage:', form.coverImage);
     const formData = new FormData();
     formData.append('title', form.title);
     formData.append('slug', form.slug);
@@ -87,9 +101,14 @@ const AdminBlog: React.FC = () => {
     formData.append('content', form.content);
     formData.append('summary', form.summary);
     formData.append('published', String(form.published));
+    formData.append('status', form.status);
     formData.append('credits', form.credits);
     if (form.coverImage) {
-      formData.append('coverImage', form.coverImage);
+      if (typeof form.coverImage === 'string') {
+        formData.append('coverImage', form.coverImage);
+      } else if (form.coverImage instanceof File) {
+        formData.append('coverImage', form.coverImage);
+      }
     }
     formData.append('tags', JSON.stringify(form.tags.split(',').map(t => t.trim()).filter(Boolean)));
     if (isEdit && editId) {
@@ -105,11 +124,12 @@ const AdminBlog: React.FC = () => {
       title: post.title,
       slug: post.slug,
       author: post.author,
-      coverImage: undefined,
+      coverImage: typeof post.coverImage === 'string' ? post.coverImage : undefined,
       content: post.content,
       summary: post.summary,
       tags: post.tags.join(', '),
       published: post.published,
+      status: post.status || (post.published ? 'published' : 'draft'),
       credits: post.credits || '',
     });
     setIsEdit(true);
@@ -211,7 +231,12 @@ const AdminBlog: React.FC = () => {
               </div>
               <div>
                 <label className="block text-sm font-medium">Cover Image</label>
-                <input type="file" accept="image/*" onChange={handleFileChange} className="w-full" />
+                <ImageUpload
+                  currentImage={form.coverImage && typeof form.coverImage === 'string' ? form.coverImage : undefined}
+                  onImageUpload={(url) => setForm((prev) => ({ ...prev, coverImage: url }))}
+                  onImageRemove={() => setForm((prev) => ({ ...prev, coverImage: undefined }))}
+                  className="mb-2"
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium">Content</label>
@@ -228,13 +253,17 @@ const AdminBlog: React.FC = () => {
                 <label className="block text-sm font-medium">Tags (comma separated)</label>
                 <input name="tags" value={form.tags} onChange={handleChange} className="w-full border rounded px-3 py-2" />
               </div>
-              <div className="flex items-center gap-2">
-                <input type="checkbox" name="published" checked={form.published} onChange={handleChange} />
-                <label className="text-sm">Published</label>
-              </div>
               <div>
-                <label className="block text-sm font-medium">Credits (optional)</label>
-                <input name="credits" value={form.credits} onChange={handleChange} className="w-full border rounded px-3 py-2" />
+                <label className="block text-sm font-medium">Status</label>
+                <select
+                  name="status"
+                  value={form.status}
+                  onChange={handleChange}
+                  className="w-full border rounded px-3 py-2"
+                >
+                  <option value="draft">Draft</option>
+                  <option value="published">Published</option>
+                </select>
               </div>
               <div className="flex justify-end gap-2">
                 <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300">Cancel</button>
@@ -252,11 +281,41 @@ const AdminBlog: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredPosts.map((post: BlogPost) => (
             <div key={post._id} className="bg-white rounded-lg shadow p-6 flex flex-col">
+              {/* Blog Cover Image */}
+              <img
+                src={post.coverImage || 'https://images.pexels.com/photos/1181675/pexels-photo-1181675.jpeg?auto=compress&w=600&h=400&fit=crop'}
+                alt={post.title}
+                className="w-full h-40 object-cover rounded mb-4"
+              />
               <div className="flex-1">
                 <div className="mb-2 flex items-center gap-2">
                   <span className="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded-full">{post.tags[0]}</span>
                   <span className="text-xs text-gray-400">•</span>
                   <span className="text-xs text-gray-500">{post.createdAt ? new Date(post.createdAt).toLocaleDateString() : ''}</span>
+                  {/* Published/Unpublished badge */}
+                  <span className={`ml-2 inline-flex px-2 py-1 text-xs font-semibold rounded-full border border-gray-200 ${post.status === 'published' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
+                    {post.status === 'published' ? 'Published' : 'Unpublished'}
+                  </span>
+                </div>
+                {/* Publish/Unpublish button */}
+                <div className="mb-2">
+                  {post.status === 'published' ? (
+                    <button
+                      onClick={() => unpublishBlog.mutate(post._id!)}
+                      disabled={unpublishBlog.isPending}
+                      className="bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed px-3 py-1 rounded-md text-xs font-medium text-white mr-2"
+                    >
+                      Unpublish
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => publishBlog.mutate(post._id!)}
+                      disabled={publishBlog.isPending}
+                      className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed px-3 py-1 rounded-md text-xs font-medium text-white mr-2"
+                    >
+                      Publish
+                    </button>
+                  )}
                 </div>
                 <h2 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2">{post.title}</h2>
                 <p className="text-sm text-gray-600 mb-4 line-clamp-3">{post.summary}</p>
