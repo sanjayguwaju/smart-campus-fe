@@ -13,7 +13,19 @@ const AdminCourses: React.FC = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingCourse, setEditingCourse] = useState<any | null>(null);
-  const [form, setForm] = useState<any>({});
+  const [form, setForm] = useState<any>({
+    title: '',
+    code: '',
+    program: '',
+    department: '',
+    semester: '',
+    semesterTerm: '',
+    year: '',
+    creditHours: '',
+    maxStudents: '',
+    instructor: '',
+    description: '',
+  });
 
   useEffect(() => {
     fetchAll();
@@ -30,11 +42,27 @@ const AdminCourses: React.FC = () => {
     setCourses(Array.isArray(coursesData) ? coursesData : coursesData?.courses || []);
     setPrograms(programsRes.data.data || []);
     setDepartments(departmentsRes.data.data || []);
-    setInstructors(instructorsRes.data.data || []);
+    // Use instructorsRes.users for the list, and sort alphabetically by fullName, displayName, or name
+    const instructorsList = (instructorsRes.users || []).slice().sort((a: any, b: any) => {
+      const aName = a.fullName || a.displayName || a.name || (a.firstName ? a.firstName + ' ' + (a.lastName || '') : a.email);
+      const bName = b.fullName || b.displayName || b.name || (b.firstName ? b.firstName + ' ' + (b.lastName || '') : b.email);
+      return aName.localeCompare(bName);
+    });
+    setInstructors(instructorsList);
   };
 
   const handleAdd = async () => {
-    await createCourse(form);
+    const payload = {
+      ...form,
+      title: form.title,
+      faculty: form.instructor,
+      creditHours: Number(form.creditHours),
+      year: Number(form.year),
+      maxStudents: Number(form.maxStudents),
+      semester: Number(form.semester),
+      semesterTerm: form.semesterTerm,
+    };
+    await createCourse(payload);
     setIsAddModalOpen(false);
     setForm({});
     fetchAll();
@@ -42,7 +70,17 @@ const AdminCourses: React.FC = () => {
 
   const handleEdit = async () => {
     if (!editingCourse) return;
-    await updateCourse(editingCourse._id, form);
+    const payload = {
+      ...form,
+      title: form.title,
+      faculty: form.instructor,
+      creditHours: Number(form.creditHours),
+      year: Number(form.year),
+      maxStudents: Number(form.maxStudents),
+      semester: Number(form.semester),
+      semesterTerm: form.semesterTerm,
+    };
+    await updateCourse(editingCourse._id, payload);
     setIsEditModalOpen(false);
     setEditingCourse(null);
     setForm({});
@@ -71,7 +109,12 @@ const AdminCourses: React.FC = () => {
               <th className="px-4 py-2 text-left">Program</th>
               <th className="px-4 py-2 text-left">Department</th>
               <th className="px-4 py-2 text-left">Semester</th>
+              <th className="px-4 py-2 text-left">Semester Term</th>
+              <th className="px-4 py-2 text-left">Year</th>
+              <th className="px-4 py-2 text-left">Credit Hours</th>
+              <th className="px-4 py-2 text-left">Max Students</th>
               <th className="px-4 py-2 text-left">Instructor</th>
+              <th className="px-4 py-2 text-left">Description</th>
               <th className="px-4 py-2 text-left">Actions</th>
             </tr>
           </thead>
@@ -83,7 +126,14 @@ const AdminCourses: React.FC = () => {
                 <td className="px-4 py-2">{course.program?.name}</td>
                 <td className="px-4 py-2">{course.department?.name}</td>
                 <td className="px-4 py-2">{course.semester}</td>
-                <td className="px-4 py-2">{course.instructor?.name}</td>
+                <td className="px-4 py-2">{course.semesterTerm}</td>
+                <td className="px-4 py-2">{course.year}</td>
+                <td className="px-4 py-2">{course.creditHours}</td>
+                <td className="px-4 py-2">{course.maxStudents}</td>
+                <td className="px-4 py-2">
+                  {course.faculty?.fullName || course.faculty?.displayName || (course.faculty?.firstName ? course.faculty.firstName + ' ' + (course.faculty.lastName || '') : course.faculty?.email)}
+                </td>
+                <td className="px-4 py-2">{course.description}</td>
                 <td className="px-4 py-2 flex gap-2">
                   <button onClick={() => { setEditingCourse(course); setForm(course); setIsEditModalOpen(true); }} className="p-2 rounded hover:bg-blue-50 text-blue-600"><Edit className="w-4 h-4" /></button>
                   <button onClick={() => handleDelete(course._id)} className="p-2 rounded hover:bg-red-50 text-red-600"><Trash2 className="w-4 h-4" /></button>
@@ -101,16 +151,16 @@ const AdminCourses: React.FC = () => {
             <h2 className="text-xl font-bold mb-4">{isAddModalOpen ? 'Add Course' : 'Edit Course'}</h2>
             <form onSubmit={e => { e.preventDefault(); isAddModalOpen ? handleAdd() : handleEdit(); }} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium">Name</label>
-                <input name="name" value={form.name || ''} onChange={e => setForm((f: any) => ({ ...f, name: e.target.value }))} className="w-full border rounded px-3 py-2" />
+                <label className="block text-sm font-medium">Title</label>
+                <input name="title" value={form.title || ''} onChange={e => setForm((f: any) => ({ ...f, title: e.target.value }))} className="w-full border rounded px-3 py-2" required />
               </div>
               <div>
                 <label className="block text-sm font-medium">Code</label>
-                <input name="code" value={form.code || ''} onChange={e => setForm((f: any) => ({ ...f, code: e.target.value }))} className="w-full border rounded px-3 py-2" />
+                <input name="code" value={form.code || ''} onChange={e => setForm((f: any) => ({ ...f, code: e.target.value }))} className="w-full border rounded px-3 py-2" required />
               </div>
               <div>
                 <label className="block text-sm font-medium">Program</label>
-                <select name="program" value={form.program || ''} onChange={e => setForm((f: any) => ({ ...f, program: e.target.value }))} className="w-full border rounded px-3 py-2">
+                <select name="program" value={form.program || ''} onChange={e => setForm((f: any) => ({ ...f, program: e.target.value }))} className="w-full border rounded px-3 py-2" required>
                   <option value="">Select Program</option>
                   {programs.map((p: any) => (
                     <option key={p._id} value={p._id}>{p.name}</option>
@@ -119,7 +169,7 @@ const AdminCourses: React.FC = () => {
               </div>
               <div>
                 <label className="block text-sm font-medium">Department</label>
-                <select name="department" value={form.department || ''} onChange={e => setForm((f: any) => ({ ...f, department: e.target.value }))} className="w-full border rounded px-3 py-2">
+                <select name="department" value={form.department || ''} onChange={e => setForm((f: any) => ({ ...f, department: e.target.value }))} className="w-full border rounded px-3 py-2" required>
                   <option value="">Select Department</option>
                   {departments.map((d: any) => (
                     <option key={d._id} value={d._id}>{d.name}</option>
@@ -128,24 +178,51 @@ const AdminCourses: React.FC = () => {
               </div>
               <div>
                 <label className="block text-sm font-medium">Semester</label>
-                <input name="semester" type="number" value={form.semester || ''} onChange={e => setForm((f: any) => ({ ...f, semester: e.target.value }))} className="w-full border rounded px-3 py-2" />
+                <input
+                  name="semester"
+                  type="number"
+                  min={1}
+                  max={12}
+                  value={form.semester || ''}
+                  onChange={e => setForm((f: any) => ({ ...f, semester: e.target.value }))}
+                  className="w-full border rounded px-3 py-2"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium">Semester Term</label>
+                <select name="semesterTerm" value={form.semesterTerm || ''} onChange={e => setForm((f: any) => ({ ...f, semesterTerm: e.target.value }))} className="w-full border rounded px-3 py-2" required>
+                  <option value="">Select Term</option>
+                  <option value="Fall">Fall</option>
+                  <option value="Spring">Spring</option>
+                  <option value="Summer">Summer</option>
+                  <option value="Winter">Winter</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium">Year</label>
+                <input name="year" type="number" min={2020} max={2030} value={form.year || ''} onChange={e => setForm((f: any) => ({ ...f, year: e.target.value }))} className="w-full border rounded px-3 py-2" required />
+              </div>
+              <div>
+                <label className="block text-sm font-medium">Credit Hours</label>
+                <input name="creditHours" type="number" min={1} max={6} value={form.creditHours || ''} onChange={e => setForm((f: any) => ({ ...f, creditHours: e.target.value }))} className="w-full border rounded px-3 py-2" required />
+              </div>
+              <div>
+                <label className="block text-sm font-medium">Max Students</label>
+                <input name="maxStudents" type="number" min={1} max={200} value={form.maxStudents || ''} onChange={e => setForm((f: any) => ({ ...f, maxStudents: e.target.value }))} className="w-full border rounded px-3 py-2" required />
               </div>
               <div>
                 <label className="block text-sm font-medium">Instructor</label>
-                <select name="instructor" value={form.instructor || ''} onChange={e => setForm((f: any) => ({ ...f, instructor: e.target.value }))} className="w-full border rounded px-3 py-2">
+                <select name="instructor" value={form.instructor || ''} onChange={e => setForm((f: any) => ({ ...f, instructor: e.target.value }))} className="w-full border rounded px-3 py-2" required>
                   <option value="">Select Instructor</option>
                   {instructors.map((f: any) => (
-                    <option key={f._id} value={f._id}>{f.name}</option>
+                    <option key={f._id} value={f._id}>{f.fullName || f.displayName || f.name || (f.firstName ? f.firstName + ' ' + (f.lastName || '') : f.email)}</option>
                   ))}
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium">Credit Hours</label>
-                <input name="creditHours" type="number" value={form.creditHours || ''} onChange={e => setForm((f: any) => ({ ...f, creditHours: e.target.value }))} className="w-full border rounded px-3 py-2" />
-              </div>
-              <div>
                 <label className="block text-sm font-medium">Description</label>
-                <textarea name="description" value={form.description || ''} onChange={e => setForm((f: any) => ({ ...f, description: e.target.value }))} className="w-full border rounded px-3 py-2" rows={3} />
+                <textarea name="description" value={form.description || ''} onChange={e => setForm((f: any) => ({ ...f, description: e.target.value }))} className="w-full border rounded px-3 py-2" rows={3} required />
               </div>
               <div className="flex justify-end gap-2">
                 <button type="button" onClick={() => { setIsAddModalOpen(false); setIsEditModalOpen(false); setEditingCourse(null); setForm({}); }} className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300">Cancel</button>

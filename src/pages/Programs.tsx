@@ -49,11 +49,11 @@ const Programs: React.FC = () => {
             : '';
       const matchesSearch =
         program.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        program.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         program.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
         departmentName.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesLevel = selectedLevel === 'all' || program.level === selectedLevel;
+    const matchesLevel = selectedLevel === 'all' || program.level === selectedLevel;
       const matchesDepartment = selectedDepartment === 'all' || departmentName === selectedDepartment;
-      return matchesSearch && matchesLevel && matchesDepartment;
+    return matchesSearch && matchesLevel && matchesDepartment;
     })
     .sort((a, b) => {
       const aDept =
@@ -70,7 +70,7 @@ const Programs: React.FC = () => {
             : '';
       if (sortBy === 'name') return a.name.localeCompare(b.name);
       return aDept.localeCompare(bDept);
-    });
+  });
 
   const getLevelColor = (level: string) => {
     const colors = {
@@ -291,7 +291,7 @@ const Programs: React.FC = () => {
                     <button className="p-2 bg-white bg-opacity-90 rounded-full hover:bg-opacity-100 transition-all duration-200">
                       <Share2 className="h-4 w-4 text-gray-600" />
                     </button>
-                  </div>
+                    </div>
                   </div>
 
                   {/* Program Content */}
@@ -479,7 +479,7 @@ const Programs: React.FC = () => {
                         ))
                       ) : (
                         <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">None</span>
-                      )}
+                        )}
                     </div>
                   </div>
                 </div>
