@@ -42,8 +42,8 @@ const AdminCourses: React.FC = () => {
     setCourses(Array.isArray(coursesData) ? coursesData : coursesData?.courses || []);
     setPrograms(programsRes.data.data || []);
     setDepartments(departmentsRes.data.data || []);
-    // Use instructorsRes.users for the list, and sort alphabetically by fullName, displayName, or name
-    const instructorsList = (instructorsRes.users || []).slice().sort((a: any, b: any) => {
+    // Use instructorsRes.data.users for the list, and sort alphabetically by fullName, displayName, or name
+    const instructorsList = (instructorsRes.data.users || []).slice().sort((a: any, b: any) => {
       const aName = a.fullName || a.displayName || a.name || (a.firstName ? a.firstName + ' ' + (a.lastName || '') : a.email);
       const bName = b.fullName || b.displayName || b.name || (b.firstName ? b.firstName + ' ' + (b.lastName || '') : b.email);
       return aName.localeCompare(bName);
@@ -121,7 +121,7 @@ const AdminCourses: React.FC = () => {
           <tbody>
             {courses.map(course => (
               <tr key={course._id} className="border-t">
-                <td className="px-4 py-2">{course.name}</td>
+                <td className="px-4 py-2">{course.title}</td>
                 <td className="px-4 py-2">{course.code}</td>
                 <td className="px-4 py-2">{course.program?.name}</td>
                 <td className="px-4 py-2">{course.department?.name}</td>
@@ -131,7 +131,9 @@ const AdminCourses: React.FC = () => {
                 <td className="px-4 py-2">{course.creditHours}</td>
                 <td className="px-4 py-2">{course.maxStudents}</td>
                 <td className="px-4 py-2">
-                  {course.faculty?.fullName || course.faculty?.displayName || (course.faculty?.firstName ? course.faculty.firstName + ' ' + (course.faculty.lastName || '') : course.faculty?.email)}
+                  {(course.faculty?.fullName || course.faculty?.displayName || (course.faculty?.firstName ? course.faculty.firstName + ' ' + (course.faculty.lastName || '') : course.faculty?.email))
+                  || (course.instructor?.fullName || course.instructor?.displayName || (course.instructor?.firstName ? course.instructor.firstName + ' ' + (course.instructor?.lastName || '') : course.instructor?.email))
+                  || course.instructor || ''}
                 </td>
                 <td className="px-4 py-2">{course.description}</td>
                 <td className="px-4 py-2 flex gap-2">
