@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Program } from '../../api/types/programs';
 import ImageUpload from '../common/ImageUpload';
+import { getDepartments } from '../../api/services/departmentService';
 
 interface AddProgramModalProps {
   isOpen: boolean;
@@ -11,8 +12,9 @@ interface AddProgramModalProps {
 const initialState = {
   name: '',
   department: '',
-  level: 'undergraduate' as 'undergraduate' | 'postgraduate' | 'professional',
+  level: 'Undergraduate',
   duration: '',
+  semesters: '',
   description: '',
   prerequisites: [''],
   image: '',
@@ -25,6 +27,15 @@ const AddProgramModal: React.FC<AddProgramModalProps> = ({ isOpen, onClose, onAd
   const [form, setForm] = useState(initialState);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [serverError, setServerError] = useState<string | null>(null);
+  const [departments, setDepartments] = useState<{ _id: string; name: string }[]>([]);
+
+  useEffect(() => {
+    if (isOpen) {
+      getDepartments().then(res => {
+        setDepartments(res.data.data || []);
+      });
+    }
+  }, [isOpen]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -56,6 +67,7 @@ const AddProgramModal: React.FC<AddProgramModalProps> = ({ isOpen, onClose, onAd
     if (!form.department.trim()) newErrors.department = 'Department is required';
     if (!form.duration.trim()) newErrors.duration = 'Duration is required';
     if (!form.description.trim()) newErrors.description = 'Description is required';
+    if (!form.semesters || isNaN(Number(form.semesters))) newErrors.semesters = 'Semesters is required and must be a number';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -88,16 +100,25 @@ const AddProgramModal: React.FC<AddProgramModalProps> = ({ isOpen, onClose, onAd
           </div>
           <div>
             <label className="block text-sm font-medium">Department</label>
-            <input name="department" value={form.department} onChange={handleChange} className="w-full border rounded px-3 py-2" />
+            <select name="department" value={form.department} onChange={handleChange} className="w-full border rounded px-3 py-2">
+              <option value="">Select Department</option>
+              {departments.map((dept) => (
+                <option key={dept._id} value={dept._id}>{dept.name}</option>
+              ))}
+            </select>
             {errors.department && <span className="text-red-500 text-xs">{errors.department}</span>}
           </div>
           <div>
             <label className="block text-sm font-medium">Level</label>
             <select name="level" value={form.level} onChange={handleChange} className="w-full border rounded px-3 py-2">
-              <option value="undergraduate">Undergraduate</option>
-              <option value="postgraduate">Postgraduate</option>
-              <option value="professional">Professional</option>
+              <option value="Undergraduate">Undergraduate</option>
+              <option value="Postgraduate">Postgraduate</option>
             </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium">Semesters</label>
+            <input name="semesters" type="number" value={form.semesters} onChange={handleChange} className="w-full border rounded px-3 py-2" required />
+            {errors.semesters && <span className="text-red-500 text-xs">{errors.semesters}</span>}
           </div>
           <div>
             <label className="block text-sm font-medium">Duration</label>

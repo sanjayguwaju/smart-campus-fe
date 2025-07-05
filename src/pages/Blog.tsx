@@ -5,14 +5,14 @@ import { BlogPost } from '../api/services/blogService';
 
 const PLACEHOLDER_IMAGE = 'https://images.pexels.com/photos/1181675/pexels-photo-1181675.jpeg?auto=compress&w=600&h=400&fit=crop';
 
-const categories = [
-  { key: 'all', name: 'All Posts' },
-  { key: 'academic', name: 'Academic' },
-  { key: 'technology', name: 'Technology' },
-  { key: 'student-life', name: 'Student Life' },
-  { key: 'research', name: 'Research' },
-  { key: 'events', name: 'Events' },
-];
+  const categories = [
+    { key: 'all', name: 'All Posts' },
+    { key: 'academic', name: 'Academic' },
+    { key: 'technology', name: 'Technology' },
+    { key: 'student-life', name: 'Student Life' },
+    { key: 'research', name: 'Research' },
+    { key: 'events', name: 'Events' },
+  ];
 
 const Blog: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -108,42 +108,42 @@ const Blog: React.FC = () => {
 
       {/* Featured Post */}
       {featuredPost && (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-            <div className="md:flex">
-              <div className="md:w-1/2">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+          <div className="md:flex">
+            <div className="md:w-1/2">
                 <img
                   src={featuredPost.coverImage || PLACEHOLDER_IMAGE}
                   alt={featuredPost.title}
                   className="h-64 md:h-full w-full object-cover"
                 />
-              </div>
-              <div className="md:w-1/2 p-8">
-                <div className="flex items-center text-sm text-gray-500 mb-4">
+            </div>
+            <div className="md:w-1/2 p-8">
+              <div className="flex items-center text-sm text-gray-500 mb-4">
                   {featuredPost.tags && featuredPost.tags[0] && (
-                    <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
+                <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
                       {featuredPost.tags[0]}
-                    </span>
+                </span>
                   )}
-                  <span className="mx-2">•</span>
+                <span className="mx-2">•</span>
                   <span>{featuredPost.createdAt ? new Date(featuredPost.createdAt).toLocaleDateString() : ''}</span>
-                </div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">{featuredPost.title}</h2>
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">{featuredPost.title}</h2>
                 <p className="text-gray-600 mb-6">{featuredPost.summary}</p>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <User className="h-5 w-5 text-gray-400 mr-2" />
-                    <span className="text-sm text-gray-600">{featuredPost.author}</span>
-                  </div>
-                  <button className="text-blue-600 hover:text-blue-800 font-medium flex items-center">
-                    Read More
-                    <ArrowRight className="h-4 w-4 ml-1" />
-                  </button>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <User className="h-5 w-5 text-gray-400 mr-2" />
+                  <span className="text-sm text-gray-600">{featuredPost.author}</span>
                 </div>
+                <button className="text-blue-600 hover:text-blue-800 font-medium flex items-center">
+                  Read More
+                  <ArrowRight className="h-4 w-4 ml-1" />
+                </button>
               </div>
             </div>
           </div>
         </div>
+      </div>
       )}
 
       {/* Blog Posts Grid */}
@@ -159,9 +159,9 @@ const Blog: React.FC = () => {
               <div className="p-6">
                 <div className="flex items-center text-sm text-gray-500 mb-3">
                   {post.tags && post.tags[0] && (
-                    <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs font-medium">
+                  <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs font-medium">
                       {post.tags[0]}
-                    </span>
+                  </span>
                   )}
                   <span className="mx-2">•</span>
                   <span>{post.createdAt ? new Date(post.createdAt).toLocaleDateString() : ''}</span>

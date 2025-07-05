@@ -1,4 +1,3 @@
-
 import { BrowserRouter as Router, Routes, Route, Outlet } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { useAuthInit } from './hooks/useAuthInit';
@@ -27,6 +26,14 @@ import Analytics from './pages/Admin/Analytics';
 import Settings from './pages/Admin/Settings';
 import AdminBlog from './pages/Admin/Blog';
 import StudentProfile from './pages/Student/Profile';
+import Courses from './pages/Faculty/Courses';
+import Students from './pages/Faculty/Students';
+import { default as FacultyEvents } from './pages/Faculty/Events';
+import { default as FacultyNotices } from './pages/Faculty/Notices';
+import Grades from './pages/Faculty/Grades';
+import OfficeHours from './pages/Faculty/OfficeHours';
+import { default as FacultyBlog } from './pages/Faculty/Blog';
+import AdminCourses from './pages/Admin/Courses';
 
 function App() {
   // Initialize authentication state
@@ -76,6 +83,7 @@ function App() {
           <Route path="events" element={<AdminEvents />} />
           <Route path="notices" element={<Notices />} />
           <Route path="programs" element={<AdminPrograms />} />
+          <Route path="courses" element={<AdminCourses />} />
           <Route path="blog" element={<AdminBlog />} />
           <Route path="analytics" element={<Analytics />} />
           <Route path="settings" element={<Settings />} />
@@ -91,12 +99,13 @@ function App() {
           }
         >
           <Route index element={<Dashboard />} />
-          <Route path="courses" element={<div className="p-6">Faculty Courses Page</div>} />
-          <Route path="students" element={<div className="p-6">Faculty Students Page</div>} />
-          <Route path="events" element={<div className="p-6">Faculty Events Page</div>} />
-          <Route path="notices" element={<div className="p-6">Faculty Notices Page</div>} />
-          <Route path="grades" element={<div className="p-6">Faculty Grades Page</div>} />
-          <Route path="office-hours" element={<div className="p-6">Faculty Office Hours Page</div>} />
+          <Route path="courses" element={<Courses />} />
+          <Route path="students" element={<Students />} />
+          <Route path="events" element={<FacultyEvents />} />
+          <Route path="notices" element={<FacultyNotices />} />
+          <Route path="grades" element={<Grades />} />
+          <Route path="office-hours" element={<OfficeHours />} />
+          <Route path="blog" element={<FacultyBlog />} />
         </Route>
 
         {/* Student routes with role-based protection */}

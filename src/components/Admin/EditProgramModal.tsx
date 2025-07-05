@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Program } from '../../api/types/programs';
 import ImageUpload from '../common/ImageUpload';
+import { getDepartments } from '../../api/services/departmentService';
 
 interface EditProgramModalProps {
   isOpen: boolean;
@@ -13,12 +14,21 @@ const EditProgramModal: React.FC<EditProgramModalProps> = ({ isOpen, onClose, pr
   const [form, setForm] = useState<Partial<Program>>({});
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [serverError, setServerError] = useState<string | null>(null);
+  const [departments, setDepartments] = useState<{ _id: string; name: string }[]>([]);
 
   useEffect(() => {
     if (program) {
       setForm({ ...program });
     }
   }, [program]);
+
+  useEffect(() => {
+    if (isOpen) {
+      getDepartments().then(res => {
+        setDepartments(res.data.data || []);
+      });
+    }
+  }, [isOpen]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -81,7 +91,12 @@ const EditProgramModal: React.FC<EditProgramModalProps> = ({ isOpen, onClose, pr
           </div>
           <div>
             <label className="block text-sm font-medium">Department</label>
-            <input name="department" value={form.department || ''} onChange={handleChange} className="w-full border rounded px-3 py-2" />
+            <select name="department" value={form.department || ''} onChange={handleChange} className="w-full border rounded px-3 py-2">
+              <option value="">Select Department</option>
+              {departments.map((dept) => (
+                <option key={dept._id} value={dept._id}>{dept.name}</option>
+              ))}
+            </select>
             {errors.department && <span className="text-red-500 text-xs">{errors.department}</span>}
           </div>
           <div>

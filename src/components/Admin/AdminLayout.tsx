@@ -23,6 +23,7 @@ const AdminLayout: React.FC = () => {
     { name: 'Events', href: '/admin/events', icon: Calendar },
     { name: 'Notices', href: '/admin/notices', icon: FileText },
     { name: 'Programs', href: '/admin/programs', icon: GraduationCap },
+    { name: 'Courses', href: '/admin/courses', icon: GraduationCap },
     { name: 'Blog', href: '/admin/blog', icon: FileText },
     { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
     { name: 'Settings', href: '/admin/settings', icon: Settings },

@@ -32,22 +32,44 @@ const Programs: React.FC = () => {
 
   const departments = [
     { value: 'all', label: 'All Departments' },
-    ...Array.from(new Set(publishedPrograms.map(p => p.department))).map(dep => ({ value: dep, label: dep }))
+    ...Array.from(new Set(publishedPrograms.map(p => typeof p.department === 'object' && p.department !== null ? p.department._id : p.department)))
+      .map(depId => {
+        const depObj = publishedPrograms.find(p => typeof p.department === 'object' && p.department !== null && p.department._id === depId)?.department;
+        return depObj && typeof depObj === 'object' ? { value: depObj._id, label: depObj.name } : { value: depId, label: depId };
+      })
   ];
 
   const filteredPrograms = publishedPrograms
     .filter(program => {
+      const departmentName =
+        typeof program.department === 'string'
+          ? program.department
+          : program.department && program.department.name
+            ? program.department.name
+            : '';
       const matchesSearch =
         program.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          program.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         program.department.toLowerCase().includes(searchTerm.toLowerCase());
+        departmentName.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesLevel = selectedLevel === 'all' || program.level === selectedLevel;
-    const matchesDepartment = selectedDepartment === 'all' || program.department === selectedDepartment;
+      const matchesDepartment = selectedDepartment === 'all' || departmentName === selectedDepartment;
     return matchesSearch && matchesLevel && matchesDepartment;
     })
     .sort((a, b) => {
+      const aDept =
+        typeof a.department === 'string'
+          ? a.department
+          : a.department && a.department.name
+            ? a.department.name
+            : '';
+      const bDept =
+        typeof b.department === 'string'
+          ? b.department
+          : b.department && b.department.name
+            ? b.department.name
+            : '';
       if (sortBy === 'name') return a.name.localeCompare(b.name);
-      return a.department.localeCompare(b.department);
+      return aDept.localeCompare(bDept);
   });
 
   const getLevelColor = (level: string) => {
@@ -153,8 +175,8 @@ const Programs: React.FC = () => {
                 onChange={(e) => setSelectedDepartment(e.target.value)}
                 className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-3 pr-8 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
-                {departments.map((department) => (
-                  <option key={department.value} value={department.value}>
+                {departments.map((department, idx) => (
+                  <option key={department.value || idx} value={department.value}>
                     {department.label}
                   </option>
                 ))}
@@ -269,7 +291,7 @@ const Programs: React.FC = () => {
                     <button className="p-2 bg-white bg-opacity-90 rounded-full hover:bg-opacity-100 transition-all duration-200">
                       <Share2 className="h-4 w-4 text-gray-600" />
                     </button>
-                  </div>
+                    </div>
                   </div>
 
                   {/* Program Content */}
@@ -295,7 +317,7 @@ const Programs: React.FC = () => {
                       </div>
                       <div className="flex items-center text-sm text-gray-500">
                       <MapPin className="h-4 w-4 mr-2 text-blue-600" />
-                      {program.department}
+                      {typeof program.department === 'object' && program.department !== null ? program.department.name : program.department}
                       </div>
                       <div className="flex items-center text-sm text-gray-500">
                         <Users className="h-4 w-4 mr-2 text-blue-600" />
@@ -436,7 +458,7 @@ const Programs: React.FC = () => {
                   </div>
                     <div className="flex items-center mb-2 text-gray-600">
                       <MapPin className="h-5 w-5 mr-2 text-blue-600" />
-                      {selectedProgram.department}
+                      {typeof selectedProgram.department === 'object' && selectedProgram.department !== null ? selectedProgram.department.name : selectedProgram.department}
                 </div>
                     <div className="flex items-center mb-2 text-gray-600">
                       <Users className="h-5 w-5 mr-2 text-blue-600" />
@@ -457,7 +479,7 @@ const Programs: React.FC = () => {
                         ))
                       ) : (
                         <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">None</span>
-                      )}
+                        )}
                     </div>
                   </div>
                 </div>
