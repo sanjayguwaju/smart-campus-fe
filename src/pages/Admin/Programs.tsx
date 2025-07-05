@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, Search, Edit, Trash2, Eye, Filter, GraduationCap, Clock, BookOpen, CheckCircle, Pencil, Layers, Award, Star } from 'lucide-react';
 import { usePrograms } from '../../api/hooks/usePrograms';
 import { Program } from '../../api/types/programs';
@@ -8,6 +8,7 @@ import DeleteProgramModal from '../../components/Admin/DeleteProgramModal';
 import LoadingSpinner from '../../components/Layout/LoadingSpinner';
 import { AxiosResponse } from 'axios';
 import SummaryCard from '../../components/Admin/SummaryCard';
+import { getDepartments } from '../../api/services/departmentService';
 
 const Programs: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -16,6 +17,7 @@ const Programs: React.FC = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingProgram, setEditingProgram] = useState<Program | null>(null);
   const [deletingProgram, setDeletingProgram] = useState<{ id: string; name: string } | null>(null);
+  const [departments, setDepartments] = useState<{ _id: string; name: string }[]>([]);
 
   // Correctly type the Axios response
   const { programsQuery, createProgram, updateProgram, deleteProgram, publishProgram, unpublishProgram } = usePrograms();
@@ -36,6 +38,15 @@ const Programs: React.FC = () => {
   const undergradPrograms = programs.filter(p => p.level === 'undergraduate').length;
   const postgradPrograms = programs.filter(p => p.level === 'postgraduate').length;
   const professionalPrograms = programs.filter(p => p.level === 'professional').length;
+
+  useEffect(() => {
+    getDepartments().then(res => {
+      setDepartments(res.data.data || []);
+    });
+  }, []);
+
+  // Map department ObjectId to name for display
+  const departmentMap = Object.fromEntries(departments.map(d => [d._id, d.name]));
 
   const filteredPrograms = programs.filter((program: Program) => {
     const matchesSearch = program.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -91,8 +102,6 @@ const Programs: React.FC = () => {
         return 'bg-gray-100 text-gray-800';
     }
   };
-
-  const departments = Array.from(new Set(programs.map((p: Program) => p.department)));
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -176,8 +185,8 @@ const Programs: React.FC = () => {
               className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="all">All Departments</option>
-              {departments.map((dept: string) => (
-                <option key={dept} value={dept}>{dept}</option>
+              {departments.map((dept: { _id: string; name: string }) => (
+                <option key={dept._id} value={dept._id}>{dept.name}</option>
               ))}
             </select>
             <button className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center">
@@ -222,7 +231,7 @@ const Programs: React.FC = () => {
                       <div className="space-y-2">
                         <div className="flex items-center text-sm text-gray-500">
                           <GraduationCap className="h-4 w-4 mr-2" />
-                          {program.department}
+                          {departmentMap[program.department]}
                         </div>
                         <div className="flex items-center text-sm text-gray-500">
                           <Clock className="h-4 w-4 mr-2" />

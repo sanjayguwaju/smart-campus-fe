@@ -1,8 +1,13 @@
+export interface DepartmentRef {
+  _id: string;
+  name: string;
+}
+
 export interface Program {
   _id: string;
   name: string;
-  department: string;
-  level: 'undergraduate' | 'postgraduate' | 'professional';
+  department: string | DepartmentRef;
+  level: 'Undergraduate' | 'Postgraduate';
   duration: string;
   description: string;
   prerequisites: string[];

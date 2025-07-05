@@ -33,6 +33,7 @@ import { default as FacultyNotices } from './pages/Faculty/Notices';
 import Grades from './pages/Faculty/Grades';
 import OfficeHours from './pages/Faculty/OfficeHours';
 import { default as FacultyBlog } from './pages/Faculty/Blog';
+import AdminCourses from './pages/Admin/Courses';
 
 function App() {
   // Initialize authentication state
@@ -82,6 +83,7 @@ function App() {
           <Route path="events" element={<AdminEvents />} />
           <Route path="notices" element={<Notices />} />
           <Route path="programs" element={<AdminPrograms />} />
+          <Route path="courses" element={<AdminCourses />} />
           <Route path="blog" element={<AdminBlog />} />
           <Route path="analytics" element={<Analytics />} />
           <Route path="settings" element={<Settings />} />
