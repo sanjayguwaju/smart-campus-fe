@@ -49,9 +49,14 @@ const Programs: React.FC = () => {
 
   const filteredPrograms = programs.filter((program: Program) => {
     const matchesSearch = program.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         program.description.toLowerCase().includes(searchTerm.toLowerCase());
+      program.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesLevel = levelFilter === 'all' || program.level.toLowerCase() === levelFilter;
-    const departmentId = typeof program.department === 'string' ? program.department : program.department._id;
+    const departmentId =
+      typeof program.department === 'object' && program.department !== null
+        ? program.department._id
+        : typeof program.department === 'string'
+          ? program.department
+          : undefined;
     const matchesDepartment = departmentFilter === 'all' || departmentId === departmentFilter;
     return matchesSearch && matchesLevel && matchesDepartment;
   });
@@ -232,8 +237,13 @@ const Programs: React.FC = () => {
                         <div className="flex items-center text-sm text-gray-500">
                           <GraduationCap className="h-4 w-4 mr-2" />
                           {(() => {
-                            const departmentId = typeof program.department === 'string' ? program.department : program.department._id;
-                            return departmentMap[departmentId];
+                            const departmentId =
+                              typeof program.department === 'object' && program.department !== null
+                                ? program.department._id
+                                : typeof program.department === 'string'
+                                  ? program.department
+                                  : undefined;
+                            return departmentId ? departmentMap[departmentId] : 'Unknown';
                           })()}
                         </div>
                         <div className="flex items-center text-sm text-gray-500">
