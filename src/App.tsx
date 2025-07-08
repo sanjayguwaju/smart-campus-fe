@@ -39,6 +39,7 @@ import Grades from './pages/Faculty/Grades';
 import OfficeHours from './pages/Faculty/OfficeHours';
 import { default as FacultyBlog } from './pages/Faculty/Blog';
 import AdminCourses from './pages/Admin/Courses';
+import Departments from './pages/Admin/Departments';
 
 function App() {
   // Initialize authentication state
@@ -61,6 +62,7 @@ function App() {
         >
           <Route index element={<AdminDashboard />} />
           <Route path="users" element={<Users />} />
+          <Route path="departments" element={<Departments />} />
           <Route path="events" element={<AdminEvents />} />
           <Route path="notices" element={<Notices />} />
           <Route path="programs" element={<AdminPrograms />} />

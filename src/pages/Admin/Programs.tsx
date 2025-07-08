@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Plus, Search, Edit, Trash2, Filter, GraduationCap, Clock, BookOpen, CheckCircle, Pencil, Layers, Award, Star } from 'lucide-react';
 import { usePrograms } from '../../api/hooks/usePrograms';
 import { Program } from '../../api/types/programs';
@@ -7,7 +7,8 @@ import EditProgramModal from '../../components/Admin/EditProgramModal';
 import DeleteProgramModal from '../../components/Admin/DeleteProgramModal';
 import LoadingSpinner from '../../components/Layout/LoadingSpinner';
 import SummaryCard from '../../components/Admin/SummaryCard';
-import { getDepartments } from '../../api/services/departmentService';
+import { departmentService } from '../../api/services/departmentService';
+import { Department } from '../../api/types/departments';
 
 const Programs: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -16,15 +17,18 @@ const Programs: React.FC = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingProgram, setEditingProgram] = useState<Program | null>(null);
   const [deletingProgram, setDeletingProgram] = useState<{ id: string; name: string } | null>(null);
-  const [departments, setDepartments] = useState<{ _id: string; name: string }[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
 
   // Correctly type the Axios response
   const { programsQuery, createProgram, updateProgram, deleteProgram, publishProgram, unpublishProgram } = usePrograms();
 
   let programs: Program[] = [];
   const backendData = programsQuery.data?.data;
-  if (backendData && typeof backendData === 'object' && 'data' in backendData && Array.isArray((backendData as any).data)) {
-    programs = (backendData as { data: Program[] }).data;
+  interface BackendResponse {
+    data: Program[];
+  }
+  if (backendData && typeof backendData === 'object' && 'data' in backendData && Array.isArray((backendData as BackendResponse).data)) {
+    programs = (backendData as BackendResponse).data;
   }
   console.log('Programs:', programs);
   const isLoading = programsQuery.isLoading;
@@ -39,9 +43,15 @@ const Programs: React.FC = () => {
   const professionalPrograms = programs.filter(p => p.level.toLowerCase() === 'professional').length;
 
   useEffect(() => {
-    getDepartments().then(res => {
-      setDepartments(res.data.data || []);
-    });
+    const fetchDepartments = async () => {
+      try {
+        const response = await departmentService.getDepartments();
+        setDepartments(response.data.data.departments || []);
+      } catch (error) {
+        console.error('Failed to fetch departments:', error instanceof Error ? error.message : 'Unknown error');
+      }
+    };
+    fetchDepartments();
   }, []);
 
   // Map department ObjectId to name for display
@@ -190,7 +200,7 @@ const Programs: React.FC = () => {
               className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="all">All Departments</option>
-              {departments.map((dept: { _id: string; name: string }) => (
+              {departments.map((dept: Department) => (
                 <option key={dept._id} value={dept._id}>{dept.name}</option>
               ))}
             </select>
@@ -307,7 +317,7 @@ const Programs: React.FC = () => {
         isOpen={!!editingProgram}
         onClose={() => setEditingProgram(null)}
         program={editingProgram}
-        onEdit={handleEditSubmit}
+        onSubmit={handleEditSubmit}
       />
       
       <DeleteProgramModal

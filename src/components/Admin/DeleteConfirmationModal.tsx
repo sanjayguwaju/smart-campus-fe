@@ -1,12 +1,14 @@
 import React from 'react';
-import { X, AlertTriangle, Trash2 } from 'lucide-react';
+import { X, AlertTriangle } from 'lucide-react';
 import { UserData } from '../../api/types/users';
 
 interface DeleteConfirmationModalProps {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: () => void;
-  user: UserData | null;
+  title: string;
+  message: string;
+  user?: UserData | null;
   isLoading?: boolean;
 }
 
@@ -14,10 +16,12 @@ const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({
   isOpen, 
   onClose, 
   onConfirm, 
+  title,
+  message,
   user, 
   isLoading = false 
 }) => {
-  if (!isOpen || !user) return null;
+  if (!isOpen) return null;
 
   const getDisplayName = (user: UserData) => {
     if (user.displayName && user.displayName !== 'undefined undefined') {
@@ -50,39 +54,41 @@ const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({
           <div className="flex items-center justify-center h-14 w-14 rounded-full bg-red-100 mb-4">
             <AlertTriangle className="h-8 w-8 text-red-600" />
           </div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-1">Delete User</h2>
+          <h2 className="text-xl font-semibold text-gray-900 mb-1">{title}</h2>
           <p className="text-sm text-gray-500 mb-4">This action cannot be undone.</p>
 
-          <div className="w-full bg-gray-50 rounded-lg border border-gray-200 p-4 mb-6 flex flex-col items-center">
-            <div className="flex items-center space-x-3">
-              <div className="h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center">
-                <span className="text-base font-medium text-white">
-                  {getDisplayName(user).split(' ').map(n => n.charAt(0)).join('').toUpperCase()}
-                </span>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-900">{getDisplayName(user)}</p>
-                <p className="text-sm text-gray-500">{user.email}</p>
-                <div className="flex items-center space-x-2 mt-1">
-                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                    user.role === 'admin' ? 'bg-red-100 text-red-800' :
-                    user.role === 'faculty' ? 'bg-blue-100 text-blue-800' :
-                    'bg-green-100 text-green-800'
-                  }`}>
-                    {user.role}
+          {user && (
+            <div className="w-full bg-gray-50 rounded-lg border border-gray-200 p-4 mb-6 flex flex-col items-center">
+              <div className="flex items-center space-x-3">
+                <div className="h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center">
+                  <span className="text-base font-medium text-white">
+                    {getDisplayName(user).split(' ').map(n => n.charAt(0)).join('').toUpperCase()}
                   </span>
-                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                    user.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                  }`}>
-                    {user.isActive ? 'Active' : 'Inactive'}
-                  </span>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-900">{getDisplayName(user)}</p>
+                  <p className="text-sm text-gray-500">{user.email}</p>
+                  <div className="flex items-center space-x-2 mt-1">
+                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                      user.role === 'admin' ? 'bg-red-100 text-red-800' :
+                      user.role === 'faculty' ? 'bg-blue-100 text-blue-800' :
+                      'bg-green-100 text-green-800'
+                    }`}>
+                      {user.role}
+                    </span>
+                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                      user.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                    }`}>
+                      {user.isActive ? 'Active' : 'Inactive'}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          )}
 
           <p className="text-sm text-gray-600 text-center mb-6">
-            Are you sure you want to delete this user? This will permanently remove the user account and all associated data.
+            {message}
           </p>
 
           <div className="flex w-full gap-3">
@@ -106,7 +112,7 @@ const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({
                   Deleting...
                 </div>
               ) : (
-                'Delete User'
+                'Delete'
               )}
             </button>
           </div>

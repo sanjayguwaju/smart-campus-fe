@@ -1,18 +1,34 @@
 import React, { useEffect, useState } from 'react';
+import { useForm, Controller } from 'react-hook-form';
+import Select from 'react-select';
 import { courseService } from '../../api/services/courseService';
 import { getPrograms } from '../../api/services/programService';
-import { getDepartments } from '../../api/services/departmentService';
 import { getUsers } from '../../api/services/userService';
 import { Course, CreateCourseRequest } from '../../api/types/courses';
-import { Program, DepartmentRef } from '../../api/types/programs';
+import { Program } from '../../api/types/programs';
 import { UserData } from '../../api/types/users';
 import { Plus, Edit, Trash2, MoreHorizontal, Eye, Search, Filter } from 'lucide-react';
 import LoadingSpinner from '../../components/Layout/LoadingSpinner';
+import { useDepartments } from '../../api/hooks/useDepartments';
 
-const AdminCourses: React.FC = () => {
+interface DepartmentOption {
+  value: string;
+  label: string;
+}
+
+interface InstructorOption {
+  value: string;
+  label: string;
+}
+
+interface ProgramOption {
+  value: string;
+  label: string;
+}
+
+const AdminCourses = () => {
   const [courses, setCourses] = useState<Course[]>([]);
   const [programs, setPrograms] = useState<Program[]>([]);
-  const [departments, setDepartments] = useState<DepartmentRef[]>([]);
   const [instructors, setInstructors] = useState<UserData[]>([]);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -30,23 +46,62 @@ const AdminCourses: React.FC = () => {
     semesterTerm: '',
     year: '',
   });
-  const [form, setForm] = useState<CreateCourseRequest>({
-    title: '',
-    code: '',
-    program: '',
-    department: '',
-    semester: 1,
-    semesterTerm: 'Fall',
-    year: new Date().getFullYear(),
-    creditHours: 3,
-    maxStudents: 30,
-    faculty: '',
-    description: '',
+
+  // Fetch departments using Tanstack Query
+  const { data: departmentsData, isLoading: isDepartmentsLoading } = useDepartments(1, 100);
+  const departments: DepartmentOption[] = departmentsData?.data?.departments?.map((dept: { _id: string; name: string }) => ({
+    value: dept._id,
+    label: dept.name
+  })) || [];
+
+  // Transform programs data for react-select
+  const programOptions: ProgramOption[] = programs.map(program => ({
+    value: program._id,
+    label: program.name
+  }));
+
+  // Transform instructors data for react-select
+  const instructorOptions: InstructorOption[] = instructors.map(instructor => ({
+    value: instructor._id,
+    label: instructor.fullName || instructor.displayName || instructor.name || 
+           (instructor.firstName ? instructor.firstName + ' ' + (instructor.lastName || '') : instructor.email)
+  }));
+
+  const { register, handleSubmit, reset, formState: { errors }, setValue, control } = useForm<CreateCourseRequest>({
+    defaultValues: {
+      title: '',
+      code: '',
+      program: '',
+      department: '',
+      semester: 1,
+      semesterTerm: 'Fall',
+      year: new Date().getFullYear(),
+      creditHours: 3,
+      maxStudents: 30,
+      faculty: '',
+      description: '',
+    }
   });
 
   useEffect(() => {
     fetchAll();
   }, [currentPage]);
+
+  useEffect(() => {
+    if (editingCourse) {
+      setValue('title', editingCourse.title);
+      setValue('code', editingCourse.code);
+      setValue('program', editingCourse.program._id);
+      setValue('department', editingCourse.department._id);
+      setValue('semester', editingCourse.semester);
+      setValue('semesterTerm', editingCourse.semesterTerm);
+      setValue('year', editingCourse.year);
+      setValue('creditHours', editingCourse.creditHours);
+      setValue('maxStudents', editingCourse.maxStudents);
+      setValue('faculty', editingCourse.faculty._id);
+      setValue('description', editingCourse.description);
+    }
+  }, [editingCourse, setValue]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -66,17 +121,15 @@ const AdminCourses: React.FC = () => {
   const fetchAll = async () => {
     setIsLoading(true);
     try {
-      const [coursesRes, programsRes, departmentsRes, instructorsRes] = await Promise.all([
+      const [coursesRes, programsRes, instructorsRes] = await Promise.all([
         courseService.getCourses({ page: currentPage, limit: pageSize }),
         getPrograms(),
-        getDepartments(),
         getUsers({ role: 'faculty' })
       ]);
       
       setCourses(coursesRes.data.courses);
       setTotalPages(coursesRes.data.pagination.totalPages);
       setPrograms(programsRes.data.data || []);
-      setDepartments(departmentsRes.data.data || []);
       
       const instructorsList = instructorsRes.users.slice().sort((a, b) => {
         const aName = a.fullName || a.displayName || a.name || (a.firstName ? a.firstName + ' ' + (a.lastName || '') : a.email);
@@ -91,46 +144,6 @@ const AdminCourses: React.FC = () => {
     }
   };
 
-  const handleAdd = async () => {
-    await courseService.createCourse(form);
-    setIsAddModalOpen(false);
-    setForm({
-      title: '',
-      code: '',
-      program: '',
-      department: '',
-      semester: 1,
-      semesterTerm: 'Fall',
-      year: new Date().getFullYear(),
-      creditHours: 3,
-      maxStudents: 30,
-      faculty: '',
-      description: '',
-    });
-    fetchAll();
-  };
-
-  const handleEdit = async () => {
-    if (!editingCourse) return;
-    await courseService.updateCourse(editingCourse._id, form);
-    setIsEditModalOpen(false);
-    setEditingCourse(null);
-    setForm({
-      title: '',
-      code: '',
-      program: '',
-      department: '',
-      semester: 1,
-      semesterTerm: 'Fall',
-      year: new Date().getFullYear(),
-      creditHours: 3,
-      maxStudents: 30,
-      faculty: '',
-      description: '',
-    });
-    fetchAll();
-  };
-
   const handleDelete = async (id: string) => {
     await courseService.deleteCourse(id);
     fetchAll();
@@ -139,6 +152,32 @@ const AdminCourses: React.FC = () => {
   const handleViewCourse = (course: Course) => {
     // Implement view course functionality
     console.log('View course:', course);
+  };
+
+  const onSubmit = async (data: CreateCourseRequest) => {
+    try {
+      if (isAddModalOpen) {
+        await courseService.createCourse(data);
+        setIsAddModalOpen(false);
+      } else {
+        if (editingCourse) {
+          await courseService.updateCourse(editingCourse._id, data);
+          setIsEditModalOpen(false);
+          setEditingCourse(null);
+        }
+      }
+      reset();
+      fetchAll();
+    } catch (error) {
+      console.error('Failed to submit course:', error);
+    }
+  };
+
+  const closeModal = () => {
+    setIsAddModalOpen(false);
+    setIsEditModalOpen(false);
+    setEditingCourse(null);
+    reset();
   };
 
   if (isLoading) {
@@ -178,16 +217,32 @@ const AdminCourses: React.FC = () => {
             </div>
           </div>
           <div className="flex gap-2">
-            <select
-              value={filters.program}
-              onChange={(e) => setFilters(f => ({ ...f, program: e.target.value }))}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="">All Programs</option>
-              {programs.map(program => (
-                <option key={program._id} value={program._id}>{program.name}</option>
-              ))}
-            </select>
+            <div className="w-48">
+              <Select
+                options={programOptions}
+                value={programOptions.find(opt => opt.value === filters.program) || null}
+                onChange={(option) => setFilters(f => ({ ...f, program: option?.value || '' }))}
+                placeholder="All Programs"
+                isClearable
+                isSearchable
+                className="text-sm"
+                classNamePrefix="select"
+                styles={{
+                  control: (baseStyles) => ({
+                    ...baseStyles,
+                    minHeight: '38px',
+                    borderColor: '#D1D5DB',
+                    '&:hover': {
+                      borderColor: '#9CA3AF'
+                    }
+                  }),
+                  placeholder: (baseStyles) => ({
+                    ...baseStyles,
+                    color: '#6B7280'
+                  })
+                }}
+              />
+            </div>
             <button 
               onClick={() => {/* TODO: Add filter drawer */}}
               className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center"
@@ -296,19 +351,17 @@ const AdminCourses: React.FC = () => {
                               onClick={() => {
                                 setOpenDropdown(null);
                                 setEditingCourse(course);
-                                setForm({
-                                  title: course.title,
-                                  code: course.code,
-                                  program: course.program._id,
-                                  department: course.department._id,
-                                  semester: course.semester,
-                                  semesterTerm: course.semesterTerm,
-                                  year: course.year,
-                                  creditHours: course.creditHours,
-                                  maxStudents: course.maxStudents,
-                                  faculty: course.faculty._id,
-                                  description: course.description,
-                                });
+                                setValue('title', course.title);
+                                setValue('code', course.code);
+                                setValue('program', course.program._id);
+                                setValue('department', course.department._id);
+                                setValue('semester', course.semester);
+                                setValue('semesterTerm', course.semesterTerm);
+                                setValue('year', course.year);
+                                setValue('creditHours', course.creditHours);
+                                setValue('maxStudents', course.maxStudents);
+                                setValue('faculty', course.faculty._id);
+                                setValue('description', course.description);
                                 setIsEditModalOpen(true);
                               }}
                               className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
@@ -440,94 +493,145 @@ const AdminCourses: React.FC = () => {
 
             <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
 
-            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-              <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
+              <div className="bg-white px-6 pt-5 pb-4 sm:p-6 sm:pb-4">
                 <div className="sm:flex sm:items-start">
                   <div className="mt-3 text-center sm:mt-0 sm:text-left w-full">
-                    <h3 className="text-lg leading-6 font-medium text-gray-900">
+                    <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">
                       {isAddModalOpen ? 'Add Course' : 'Edit Course'}
                     </h3>
                     <div className="mt-4">
-                      <form onSubmit={async (e) => {
-                        e.preventDefault();
-                        if (isAddModalOpen) {
-                          await handleAdd();
-                        } else {
-                          await handleEdit();
-                        }
-                      }} className="space-y-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700">Title</label>
-                          <input
-                            name="title"
-                            value={form.title}
-                            onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
-                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                            required
-                          />
+                      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                        <div className="grid grid-cols-2 gap-6">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">Title</label>
+                            <input
+                              {...register('title', { 
+                                required: 'Title is required',
+                                minLength: { value: 3, message: 'Title must be at least 3 characters' }
+                              })}
+                              className={`mt-1 block w-full border ${errors.title ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
+                            />
+                            {errors.title && (
+                              <p className="mt-1 text-sm text-red-600">{errors.title.message}</p>
+                            )}
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">Code</label>
+                            <input
+                              {...register('code', { 
+                                required: 'Course code is required',
+                                pattern: { 
+                                  value: /^[A-Z0-9]+$/,
+                                  message: 'Code must be uppercase letters and numbers only'
+                                }
+                              })}
+                              className={`mt-1 block w-full border ${errors.code ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
+                            />
+                            {errors.code && (
+                              <p className="mt-1 text-sm text-red-600">{errors.code.message}</p>
+                            )}
+                          </div>
                         </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700">Code</label>
-                          <input
-                            name="code"
-                            value={form.code}
-                            onChange={e => setForm(f => ({ ...f, code: e.target.value }))}
-                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                            required
-                          />
+                        <div className="grid grid-cols-2 gap-6">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">Program</label>
+                            <Controller
+                              name="program"
+                              control={control}
+                              rules={{ required: 'Program is required' }}
+                              render={({ field }) => (
+                                <Select
+                                  {...field}
+                                  options={programOptions}
+                                  className="mt-1"
+                                  classNamePrefix="select"
+                                  placeholder="Select Program"
+                                  isClearable
+                                  isSearchable
+                                  value={programOptions.find(opt => opt.value === field.value) || null}
+                                  onChange={(option) => field.onChange(option?.value || '')}
+                                  styles={{
+                                    control: (baseStyles, state) => ({
+                                      ...baseStyles,
+                                      borderColor: errors.program ? '#EF4444' : state.isFocused ? '#3B82F6' : '#D1D5DB',
+                                      boxShadow: state.isFocused ? '0 0 0 1px #3B82F6' : 'none',
+                                      '&:hover': {
+                                        borderColor: state.isFocused ? '#3B82F6' : '#9CA3AF'
+                                      }
+                                    }),
+                                    placeholder: (baseStyles) => ({
+                                      ...baseStyles,
+                                      color: '#6B7280'
+                                    })
+                                  }}
+                                />
+                              )}
+                            />
+                            {errors.program && (
+                              <p className="mt-1 text-sm text-red-600">{errors.program.message}</p>
+                            )}
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">Department</label>
+                            <Controller
+                              name="department"
+                              control={control}
+                              rules={{ required: 'Department is required' }}
+                              render={({ field }) => (
+                                <Select
+                                  {...field}
+                                  options={departments}
+                                  className="mt-1"
+                                  classNamePrefix="select"
+                                  placeholder={isDepartmentsLoading ? "Loading departments..." : "Select Department"}
+                                  isClearable
+                                  isLoading={isDepartmentsLoading}
+                                  value={departments.find(dept => dept.value === field.value) || null}
+                                  onChange={(option) => field.onChange(option?.value || '')}
+                                  styles={{
+                                    control: (baseStyles, state) => ({
+                                      ...baseStyles,
+                                      borderColor: errors.department ? '#EF4444' : state.isFocused ? '#3B82F6' : '#D1D5DB',
+                                      boxShadow: state.isFocused ? '0 0 0 1px #3B82F6' : 'none',
+                                      '&:hover': {
+                                        borderColor: state.isFocused ? '#3B82F6' : '#9CA3AF'
+                                      }
+                                    }),
+                                    placeholder: (baseStyles) => ({
+                                      ...baseStyles,
+                                      color: '#6B7280'
+                                    })
+                                  }}
+                                />
+                              )}
+                            />
+                            {errors.department && (
+                              <p className="mt-1 text-sm text-red-600">{errors.department.message}</p>
+                            )}
+                          </div>
                         </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700">Program</label>
-                          <select
-                            name="program"
-                            value={form.program}
-                            onChange={e => setForm(f => ({ ...f, program: e.target.value }))}
-                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                            required
-                          >
-                            <option value="">Select Program</option>
-                            {programs.map(p => (
-                              <option key={p._id} value={p._id}>{p.name}</option>
-                            ))}
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700">Department</label>
-                          <select
-                            name="department"
-                            value={form.department}
-                            onChange={e => setForm(f => ({ ...f, department: e.target.value }))}
-                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                            required
-                          >
-                            <option value="">Select Department</option>
-                            {departments.map(d => (
-                              <option key={d._id} value={d._id}>{d.name}</option>
-                            ))}
-                          </select>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-3 gap-6">
                           <div>
                             <label className="block text-sm font-medium text-gray-700">Semester</label>
                             <input
-                              name="semester"
                               type="number"
-                              min={1}
-                              max={12}
-                              value={form.semester}
-                              onChange={e => setForm(f => ({ ...f, semester: Number(e.target.value) }))}
-                              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                              required
+                              {...register('semester', { 
+                                required: 'Semester is required',
+                                min: { value: 1, message: 'Minimum semester is 1' },
+                                max: { value: 12, message: 'Maximum semester is 12' }
+                              })}
+                              className={`mt-1 block w-full border ${errors.semester ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
                             />
+                            {errors.semester && (
+                              <p className="mt-1 text-sm text-red-600">{errors.semester.message}</p>
+                            )}
                           </div>
                           <div>
                             <label className="block text-sm font-medium text-gray-700">Term</label>
                             <select
-                              name="semesterTerm"
-                              value={form.semesterTerm}
-                              onChange={e => setForm(f => ({ ...f, semesterTerm: e.target.value as Course['semesterTerm'] }))}
-                              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                              required
+                              {...register('semesterTerm', { required: 'Term is required' })}
+                              className={`mt-1 block w-full border ${errors.semesterTerm ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
                             >
                               <option value="">Select Term</option>
                               <option value="Fall">Fall</option>
@@ -535,76 +639,109 @@ const AdminCourses: React.FC = () => {
                               <option value="Summer">Summer</option>
                               <option value="Winter">Winter</option>
                             </select>
+                            {errors.semesterTerm && (
+                              <p className="mt-1 text-sm text-red-600">{errors.semesterTerm.message}</p>
+                            )}
                           </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
                           <div>
                             <label className="block text-sm font-medium text-gray-700">Year</label>
                             <input
-                              name="year"
                               type="number"
-                              min={2020}
-                              max={2030}
-                              value={form.year}
-                              onChange={e => setForm(f => ({ ...f, year: Number(e.target.value) }))}
-                              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                              required
+                              {...register('year', { 
+                                required: 'Year is required',
+                                min: { value: 2020, message: 'Year must be 2020 or later' },
+                                max: { value: 2030, message: 'Year must be 2030 or earlier' }
+                              })}
+                              className={`mt-1 block w-full border ${errors.year ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
                             />
+                            {errors.year && (
+                              <p className="mt-1 text-sm text-red-600">{errors.year.message}</p>
+                            )}
                           </div>
+                        </div>
+                        <div className="grid grid-cols-3 gap-6">
                           <div>
                             <label className="block text-sm font-medium text-gray-700">Credit Hours</label>
                             <input
-                              name="creditHours"
                               type="number"
-                              min={1}
-                              max={6}
-                              value={form.creditHours}
-                              onChange={e => setForm(f => ({ ...f, creditHours: Number(e.target.value) }))}
-                              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                              required
+                              {...register('creditHours', { 
+                                required: 'Credit hours is required',
+                                min: { value: 1, message: 'Minimum credit hours is 1' },
+                                max: { value: 6, message: 'Maximum credit hours is 6' }
+                              })}
+                              className={`mt-1 block w-full border ${errors.creditHours ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
                             />
+                            {errors.creditHours && (
+                              <p className="mt-1 text-sm text-red-600">{errors.creditHours.message}</p>
+                            )}
                           </div>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700">Max Students</label>
-                          <input
-                            name="maxStudents"
-                            type="number"
-                            min={1}
-                            max={200}
-                            value={form.maxStudents}
-                            onChange={e => setForm(f => ({ ...f, maxStudents: Number(e.target.value) }))}
-                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                            required
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700">Instructor</label>
-                          <select
-                            name="faculty"
-                            value={form.faculty}
-                            onChange={e => setForm(f => ({ ...f, faculty: e.target.value }))}
-                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                            required
-                          >
-                            <option value="">Select Instructor</option>
-                            {instructors.map(f => (
-                              <option key={f._id} value={f._id}>
-                                {f.fullName || f.displayName || f.name || (f.firstName ? f.firstName + ' ' + (f.lastName || '') : f.email)}
-                              </option>
-                            ))}
-                          </select>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">Max Students</label>
+                            <input
+                              type="number"
+                              {...register('maxStudents', { 
+                                required: 'Maximum students is required',
+                                min: { value: 1, message: 'Minimum students is 1' },
+                                max: { value: 200, message: 'Maximum students is 200' }
+                              })}
+                              className={`mt-1 block w-full border ${errors.maxStudents ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
+                            />
+                            {errors.maxStudents && (
+                              <p className="mt-1 text-sm text-red-600">{errors.maxStudents.message}</p>
+                            )}
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">Instructor</label>
+                            <Controller
+                              name="faculty"
+                              control={control}
+                              rules={{ required: 'Instructor is required' }}
+                              render={({ field }) => (
+                                <Select
+                                  {...field}
+                                  options={instructorOptions}
+                                  className="mt-1"
+                                  classNamePrefix="select"
+                                  placeholder="Select Instructor"
+                                  isClearable
+                                  isSearchable
+                                  value={instructorOptions.find(opt => opt.value === field.value) || null}
+                                  onChange={(option) => field.onChange(option?.value || '')}
+                                  styles={{
+                                    control: (baseStyles, state) => ({
+                                      ...baseStyles,
+                                      borderColor: errors.faculty ? '#EF4444' : state.isFocused ? '#3B82F6' : '#D1D5DB',
+                                      boxShadow: state.isFocused ? '0 0 0 1px #3B82F6' : 'none',
+                                      '&:hover': {
+                                        borderColor: state.isFocused ? '#3B82F6' : '#9CA3AF'
+                                      }
+                                    }),
+                                    placeholder: (baseStyles) => ({
+                                      ...baseStyles,
+                                      color: '#6B7280'
+                                    })
+                                  }}
+                                />
+                              )}
+                            />
+                            {errors.faculty && (
+                              <p className="mt-1 text-sm text-red-600">{errors.faculty.message}</p>
+                            )}
+                          </div>
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-gray-700">Description</label>
                           <textarea
-                            name="description"
-                            value={form.description}
-                            onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+                            {...register('description', { 
+                              required: 'Description is required',
+                              minLength: { value: 10, message: 'Description must be at least 10 characters' }
+                            })}
                             rows={3}
-                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                            required
+                            className={`mt-1 block w-full border ${errors.description ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
                           />
+                          {errors.description && (
+                            <p className="mt-1 text-sm text-red-600">{errors.description.message}</p>
+                          )}
                         </div>
                         <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
                           <button
@@ -615,24 +752,7 @@ const AdminCourses: React.FC = () => {
                           </button>
                           <button
                             type="button"
-                            onClick={() => {
-                              setIsAddModalOpen(false);
-                              setIsEditModalOpen(false);
-                              setEditingCourse(null);
-                              setForm({
-                                title: '',
-                                code: '',
-                                program: '',
-                                department: '',
-                                semester: 1,
-                                semesterTerm: 'Fall',
-                                year: new Date().getFullYear(),
-                                creditHours: 3,
-                                maxStudents: 30,
-                                faculty: '',
-                                description: '',
-                              });
-                            }}
+                            onClick={closeModal}
                             className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:w-auto sm:text-sm"
                           >
                             Cancel
