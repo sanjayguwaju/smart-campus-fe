@@ -8,15 +8,31 @@ import {
   ResetPasswordResponse
 } from '../types/users';
 
-export async function getUsers(params?: { role?: string, page?: number, limit?: number }): Promise<UsersResponse> {
+export async function getUsers(params?: { 
+  role?: string, 
+  page?: number, 
+  limit?: number,
+  search?: string,
+  status?: string,
+  department?: string,
+  isEmailVerified?: string,
+  dateRange?: string
+}): Promise<UsersResponse> {
   let url = '/users';
   const query: string[] = [];
+  
   if (params?.role) query.push(`role=${params.role}`);
   if (params?.page) query.push(`page=${params.page}`);
   if (params?.limit) query.push(`limit=${params.limit}`);
+  if (params?.search) query.push(`search=${encodeURIComponent(params.search)}`);
+  if (params?.status) query.push(`status=${params.status}`);
+  if (params?.department) query.push(`department=${encodeURIComponent(params.department)}`);
+  if (params?.isEmailVerified) query.push(`isEmailVerified=${params.isEmailVerified}`);
+  if (params?.dateRange) query.push(`dateRange=${params.dateRange}`);
+  
   if (query.length) url += `?${query.join('&')}`;
   const response = await apiClient.get<UsersResponse>(url);
-  return response.data;
+  return response.data.data;
 }
 
 export const userService = {
