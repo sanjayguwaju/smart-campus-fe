@@ -1,12 +1,33 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient, UseQueryOptions } from '@tanstack/react-query';
 import { userService } from '../services/userService';
-import { CreateUserRequest, UpdateUserRequest } from '../types/users';
+import { CreateUserRequest, UpdateUserRequest, UsersResponse } from '../types/users';
 
-export const useUsers = (page = 1, limit = 10) => {
+export const useUsers = (
+  page = 1, 
+  limit = 10, 
+  search?: string,
+  role?: string,
+  status?: string,
+  department?: string,
+  isEmailVerified?: string,
+  dateRange?: string,
+  options?: Partial<UseQueryOptions<UsersResponse, Error, UsersResponse, readonly (string | number | undefined)[]>>
+) => {
   return useQuery({
-    queryKey: ['users', page, limit],
-    queryFn: () => userService.getUsers(page, limit),
-    select: (data) => data.data,
+    queryKey: ['users', page, limit, search, role, status, department, isEmailVerified, dateRange],
+    queryFn: () => userService.getUsers({ 
+      page, 
+      limit, 
+      search, 
+      role, 
+      status, 
+      department, 
+      isEmailVerified, 
+      dateRange 
+    }),
+    select: (data) => data,
+    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
+    ...options,
   });
 };
 
