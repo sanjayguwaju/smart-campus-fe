@@ -60,15 +60,6 @@ const Events: React.FC = () => {
     status: statusFilter,
   });
 
-  // Debug logging
-  console.log('Events component state:', {
-    isLoading,
-    error,
-    eventsData,
-    events: eventsData?.data?.events,
-    eventsCount: eventsData?.data?.events?.length
-  });
-
   const publishEventMutation = usePublishEvent();
   const unpublishEventMutation = useUnpublishEvent();
   const { user: currentUser } = useAuthStore();
@@ -191,13 +182,6 @@ const Events: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Debug info - remove this later */}
-      <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-md">
-        <p className="text-sm text-yellow-800">
-          Debug: Loading: {isLoading.toString()}, Error: {error ? String(error) : 'none'}, Events count: {events.length}
-        </p>
-      </div>
-
       {/* Page header */}
       <div className="flex justify-between items-center">
         <div>
@@ -404,257 +388,253 @@ const Events: React.FC = () => {
           ))
         )}
       </div>
-    </div>
 
-      {/* Pagination */ }
-  {
-    pagination && pagination.pages > 1 && (
-      <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200">
-        <div className="flex-1 flex justify-between sm:hidden">
-          <button
-            onClick={() => setCurrentPage(currentPage - 1)}
-            disabled={currentPage === 1}
-            className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Previous
-          </button>
-          <button
-            onClick={() => setCurrentPage(currentPage + 1)}
-            disabled={currentPage === pagination.pages}
-            className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Next
-          </button>
-        </div>
-        <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-          <div>
-            <p className="text-sm text-gray-700">
-              Showing{" "}
-              <span className="font-medium">
-                {(currentPage - 1) * pagination.limit + 1}
-              </span>{" "}
-              to{" "}
-              <span className="font-medium">
-                {Math.min(currentPage * pagination.limit, pagination.total)}
-              </span>{" "}
-              of <span className="font-medium">{pagination.total}</span>{" "}
-              results
-            </p>
+      {/* Pagination */}
+      {pagination && pagination.pages > 1 && (
+        <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200">
+          <div className="flex-1 flex justify-between sm:hidden">
+            <button
+              onClick={() => setCurrentPage(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Previous
+            </button>
+            <button
+              onClick={() => setCurrentPage(currentPage + 1)}
+              disabled={currentPage === pagination.pages}
+              className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Next
+            </button>
           </div>
-          <div>
-            <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
-              <button
-                onClick={() => setCurrentPage(currentPage - 1)}
-                disabled={currentPage === 1}
-                className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              {Array.from({ length: pagination.pages }, (_, i) => i + 1).map(
-                (page) => (
-                  <button
-                    key={page}
-                    onClick={() => setCurrentPage(page)}
-                    className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${page === currentPage
-                      ? "z-10 bg-blue-50 border-blue-500 text-blue-600"
-                      : "bg-white border-gray-300 text-gray-500 hover:bg-gray-50"
-                      }`}
-                  >
-                    {page}
-                  </button>
-                )
-              )}
-              <button
-                onClick={() => setCurrentPage(currentPage + 1)}
-                disabled={currentPage === pagination.pages}
-                className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </nav>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  {/* View Event Modal */ }
-  {
-    viewedEvent && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl p-8 relative overflow-y-auto max-h-[90vh]">
-          <button
-            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
-            onClick={() => setViewedEvent(null)}
-            aria-label="Close"
-          >
-            <X className="h-6 w-6" />
-          </button>
-          <h2 className="text-2xl font-bold mb-2">{viewedEvent.title}</h2>
-          <p className="text-gray-600 mb-4">{viewedEvent.description}</p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
             <div>
-              <div className="mb-2">
-                <span className="font-semibold">Type:</span>{" "}
-                {viewedEvent.eventType}
-              </div>
-              <div className="mb-2">
-                <span className="font-semibold">Category:</span>{" "}
-                {viewedEvent.category}
-              </div>
-              <div className="mb-2">
-                <span className="font-semibold">Status:</span>{" "}
-                <span
-                  className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeColor(
-                    viewedEvent.status
-                  )} border border-gray-200`}
+              <p className="text-sm text-gray-700">
+                Showing{" "}
+                <span className="font-medium">
+                  {(currentPage - 1) * pagination.limit + 1}
+                </span>{" "}
+                to{" "}
+                <span className="font-medium">
+                  {Math.min(currentPage * pagination.limit, pagination.total)}
+                </span>{" "}
+                of <span className="font-medium">{pagination.total}</span>{" "}
+                results
+              </p>
+            </div>
+            <div>
+              <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+                <button
+                  onClick={() => setCurrentPage(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {viewedEvent.status}
-                </span>
-              </div>
-              <div className="mb-2 flex items-center">
-                <Calendar className="h-4 w-4 mr-2" />{" "}
-                <span>
-                  <span className="font-semibold">Start:</span>{" "}
-                  {formatDate(viewedEvent.startDate)}{" "}
-                  {formatTime(viewedEvent.startTime)}
-                </span>
-              </div>
-              <div className="mb-2 flex items-center">
-                <Calendar className="h-4 w-4 mr-2" />{" "}
-                <span>
-                  <span className="font-semibold">End:</span>{" "}
-                  {formatDate(viewedEvent.endDate)}{" "}
-                  {formatTime(viewedEvent.endTime)}
-                </span>
-              </div>
-              <div className="mb-2 flex items-center">
-                <MapPin className="h-4 w-4 mr-2" />{" "}
-                <span>
-                  {[
-                    viewedEvent.location.venue,
-                    viewedEvent.location.room,
-                    viewedEvent.location.building,
-                    viewedEvent.location.campus,
-                  ]
-                    .filter(Boolean)
-                    .join(", ")}
-                </span>
-              </div>
-            </div>
-            <div>
-              <div className="mb-2">
-                <span className="font-semibold">Organizer:</span>{" "}
-                {viewedEvent.organizer?.fullName ||
-                  viewedEvent.organizer?.email ||
-                  "Unknown"}
-              </div>
-              {viewedEvent.coOrganizers &&
-                viewedEvent.coOrganizers.length > 0 && (
-                  <div className="mb-2">
-                    <span className="font-semibold">Co-Organizers:</span>
-                    <ul className="list-disc list-inside ml-2">
-                      {viewedEvent.coOrganizers.map((co, idx) => (
-                        <li key={co._id || idx}>{co.fullName || co.email}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              <div className="mb-2 flex items-center">
-                <Users className="h-4 w-4 mr-2" />{" "}
-                <span>
-                  {viewedEvent.currentAttendees} /{" "}
-                  {viewedEvent.maxAttendees || "∞"} attendees
-                </span>
-              </div>
-              <div className="mb-2">
-                <span className="font-semibold">Registration:</span>{" "}
-                {viewedEvent.isRegistrationRequired
-                  ? viewedEvent.isRegistrationOpen
-                    ? "Open"
-                    : "Closed"
-                  : "Not required"}
-              </div>
-              {viewedEvent.registrationDeadline && (
-                <div className="mb-2">
-                  <span className="font-semibold">
-                    Registration Deadline:
-                  </span>{" "}
-                  {formatDate(viewedEvent.registrationDeadline)}
-                </div>
-              )}
-            </div>
-          </div>
-          {viewedEvent.tags && viewedEvent.tags.length > 0 && (
-            <div className="mb-4">
-              <span className="font-semibold">Tags:</span>
-              <div className="flex flex-wrap gap-2 mt-1">
-                {viewedEvent.tags.map((tag, idx) => (
-                  <span
-                    key={idx}
-                    className="px-2 py-1 bg-gray-100 rounded text-xs text-gray-700"
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-          {viewedEvent.attachments && viewedEvent.attachments.length > 0 && (
-            <div className="mb-4">
-              <span className="font-semibold">Attachments:</span>
-              <ul className="list-disc list-inside ml-2">
-                {viewedEvent.attachments.map((att, idx) => (
-                  <li key={att.url || idx}>
-                    <a
-                      href={att.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 underline"
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                {Array.from({ length: pagination.pages }, (_, i) => i + 1).map(
+                  (page) => (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${page === currentPage
+                        ? "z-10 bg-blue-50 border-blue-500 text-blue-600"
+                        : "bg-white border-gray-300 text-gray-500 hover:bg-gray-50"
+                        }`}
                     >
-                      {att.name || att.url}
-                    </a>
-                  </li>
-                ))}
-              </ul>
+                      {page}
+                    </button>
+                  )
+                )}
+                <button
+                  onClick={() => setCurrentPage(currentPage + 1)}
+                  disabled={currentPage === pagination.pages}
+                  className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </nav>
             </div>
-          )}
-          {viewedEvent.contactInfo && (
-            <div className="mb-4">
-              <span className="font-semibold">Contact Info:</span>
-              <div className="ml-2">
-                {viewedEvent.contactInfo.email && (
-                  <div>Email: {viewedEvent.contactInfo.email}</div>
-                )}
-                {viewedEvent.contactInfo.phone && (
-                  <div>Phone: {viewedEvent.contactInfo.phone}</div>
-                )}
-                {viewedEvent.contactInfo.website && (
-                  <div>
-                    Website:{" "}
-                    <a
-                      href={viewedEvent.contactInfo.website}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 underline"
-                    >
-                      {viewedEvent.contactInfo.website}
-                    </a>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-          <div className="text-xs text-gray-400 mt-4">
-            Created at: {formatDate(viewedEvent.createdAt)} | Updated at:{" "}
-            {formatDate(viewedEvent.updatedAt)}
           </div>
         </div>
-      </div>
-    )
-  }
+      )}
 
-  {/* Modals */ }
+      {/* View Event Modal */}
+      {viewedEvent && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl p-8 relative overflow-y-auto max-h-[90vh]">
+            <button
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+              onClick={() => setViewedEvent(null)}
+              aria-label="Close"
+            >
+              <X className="h-6 w-6" />
+            </button>
+            <h2 className="text-2xl font-bold mb-2">{viewedEvent.title}</h2>
+            <p className="text-gray-600 mb-4">{viewedEvent.description}</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <div className="mb-2">
+                  <span className="font-semibold">Type:</span>{" "}
+                  {viewedEvent.eventType}
+                </div>
+                <div className="mb-2">
+                  <span className="font-semibold">Category:</span>{" "}
+                  {viewedEvent.category}
+                </div>
+                <div className="mb-2">
+                  <span className="font-semibold">Status:</span>{" "}
+                  <span
+                    className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeColor(
+                      viewedEvent.status
+                    )} border border-gray-200`}
+                  >
+                    {viewedEvent.status}
+                  </span>
+                </div>
+                <div className="mb-2 flex items-center">
+                  <Calendar className="h-4 w-4 mr-2" />{" "}
+                  <span>
+                    <span className="font-semibold">Start:</span>{" "}
+                    {formatDate(viewedEvent.startDate)}{" "}
+                    {formatTime(viewedEvent.startTime)}
+                  </span>
+                </div>
+                <div className="mb-2 flex items-center">
+                  <Calendar className="h-4 w-4 mr-2" />{" "}
+                  <span>
+                    <span className="font-semibold">End:</span>{" "}
+                    {formatDate(viewedEvent.endDate)}{" "}
+                    {formatTime(viewedEvent.endTime)}
+                  </span>
+                </div>
+                <div className="mb-2 flex items-center">
+                  <MapPin className="h-4 w-4 mr-2" />{" "}
+                  <span>
+                    {[
+                      viewedEvent.location.venue,
+                      viewedEvent.location.room,
+                      viewedEvent.location.building,
+                      viewedEvent.location.campus,
+                    ]
+                      .filter(Boolean)
+                      .join(", ")}
+                  </span>
+                </div>
+              </div>
+              <div>
+                <div className="mb-2">
+                  <span className="font-semibold">Organizer:</span>{" "}
+                  {viewedEvent.organizer?.fullName ||
+                    viewedEvent.organizer?.email ||
+                    "Unknown"}
+                </div>
+                {viewedEvent.coOrganizers &&
+                  viewedEvent.coOrganizers.length > 0 && (
+                    <div className="mb-2">
+                      <span className="font-semibold">Co-Organizers:</span>
+                      <ul className="list-disc list-inside ml-2">
+                        {viewedEvent.coOrganizers.map((co, idx) => (
+                          <li key={co._id || idx}>{co.fullName || co.email}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                <div className="mb-2 flex items-center">
+                  <Users className="h-4 w-4 mr-2" />{" "}
+                  <span>
+                    {viewedEvent.currentAttendees} /{" "}
+                    {viewedEvent.maxAttendees || "∞"} attendees
+                  </span>
+                </div>
+                <div className="mb-2">
+                  <span className="font-semibold">Registration:</span>{" "}
+                  {viewedEvent.isRegistrationRequired
+                    ? viewedEvent.isRegistrationOpen
+                      ? "Open"
+                      : "Closed"
+                    : "Not required"}
+                </div>
+                {viewedEvent.registrationDeadline && (
+                  <div className="mb-2">
+                    <span className="font-semibold">
+                      Registration Deadline:
+                    </span>{" "}
+                    {formatDate(viewedEvent.registrationDeadline)}
+                  </div>
+                )}
+              </div>
+            </div>
+            {viewedEvent.tags && viewedEvent.tags.length > 0 && (
+              <div className="mb-4">
+                <span className="font-semibold">Tags:</span>
+                <div className="flex flex-wrap gap-2 mt-1">
+                  {viewedEvent.tags.map((tag, idx) => (
+                    <span
+                      key={idx}
+                      className="px-2 py-1 bg-gray-100 rounded text-xs text-gray-700"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+            {viewedEvent.attachments && viewedEvent.attachments.length > 0 && (
+              <div className="mb-4">
+                <span className="font-semibold">Attachments:</span>
+                <ul className="list-disc list-inside ml-2">
+                  {viewedEvent.attachments.map((att, idx) => (
+                    <li key={att.url || idx}>
+                      <a
+                        href={att.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 underline"
+                      >
+                        {att.name || att.url}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {viewedEvent.contactInfo && (
+              <div className="mb-4">
+                <span className="font-semibold">Contact Info:</span>
+                <div className="ml-2">
+                  {viewedEvent.contactInfo.email && (
+                    <div>Email: {viewedEvent.contactInfo.email}</div>
+                  )}
+                  {viewedEvent.contactInfo.phone && (
+                    <div>Phone: {viewedEvent.contactInfo.phone}</div>
+                  )}
+                  {viewedEvent.contactInfo.website && (
+                    <div>
+                      Website:{" "}
+                      <a
+                        href={viewedEvent.contactInfo.website}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 underline"
+                      >
+                        {viewedEvent.contactInfo.website}
+                      </a>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+            <div className="text-xs text-gray-400 mt-4">
+              Created at: {formatDate(viewedEvent.createdAt)} | Updated at:{" "}
+              {formatDate(viewedEvent.updatedAt)}
+            </div>
+          </div>
+        </div>
+      )
+      }
+
+      {/* Modals */}
       <AddEventModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
@@ -672,7 +652,7 @@ const Events: React.FC = () => {
         eventId={deletingEvent?.id || ""}
         eventTitle={deletingEvent?.title || ""}
       />
-    </div >
+    </div>
   );
 };
 

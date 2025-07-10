@@ -47,13 +47,13 @@ const Events: React.FC = () => {
       toast.error('Please login to RSVP for events');
       return;
     }
-    
+
     // Prevent admin and faculty from registering for events
     if (user.role === 'admin' || user.role === 'faculty') {
       toast.error('Admin and faculty members cannot register for events');
       return;
     }
-    
+
     registerForEvent.mutate(eventId);
   };
 
@@ -119,7 +119,7 @@ const Events: React.FC = () => {
             Campus Events
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-            Discover exciting events, workshops, and activities happening on our smart campus. 
+            Discover exciting events, workshops, and activities happening on our smart campus.
             Join the community and enhance your learning experience.
           </p>
         </motion.div>
@@ -319,23 +319,22 @@ const Events: React.FC = () => {
                         (event.maxAttendees ? event.currentAttendees >= event.maxAttendees : false) ||
                         (user ? (user.role === 'admin' || user.role === 'faculty') : false)
                       }
-                      className={`px-6 py-2 rounded-lg font-semibold transition-colors duration-200 ${
-                        user && event.attendees.some(attendee => attendee.user._id === user.id)
+                      className={`px-6 py-2 rounded-lg font-semibold transition-colors duration-200 ${user && event.attendees.some(attendee => attendee.user && attendee.user._id === user.id)
                           ? 'bg-green-600 text-white hover:bg-green-700'
                           : event.maxAttendees && event.currentAttendees >= event.maxAttendees
-                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                          : user && (user.role === 'admin' || user.role === 'faculty')
-                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                          : 'bg-blue-600 text-white hover:bg-blue-700'
-                      }`}
+                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                            : user && (user.role === 'admin' || user.role === 'faculty')
+                              ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                              : 'bg-blue-600 text-white hover:bg-blue-700'
+                        }`}
                     >
-                      {user && event.attendees.some(attendee => attendee.user._id === user.id)
+                      {user && event.attendees.some(attendee => attendee.user && attendee.user._id === user.id)
                         ? 'Registered'
                         : event.maxAttendees && event.currentAttendees >= event.maxAttendees
-                        ? 'Full'
-                        : user && (user.role === 'admin' || user.role === 'faculty')
-                        ? 'Not Available'
-                        : 'RSVP'
+                          ? 'Full'
+                          : user && (user.role === 'admin' || user.role === 'faculty')
+                            ? 'Not Available'
+                            : 'RSVP'
                       }
                     </button>
                   </div>
@@ -371,7 +370,7 @@ const Events: React.FC = () => {
             Want to organize an event?
           </h2>
           <p className="text-blue-100 mb-6 max-w-2xl mx-auto">
-            Share your ideas and create memorable experiences for the campus community. 
+            Share your ideas and create memorable experiences for the campus community.
             Contact our events team to get started.
           </p>
           <button className="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-blue-50 transition-colors duration-200">
