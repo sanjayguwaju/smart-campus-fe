@@ -48,13 +48,13 @@ const Events: React.FC = () => {
       toast.error('Please login to RSVP for events');
       return;
     }
-    
+
     // Prevent admin and faculty from registering for events
     if (user.role === 'admin' || user.role === 'faculty') {
       toast.error('Admin and faculty members cannot register for events');
       return;
     }
-    
+
     registerForEvent.mutate(eventId);
   };
 
@@ -82,26 +82,26 @@ const Events: React.FC = () => {
     // First try to get the primary image from the images array
     const primaryImage = event.images?.find(img => img.isPrimary)?.url;
     if (primaryImage) return primaryImage;
-    
+
     // Fallback to first image in array
     if (event.images && event.images.length > 0) {
       return event.images[0].url;
     }
-    
+
     // Fallback to legacy imageUrl
     if (event.imageUrl) return event.imageUrl;
-    
+
     // Final fallback to default image
     return 'https://images.pexels.com/photos/1595391/pexels-photo-1595391.jpeg?auto=compress&cs=tinysrgb&w=800';
   };
 
   const getCurrentEventImage = (event: Event) => {
     const currentIndex = activeImageIndex[event._id] || 0;
-    
+
     if (event.images && event.images.length > 0) {
       return event.images[currentIndex]?.url || getEventImage(event);
     }
-    
+
     return getEventImage(event);
   };
 
@@ -154,7 +154,7 @@ const Events: React.FC = () => {
             Campus Events
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-            Discover exciting events, workshops, and activities happening on our smart campus. 
+            Discover exciting events, workshops, and activities happening on our smart campus.
             Join the community and enhance your learning experience.
           </p>
         </motion.div>
@@ -290,14 +290,14 @@ const Events: React.FC = () => {
                           target.src = 'https://images.pexels.com/photos/1595391/pexels-photo-1595391.jpeg?auto=compress&cs=tinysrgb&w=800';
                         }}
                       />
-                      
+
                       {/* Image Counter Badge */}
                       {event.images.length > 1 && (
                         <div className="absolute top-4 right-4 bg-black bg-opacity-70 text-white px-2 py-1 rounded-full text-xs font-semibold">
                           {(activeImageIndex[event._id] || 0) + 1} / {event.images.length}
                         </div>
                       )}
-                      
+
                       {/* Navigation Arrows */}
                       {event.images && event.images.length > 1 && (
                         <>
@@ -325,7 +325,7 @@ const Events: React.FC = () => {
                           </button>
                         </>
                       )}
-                      
+
                       {/* Image Navigation Dots */}
                       {event.images && event.images.length > 1 && (
                         <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-1">
@@ -336,9 +336,8 @@ const Events: React.FC = () => {
                                 e.stopPropagation();
                                 handleImageChange(event._id, index, event.images!.length);
                               }}
-                              className={`w-2 h-2 rounded-full transition-all duration-200 ${
-                                index === (activeImageIndex[event._id] || 0) ? 'bg-white' : 'bg-white bg-opacity-50 hover:bg-opacity-75'
-                              }`}
+                              className={`w-2 h-2 rounded-full transition-all duration-200 ${index === (activeImageIndex[event._id] || 0) ? 'bg-white' : 'bg-white bg-opacity-50 hover:bg-opacity-75'
+                                }`}
                             />
                           ))}
                         </div>
@@ -355,7 +354,7 @@ const Events: React.FC = () => {
                       }}
                     />
                   )}
-                  
+
                   <div className="absolute top-4 left-4">
                     <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getCategoryColor(event.eventType)}`}>
                       {event.eventType.charAt(0).toUpperCase() + event.eventType.slice(1)}
@@ -427,23 +426,22 @@ const Events: React.FC = () => {
                         (event.maxAttendees ? event.currentAttendees >= event.maxAttendees : false) ||
                         (user ? (user.role === 'admin' || user.role === 'faculty') : false)
                       }
-                      className={`px-6 py-2 rounded-lg font-semibold transition-colors duration-200 ${
-                        user && event.attendees.some(attendee => attendee.user._id === user.id)
+                      className={`px-6 py-2 rounded-lg font-semibold transition-colors duration-200 ${user && event.attendees.some(attendee => attendee.user && attendee.user._id === user.id)
                           ? 'bg-green-600 text-white hover:bg-green-700'
                           : event.maxAttendees && event.currentAttendees >= event.maxAttendees
-                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                          : user && (user.role === 'admin' || user.role === 'faculty')
-                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                          : 'bg-blue-600 text-white hover:bg-blue-700'
-                      }`}
+                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                            : user && (user.role === 'admin' || user.role === 'faculty')
+                              ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                              : 'bg-blue-600 text-white hover:bg-blue-700'
+                        }`}
                     >
-                      {user && event.attendees.some(attendee => attendee.user._id === user.id)
+                      {user && event.attendees.some(attendee => attendee.user && attendee.user._id === user.id)
                         ? 'Registered'
                         : event.maxAttendees && event.currentAttendees >= event.maxAttendees
-                        ? 'Full'
-                        : user && (user.role === 'admin' || user.role === 'faculty')
-                        ? 'Not Available'
-                        : 'RSVP'
+                          ? 'Full'
+                          : user && (user.role === 'admin' || user.role === 'faculty')
+                            ? 'Not Available'
+                            : 'RSVP'
                       }
                     </button>
                   </div>
@@ -479,7 +477,7 @@ const Events: React.FC = () => {
             Want to organize an event?
           </h2>
           <p className="text-blue-100 mb-6 max-w-2xl mx-auto">
-            Share your ideas and create memorable experiences for the campus community. 
+            Share your ideas and create memorable experiences for the campus community.
             Contact our events team to get started.
           </p>
           <button className="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-blue-50 transition-colors duration-200">
