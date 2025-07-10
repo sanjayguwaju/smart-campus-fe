@@ -1,28 +1,12 @@
-import React, { useState, useEffect } from "react";
-import {
-  Search,
-  Plus,
-  Edit,
-  Trash2,
-  ChevronLeft,
-  ChevronRight,
-  Calendar,
-  MapPin,
-  Users,
-  Eye,
-  X,
-} from "lucide-react";
-import { toast } from "react-hot-toast";
-import {
-  useEvents,
-  usePublishEvent,
-  useUnpublishEvent,
-} from "../../api/hooks/useEvents";
-import { Event } from "../../api/types/events";
-import AddEventModal from "../../components/Admin/AddEventModal";
-import EditEventModal from "../../components/Admin/EditEventModal";
-import DeleteEventModal from "../../components/Admin/DeleteEventModal";
-import LoadingSpinner from "../../components/Layout/LoadingSpinner";
+import React, { useState, useEffect } from 'react';
+import { Search, Plus, Edit, Trash2, ChevronLeft, ChevronRight, Calendar, MapPin, Users, Eye, X } from 'lucide-react';
+import { toast } from 'react-hot-toast';
+import { useEvents, usePublishEvent, useUnpublishEvent } from '../../api/hooks/useEvents';
+import { Event } from '../../api/types/events';
+import AddEventModal from '../../components/Admin/AddEventModal';
+import EditEventModal from '../../components/Admin/EditEventModal';
+import DeleteEventModal from '../../components/Admin/DeleteEventModal';
+import LoadingSpinner from '../../components/Layout/LoadingSpinner';
 
 const Events: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -64,6 +48,16 @@ const Events: React.FC = () => {
 
   const events = eventsData?.data?.events || [];
   const pagination = eventsData?.data?.pagination;
+
+  // Summary metrics
+  const now = new Date();
+  const totalEvents = events.length;
+  const publishedEvents = events.filter(e => e.isPublished).length;
+  const draftEvents = events.filter(e => e.status === 'draft').length;
+  const upcomingEvents = events.filter(e => new Date(e.startDate) > now).length;
+  const completedEvents = events.filter(e => e.status === 'completed').length;
+  const cancelledEvents = events.filter(e => e.status === 'cancelled').length;
+  // If you support pinning, add: const pinnedEvents = events.filter(e => e.isPinned).length;
 
   const handleEdit = (event: Event) => {
     setEditingEvent(event);
@@ -137,6 +131,23 @@ const Events: React.FC = () => {
     other: "bg-gray-50 text-gray-700",
   };
 
+  const getEventImage = (event: Event) => {
+    // First try to get the primary image from the images array
+    const primaryImage = event.images?.find(img => img.isPrimary)?.url;
+    if (primaryImage) return primaryImage;
+    
+    // Fallback to first image in array
+    if (event.images && event.images.length > 0) {
+      return event.images[0].url;
+    }
+    
+    // Fallback to legacy imageUrl
+    if (event.imageUrl) return event.imageUrl;
+    
+    // Final fallback to default image
+    return 'https://images.pexels.com/photos/1595391/pexels-photo-1595391.jpeg?auto=compress&cs=tinysrgb&w=800';
+  };
+
   if (isLoading) {
     return <LoadingSpinner size="lg" className="min-h-screen" />;
   }
@@ -151,6 +162,16 @@ const Events: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 mb-8">
+        <SummaryCard value={totalEvents} label="Total Events" color="text-blue-600" icon={<Calendar className="text-blue-400" />} />
+        <SummaryCard value={publishedEvents} label="Published" color="text-green-600" icon={<CheckCircle className="text-green-400" />} />
+        <SummaryCard value={draftEvents} label="Draft" color="text-gray-600" icon={<Pencil className="text-gray-400" />} />
+        <SummaryCard value={upcomingEvents} label="Upcoming" color="text-orange-500" icon={<Clock className="text-orange-400" />} />
+        <SummaryCard value={completedEvents} label="Completed" color="text-purple-600" icon={<Check className="text-purple-400" />} />
+        <SummaryCard value={cancelledEvents} label="Cancelled" color="text-red-600" icon={<XCircle className="text-red-400" />} />
+      </div>
+
       {/* Page header */}
       <div className="flex justify-between items-center">
         <div>
@@ -217,12 +238,17 @@ const Events: React.FC = () => {
             className="bg-white rounded-2xl shadow p-7 flex flex-col border border-gray-100 hover:shadow-xl transition-shadow"
           >
             {/* Event Image */}
-            {event.imageUrl && (
+            {((event.images && event.images.length > 0) || event.imageUrl) && (
               <div className="mb-4">
                 <img
-                  src={event.imageUrl}
+                  src={getEventImage(event)}
                   alt={event.title}
                   className="w-full h-48 object-cover rounded-lg"
+                  onError={(e) => {
+                    // Fallback to default image if the image fails to load
+                    const target = e.target as HTMLImageElement;
+                    target.src = 'https://images.pexels.com/photos/1595391/pexels-photo-1595391.jpeg?auto=compress&cs=tinysrgb&w=800';
+                  }}
                 />
               </div>
             )}

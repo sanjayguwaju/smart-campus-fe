@@ -11,6 +11,7 @@ import {
   Settings,
   Bell,
   LogOut,
+  Building2,
 } from 'lucide-react';
 
 const AdminLayout: React.FC = () => {
@@ -20,15 +21,24 @@ const AdminLayout: React.FC = () => {
   const navigation = [
     { name: 'Dashboard', href: '/admin', icon: Home },
     { name: 'Users', href: '/admin/users', icon: Users },
+    { name: 'Departments', href: '/admin/departments', icon: Building2 },
     { name: 'Events', href: '/admin/events', icon: Calendar },
     { name: 'Notices', href: '/admin/notices', icon: FileText },
     { name: 'Programs', href: '/admin/programs', icon: GraduationCap },
+    { name: 'Courses', href: '/admin/courses', icon: GraduationCap },
     { name: 'Blog', href: '/admin/blog', icon: FileText },
     { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
     { name: 'Settings', href: '/admin/settings', icon: Settings },
   ];
 
   const isActive = (path: string) => location.pathname === path;
+
+  const getDisplayName = () => {
+    if (!user) return '';
+    if (user.displayName) return user.displayName;
+    if (user.fullName) return user.fullName;
+    return `${user.firstName} ${user.lastName}`;
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -77,12 +87,12 @@ const AdminLayout: React.FC = () => {
               
               <div className="flex items-center space-x-3">
                 <div className="text-right">
-                  <p className="text-sm font-medium text-gray-900">{user?.name}</p>
+                  <p className="text-sm font-medium text-gray-900">{getDisplayName()}</p>
                   <p className="text-xs text-gray-500 capitalize">{user?.role}</p>
                 </div>
                 <div className="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center">
                   <span className="text-sm font-medium text-white">
-                    {user?.name?.charAt(0)}
+                    {user?.firstName?.charAt(0)}
                   </span>
                 </div>
                 <button

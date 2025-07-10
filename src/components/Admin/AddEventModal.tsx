@@ -46,7 +46,7 @@ const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose }) => {
     requirements: [],
     benefits: [],
     externalLinks: [],
-    imageUrl: ''
+    images: []
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -89,10 +89,16 @@ const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose }) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const payload = {
+      console.log('Form data before submission:', formData);
+      console.log('Images in form data:', formData.images);
+      
+      const payload: CreateEventRequest = {
         ...formData,
+        images: formData.images || [],
         organizer: currentUser?._id,
-      };
+      } as CreateEventRequest;
+      console.log('Submitting event payload:', payload);
+      console.log('Images in payload:', payload.images);
       await createEventMutation.mutateAsync(payload as CreateEventRequest);
       onClose();
       // Reset form
@@ -117,6 +123,7 @@ const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose }) => {
         isRegistrationRequired: false,
         isRegistrationOpen: true,
         tags: [],
+        images: [],
         contactInfo: {
           email: '',
           phone: '',
@@ -258,18 +265,67 @@ const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose }) => {
             />
           </div>
 
-          {/* Event Image */}
+          {/* Event Images */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Event Image
+              Event Images
             </label>
-            <ImageUpload
-              onImageUpload={(url) => setFormData(prev => ({ ...prev, imageUrl: url }))}
-              onImageRemove={() => setFormData(prev => ({ ...prev, imageUrl: '' }))}
-              currentImage={formData.imageUrl}
-              maxSize={5}
-              className="max-w-md"
-            />
+            <div className="space-y-4">
+              {/* Upload new image */}
+              <ImageUpload
+                onImageUpload={(url) => {
+                  console.log('Image uploaded, adding to images array:', url);
+                  setFormData(prev => ({
+                    ...prev,
+                    images: [...(prev.images || []), {
+                      url,
+                      caption: '',
+                      isPrimary: prev.images?.length === 0 // First image is primary
+                    }]
+                  }));
+                }}
+                onImageRemove={() => {
+                  console.log('Image removed, clearing images array');
+                  setFormData(prev => ({ ...prev, images: [] }));
+                }}
+                currentImage=""
+                maxSize={5}
+                className="max-w-md"
+              />
+              
+              {/* Display uploaded images */}
+              {formData.images && formData.images.length > 0 && (
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {formData.images.map((image, index) => (
+                    <div key={index} className="relative group">
+                      <img
+                        src={image.url}
+                        alt={`Event image ${index + 1}`}
+                        className="w-full h-32 object-cover rounded-lg border-2 border-gray-200"
+                      />
+                      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200 rounded-lg flex items-center justify-center">
+                        <button
+                          onClick={() => {
+                            setFormData(prev => ({
+                              ...prev,
+                              images: prev.images?.filter((_, i) => i !== index) || []
+                            }));
+                          }}
+                          className="opacity-0 group-hover:opacity-100 bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-all duration-200"
+                        >
+                          ×
+                        </button>
+                      </div>
+                      {image.isPrimary && (
+                        <div className="absolute top-2 left-2 bg-blue-500 text-white px-2 py-1 rounded text-xs">
+                          Primary
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Date and Time */}

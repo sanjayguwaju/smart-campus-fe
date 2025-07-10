@@ -1,12 +1,10 @@
-import React, { useState } from "react";
-import { Plus, Search, Edit, Trash2, Eye, Filter, Pin } from "lucide-react";
-import { useNotices, useDeleteNotice } from "../../api/hooks/useNotices";
-import { Notice } from "../../api/types/notices";
-import AddNoticeModal from "../../components/Admin/AddNoticeModal";
-import ViewNoticeModal from "../../components/Admin/ViewNoticeModal";
-import EditNoticeModal from "../../components/Admin/EditNoticeModal";
-import { usePublishEvent, useUnpublishEvent } from "../../api";
-import toast from "react-hot-toast";
+import React, { useState } from 'react';
+import { Plus, Search, Edit, Trash2, Eye, Filter, Pin } from 'lucide-react';
+import { useNotices, useDeleteNotice } from '../../api/hooks/useNotices';
+import { Notice } from '../../api/types/notices';
+import AddNoticeModal from '../../components/Admin/AddNoticeModal';
+import ViewNoticeModal from '../../components/Admin/ViewNoticeModal';
+import EditNoticeModal from '../../components/Admin/EditNoticeModal';
 
 const Notices: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -26,9 +24,6 @@ const Notices: React.FC = () => {
     ...n,
     id: n.id || n._id,
   }));
-
-  const publishEventMutation = usePublishEvent();
-  const unpublishEventMutation = useUnpublishEvent();
 
   const filteredNotices = notices.filter((notice) => {
     const matchesSearch =
@@ -110,6 +105,14 @@ const Notices: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+        <SummaryCard value={totalNotices} label="Total Notices" color="text-blue-600" icon={<FileText className="text-blue-400" />} />
+        <SummaryCard value={highPriority} label="High Priority" color="text-red-600" icon={<AlertTriangle className="text-red-400" />} />
+        <SummaryCard value={pinned} label="Pinned" color="text-green-600" icon={<Pin className="text-green-400" />} />
+        <SummaryCard value={examRelated} label="Exam Related" color="text-purple-600" icon={<BookOpen className="text-purple-400" />} />
+      </div>
+
       {/* Add Notice Modal */}
       <AddNoticeModal
         isOpen={isAddModalOpen}

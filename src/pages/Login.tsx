@@ -52,7 +52,17 @@ const Login: React.FC = () => {
         toast.error('Invalid email or password');
       }
     } catch (error) {
-      toast.error('An error occurred during login');
+      // Handle specific error cases
+      const axiosError = error as { response?: { status?: number } };
+      if (axiosError.response?.status === 401) {
+        toast.error('Invalid email or password');
+      } else if (axiosError.response?.status === 400) {
+        toast.error('Invalid credentials provided');
+      } else if (axiosError.response?.status && axiosError.response.status >= 500) {
+        toast.error('Server error. Please try again later.');
+      } else {
+        toast.error('An error occurred during login');
+      }
       console.error('Login failed:', error);
     }
   };

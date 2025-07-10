@@ -12,6 +12,7 @@ const Events: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'date' | 'popularity'>('date');
   const [showFilters, setShowFilters] = useState(false);
+  const [activeImageIndex, setActiveImageIndex] = useState<Record<string, number>>({});
 
   // Use the events hook with search and category filters
   const { data: eventsData, isLoading, error } = useEvents({
@@ -75,6 +76,40 @@ const Events: React.FC = () => {
       general: 'bg-gray-100 text-gray-800',
     };
     return colors[category as keyof typeof colors] || colors.general;
+  };
+
+  const getEventImage = (event: Event) => {
+    // First try to get the primary image from the images array
+    const primaryImage = event.images?.find(img => img.isPrimary)?.url;
+    if (primaryImage) return primaryImage;
+    
+    // Fallback to first image in array
+    if (event.images && event.images.length > 0) {
+      return event.images[0].url;
+    }
+    
+    // Fallback to legacy imageUrl
+    if (event.imageUrl) return event.imageUrl;
+    
+    // Final fallback to default image
+    return 'https://images.pexels.com/photos/1595391/pexels-photo-1595391.jpeg?auto=compress&cs=tinysrgb&w=800';
+  };
+
+  const getCurrentEventImage = (event: Event) => {
+    const currentIndex = activeImageIndex[event._id] || 0;
+    
+    if (event.images && event.images.length > 0) {
+      return event.images[currentIndex]?.url || getEventImage(event);
+    }
+    
+    return getEventImage(event);
+  };
+
+  const handleImageChange = (eventId: string, newIndex: number, totalImages: number) => {
+    setActiveImageIndex(prev => ({
+      ...prev,
+      [eventId]: newIndex >= totalImages ? 0 : newIndex < 0 ? totalImages - 1 : newIndex
+    }));
   };
 
   // Loading state
@@ -241,13 +276,86 @@ const Events: React.FC = () => {
                 whileHover={{ y: -5 }}
                 className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300"
               >
-                {/* Event Image */}
+                {/* Event Images */}
                 <div className="relative h-48 overflow-hidden">
-                  <img
-                    src={event.images?.[0]?.url || 'https://images.pexels.com/photos/1595391/pexels-photo-1595391.jpeg?auto=compress&cs=tinysrgb&w=800'}
-                    alt={event.title}
-                    className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-                  />
+                  {event.images && event.images.length > 0 ? (
+                    <div className="relative h-full group">
+                      {/* Main Image */}
+                      <img
+                        src={getCurrentEventImage(event)}
+                        alt={event.title}
+                        className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = 'https://images.pexels.com/photos/1595391/pexels-photo-1595391.jpeg?auto=compress&cs=tinysrgb&w=800';
+                        }}
+                      />
+                      
+                      {/* Image Counter Badge */}
+                      {event.images.length > 1 && (
+                        <div className="absolute top-4 right-4 bg-black bg-opacity-70 text-white px-2 py-1 rounded-full text-xs font-semibold">
+                          {(activeImageIndex[event._id] || 0) + 1} / {event.images.length}
+                        </div>
+                      )}
+                      
+                      {/* Navigation Arrows */}
+                      {event.images && event.images.length > 1 && (
+                        <>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleImageChange(event._id, (activeImageIndex[event._id] || 0) - 1, event.images!.length);
+                            }}
+                            className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-opacity-70"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                            </svg>
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleImageChange(event._id, (activeImageIndex[event._id] || 0) + 1, event.images!.length);
+                            }}
+                            className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-opacity-70"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            </svg>
+                          </button>
+                        </>
+                      )}
+                      
+                      {/* Image Navigation Dots */}
+                      {event.images && event.images.length > 1 && (
+                        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-1">
+                          {event.images.map((_, index) => (
+                            <button
+                              key={index}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleImageChange(event._id, index, event.images!.length);
+                              }}
+                              className={`w-2 h-2 rounded-full transition-all duration-200 ${
+                                index === (activeImageIndex[event._id] || 0) ? 'bg-white' : 'bg-white bg-opacity-50 hover:bg-opacity-75'
+                              }`}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <img
+                      src={getEventImage(event)}
+                      alt={event.title}
+                      className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = 'https://images.pexels.com/photos/1595391/pexels-photo-1595391.jpeg?auto=compress&cs=tinysrgb&w=800';
+                      }}
+                    />
+                  )}
+                  
                   <div className="absolute top-4 left-4">
                     <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getCategoryColor(event.eventType)}`}>
                       {event.eventType.charAt(0).toUpperCase() + event.eventType.slice(1)}

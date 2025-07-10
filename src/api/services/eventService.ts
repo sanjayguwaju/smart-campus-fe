@@ -33,12 +33,14 @@ export const eventService = {
 
   // Create new event
   async createEvent(eventData: CreateEventRequest): Promise<CreateEventResponse> {
+    console.log('Event service - sending data to backend:', eventData);
     const response = await apiClient.post('/events', eventData);
     return response.data;
   },
 
   // Update event
   async updateEvent(id: string, eventData: Partial<CreateEventRequest>): Promise<EventResponse> {
+    console.log('Event service - updating event with data:', eventData);
     const response = await apiClient.put(`/events/${id}`, eventData);
     return response.data;
   },

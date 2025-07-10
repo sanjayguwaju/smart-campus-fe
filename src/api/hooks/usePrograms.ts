@@ -26,10 +26,22 @@ export const usePrograms = () => {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['programs'] })
   });
 
+  const publishProgram = useMutation({
+    mutationFn: programService.publishProgram,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['programs'] })
+  });
+
+  const unpublishProgram = useMutation({
+    mutationFn: programService.unpublishProgram,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['programs'] })
+  });
+
   return {
     programsQuery,
     createProgram,
     updateProgram,
-    deleteProgram
+    deleteProgram,
+    publishProgram,
+    unpublishProgram
   };
 }; 

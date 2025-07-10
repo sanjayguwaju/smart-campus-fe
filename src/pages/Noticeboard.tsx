@@ -1,11 +1,15 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, Search, Filter, Calendar, User, Pin, AlertTriangle, BookOpen, GraduationCap, ChevronDown, Eye } from 'lucide-react';
-import { useAppStore } from '../store/appStore';
-import { Notice } from '../types';
+import { useNotices } from '../api/hooks/useNotices';
 
 const Noticeboard: React.FC = () => {
-  const { notices } = useAppStore();
+  const { data: noticesData } = useNotices();
+  const noticesRaw = noticesData?.data?.notices || [];
+  const notices = noticesRaw.map((notice: any) => ({
+    ...notice,
+    pinned: notice.pinned ?? notice.settings?.pinToTop ?? false,
+  }));
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedPriority, setSelectedPriority] = useState<string>('all');
@@ -40,51 +44,46 @@ const Noticeboard: React.FC = () => {
       if (a.pinned && !b.pinned) return -1;
       if (!a.pinned && b.pinned) return 1;
       
-      const priorityOrder = { high: 3, medium: 2, low: 1 };
+      const priorityOrder: Record<string, number> = { high: 3, medium: 2, low: 1 };
       const priorityDiff = priorityOrder[b.priority] - priorityOrder[a.priority];
       if (priorityDiff !== 0) return priorityDiff;
       
       return new Date(b.publishDate).getTime() - new Date(a.publishDate).getTime();
     });
 
-  const formatDate = (date: Date) => {
+  const formatDate = (date: string | Date) => {
+    if (!date) return '';
+    const d = typeof date === 'string' ? new Date(date) : date;
+    if (isNaN(d.getTime())) return '';
     return new Intl.DateTimeFormat('en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
-    }).format(date);
+    }).format(d);
   };
 
   const getCategoryIcon = (category: string) => {
-    const icons = {
+    const icons: Record<string, any> = {
       exam: GraduationCap,
       alert: AlertTriangle,
       academic: BookOpen,
       general: Bell,
     };
-    return icons[category as keyof typeof icons] || Bell;
+    return icons[category] || Bell;
   };
 
   const getCategoryColor = (category: string) => {
-    const colors = {
+    const colors: Record<string, string> = {
       exam: 'bg-blue-100 text-blue-800 border-blue-200',
       alert: 'bg-red-100 text-red-800 border-red-200',
       academic: 'bg-green-100 text-green-800 border-green-200',
       general: 'bg-gray-100 text-gray-800 border-gray-200',
     };
-    return colors[category as keyof typeof colors] || colors.general;
+    return colors[category] || colors.general;
   };
 
-  const getPriorityColor = (priority: string) => {
-    const colors = {
-      high: 'bg-red-500',
-      medium: 'bg-yellow-500',
-      low: 'bg-green-500',
-    };
-    return colors[priority as keyof typeof colors] || colors.low;
-  };
 
   const toggleNoticeExpansion = (noticeId: string) => {
     setExpandedNotice(expandedNotice === noticeId ? null : noticeId);
@@ -110,6 +109,31 @@ const Noticeboard: React.FC = () => {
             Stay updated with the latest announcements, alerts, and important information 
             from the campus administration and academic departments.
           </p>
+        </motion.div>
+
+        {/* Legend Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="flex flex-wrap items-center justify-center gap-6 mb-8"
+        >
+          <div className="flex items-center gap-2">
+            <Pin className="h-5 w-5 text-blue-600" />
+            <span className="text-sm text-gray-700">Pinned Notice</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800 border border-red-200">HIGH</span>
+            <span className="text-sm text-gray-700">High Priority</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800 border border-yellow-200">MEDIUM</span>
+            <span className="text-sm text-gray-700">Medium Priority</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800 border border-green-200">LOW</span>
+            <span className="text-sm text-gray-700">Low Priority</span>
+          </div>
         </motion.div>
 
         {/* Search and Filter Section */}
@@ -232,8 +256,12 @@ const Noticeboard: React.FC = () => {
                       <div className="flex items-start space-x-4 flex-1">
                         {/* Priority Indicator */}
                         <div className="flex flex-col items-center space-y-2">
-                          <div className={`w-3 h-3 rounded-full ${getPriorityColor(notice.priority)}`}></div>
-                          {notice.pinned && <Pin className="h-4 w-4 text-blue-600" />}
+                          {notice.pinned && (
+                            <div className="flex items-center mb-2">
+                              <Pin className="h-6 w-6 text-blue-600 mr-1 animate-bounce" />
+                              <span className="text-blue-700 font-semibold text-xs uppercase tracking-wider">Pinned</span>
+                            </div>
+                          )}
                         </div>
 
                         {/* Notice Content */}
@@ -243,12 +271,12 @@ const Noticeboard: React.FC = () => {
                             <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${getCategoryColor(notice.category)}`}>
                               {notice.category.charAt(0).toUpperCase() + notice.category.slice(1)}
                             </span>
-                            <span className={`px-2 py-1 rounded text-xs font-medium ${
-                              notice.priority === 'high' ? 'bg-red-100 text-red-800' :
-                              notice.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
-                              'bg-green-100 text-green-800'
+                            <span className={`px-3 py-1 rounded-full text-sm font-bold border uppercase tracking-wide ml-2 ${
+                              notice.priority === 'high' ? 'bg-red-100 text-red-800 border-red-200' :
+                              notice.priority === 'medium' ? 'bg-yellow-100 text-yellow-800 border-yellow-200' :
+                              'bg-green-100 text-green-800 border-green-200'
                             }`}>
-                              {notice.priority.toUpperCase()}
+                              {notice.priority}
                             </span>
                           </div>
 
@@ -259,7 +287,7 @@ const Noticeboard: React.FC = () => {
                           <div className="flex items-center space-x-4 text-sm text-gray-500 mb-3">
                             <div className="flex items-center space-x-1">
                               <User className="h-4 w-4" />
-                              <span>{notice.author}</span>
+                              <span>{typeof notice.author === 'string' ? notice.author : notice.author?.name || ''}</span>
                             </div>
                             <div className="flex items-center space-x-1">
                               <Calendar className="h-4 w-4" />

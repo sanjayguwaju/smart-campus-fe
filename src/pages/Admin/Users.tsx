@@ -13,12 +13,13 @@ import ActivateUserModal from '../../components/Admin/ActivateUserModal';
 import ViewUserModal from '../../components/Admin/ViewUserModal';
 import UsersFilterDrawer from '../../components/Admin/UsersFilterDrawer';
 
+
 const Users: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [roleFilter, setRoleFilter] = useState<string>('all');
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+
   const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
   const [isEditUserModalOpen, setIsEditUserModalOpen] = useState(false);
   const [selectedUserForEdit, setSelectedUserForEdit] = useState<UserData | null>(null);
@@ -58,8 +59,26 @@ const Users: React.FC = () => {
     };
   }, []);
 
-  // TanStack Query hooks
-  const { data, isLoading, error } = useUsers(currentPage, pageSize);
+  // Reset to first page when search term changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
+  // TanStack Query hooks with refetchInterval
+  const { data, isLoading, error } = useUsers(
+    currentPage, 
+    pageSize, 
+    searchTerm || undefined,
+    filters.role || undefined,
+    filters.status || undefined,
+    filters.department || undefined,
+    filters.isEmailVerified || undefined,
+    filters.dateRange || undefined,
+    {
+      refetchInterval: searchTerm ? 3000 : false, // Auto-refetch every 3 seconds while searching
+      enabled: true, // Always enabled
+    }
+  );
   const deleteUserMutation = useDeleteUser();
   const activateUserMutation = useActivateUser();
   const deactivateUserMutation = useDeactivateUser();
@@ -104,67 +123,6 @@ const Users: React.FC = () => {
   // Get unique departments from users
   const departments = Array.from(new Set(users.map((user: UserData) => user.department).filter(Boolean))) as string[];
 
-  const filteredUsers = users.filter((user: UserData) => {
-    const displayName = getDisplayName(user);
-    
-    // Search filter
-    const searchMatch = !filters.searchTerm || 
-      displayName.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(filters.searchTerm.toLowerCase());
-    
-    // Role filter
-    const roleMatch = !filters.role || user.role === filters.role;
-    
-    // Status filter
-    const statusMatch = !filters.status || 
-      (filters.status === 'active' && user.isActive) ||
-      (filters.status === 'inactive' && !user.isActive);
-    
-    // Department filter
-    const departmentMatch = !filters.department || user.department === filters.department;
-    
-    // Email verification filter
-    const emailMatch = !filters.isEmailVerified ||
-      (filters.isEmailVerified === 'verified' && user.isEmailVerified) ||
-      (filters.isEmailVerified === 'unverified' && !user.isEmailVerified);
-    
-    // Date range filter
-    let dateMatch = true;
-    if (filters.dateRange) {
-      const userDate = new Date(user.createdAt);
-      const now = new Date();
-      
-      switch (filters.dateRange) {
-        case 'today': {
-          dateMatch = userDate.toDateString() === now.toDateString();
-          break;
-        }
-        case 'week': {
-          const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-          dateMatch = userDate >= weekAgo;
-          break;
-        }
-        case 'month': {
-          const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-          dateMatch = userDate >= monthAgo;
-          break;
-        }
-        case 'quarter': {
-          const quarterAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
-          dateMatch = userDate >= quarterAgo;
-          break;
-        }
-        case 'year': {
-          const yearAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
-          dateMatch = userDate >= yearAgo;
-          break;
-        }
-      }
-    }
-    
-    return searchMatch && roleMatch && statusMatch && departmentMatch && emailMatch && dateMatch;
-  });
-
   const handleSelectUser = (userId: string) => {
     setSelectedUsers(prev => 
       prev.includes(userId) 
@@ -174,10 +132,10 @@ const Users: React.FC = () => {
   };
 
   const handleSelectAll = () => {
-    if (selectedUsers.length === filteredUsers.length) {
+    if (selectedUsers.length === users.length) {
       setSelectedUsers([]);
     } else {
-      setSelectedUsers(filteredUsers.map((user: UserData) => user._id));
+      setSelectedUsers(users.map((user: UserData) => user._id));
     }
   };
 
@@ -279,6 +237,7 @@ const Users: React.FC = () => {
 
   const handleApplyFilters = (newFilters: typeof filters) => {
     setFilters(newFilters);
+    setSearchTerm(newFilters.searchTerm || '');
     setCurrentPage(1); // Reset to first page when applying filters
   };
 
@@ -291,6 +250,7 @@ const Users: React.FC = () => {
       dateRange: '',
       isEmailVerified: ''
     });
+    setSearchTerm('');
     setCurrentPage(1);
   };
 
@@ -374,16 +334,6 @@ const Users: React.FC = () => {
             </div>
           </div>
           <div className="flex gap-2">
-            <select
-              value={roleFilter}
-              onChange={(e) => setRoleFilter(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="all">All Roles</option>
-              <option value="admin">Admin</option>
-              <option value="faculty">Faculty</option>
-              <option value="student">Student</option>
-            </select>
             <button 
               onClick={() => setIsFilterDrawerOpen(true)}
               className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center"
@@ -399,7 +349,7 @@ const Users: React.FC = () => {
         <div className="px-6 py-4 border-b border-gray-200">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-medium text-gray-900">
-              {pagination ? `${pagination.total} users found` : `${filteredUsers.length} users found`}
+              {pagination ? `${pagination.total} users found` : `${users.length} users found`}
             </h3>
             {selectedUsers.length > 0 && (
               <div className="flex items-center space-x-2">
@@ -421,7 +371,7 @@ const Users: React.FC = () => {
                 <th className="px-6 py-3 text-left">
                   <input
                     type="checkbox"
-                    checked={selectedUsers.length === filteredUsers.length && filteredUsers.length > 0}
+                    checked={selectedUsers.length === users.length && users.length > 0}
                     onChange={handleSelectAll}
                     className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                   />
@@ -450,7 +400,7 @@ const Users: React.FC = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {filteredUsers.map((user: UserData) => (
+              {users.map((user: UserData) => (
                 <tr key={user._id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <input
@@ -717,6 +667,8 @@ const Users: React.FC = () => {
             handleDeleteUser(selectedUserForDelete._id);
           }
         }}
+        title="Delete User"
+        message={`Are you sure you want to delete ${selectedUserForDelete ? getDisplayName(selectedUserForDelete) : 'this user'}? This action cannot be undone.`}
         user={selectedUserForDelete}
         isLoading={deleteUserMutation.isPending}
       />

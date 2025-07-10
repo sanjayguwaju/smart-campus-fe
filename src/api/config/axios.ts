@@ -29,9 +29,13 @@ apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Clear auth data and redirect to login
-      useAuthStore.getState().clearAuth();
-      window.location.href = '/login';
+      // Only redirect to login if user is already authenticated
+      // This prevents redirect during login attempts
+      const isAuthenticated = useAuthStore.getState().isAuthenticated;
+      if (isAuthenticated) {
+        useAuthStore.getState().clearAuth();
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }

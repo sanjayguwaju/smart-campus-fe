@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useUpdateEvent } from '../../api/hooks/useEvents';
 import { Event, CreateEventRequest } from '../../api/types/events';
 import { useAuthStore } from '../../store/authStore';
+import ImageUpload from '../common/ImageUpload';
 
 interface EditEventModalProps {
   isOpen: boolean;
@@ -33,6 +34,7 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ isOpen, onClose, event 
     isRegistrationRequired: false,
     isRegistrationOpen: true,
     tags: [],
+    images: [],
     contactInfo: {
       email: '',
       phone: '',
@@ -72,6 +74,7 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ isOpen, onClose, event 
         isRegistrationRequired: event.isRegistrationRequired,
         isRegistrationOpen: event.isRegistrationOpen,
         tags: event.tags,
+        images: event.images || [],
         contactInfo: {
           email: event.contactInfo?.email,
           phone: event.contactInfo?.phone,
@@ -131,7 +134,16 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ isOpen, onClose, event 
     setServerError(null);
     if (!event) return;
     try {
-      const payload = { ...formData };
+      console.log('Edit form data before submission:', formData);
+      console.log('Images in edit form data:', formData.images);
+      
+      const payload = { 
+        ...formData,
+        images: formData.images || []
+      };
+      console.log('Edit event payload:', payload);
+      console.log('Images in edit payload:', payload.images);
+      
       await updateEventMutation.mutateAsync({
         id: event._id,
         data: payload as Partial<CreateEventRequest>
@@ -263,6 +275,86 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ isOpen, onClose, event 
               rows={4}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
+          </div>
+
+          {/* Event Images */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Event Images
+            </label>
+            <div className="space-y-4">
+              {/* Upload new image */}
+              <ImageUpload
+                onImageUpload={(url) => {
+                  console.log('Image uploaded, adding to images array:', url);
+                  setFormData(prev => ({
+                    ...prev,
+                    images: [...(prev.images || []), {
+                      url,
+                      caption: '',
+                      isPrimary: prev.images?.length === 0 // First image is primary
+                    }]
+                  }));
+                }}
+                onImageRemove={() => {
+                  console.log('Image removed, clearing images array');
+                  setFormData(prev => ({ ...prev, images: [] }));
+                }}
+                currentImage=""
+                maxSize={5}
+                className="max-w-md"
+              />
+              
+              {/* Display uploaded images */}
+              {formData.images && formData.images.length > 0 && (
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {formData.images.map((image, index) => (
+                    <div key={index} className="relative group">
+                      <img
+                        src={image.url}
+                        alt={`Event image ${index + 1}`}
+                        className="w-full h-32 object-cover rounded-lg border-2 border-gray-200"
+                      />
+                      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200 rounded-lg flex items-center justify-center">
+                        <button
+                          onClick={() => {
+                            setFormData(prev => ({
+                              ...prev,
+                              images: prev.images?.filter((_, i) => i !== index) || []
+                            }));
+                          }}
+                          className="opacity-0 group-hover:opacity-100 bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-all duration-200"
+                        >
+                          ×
+                        </button>
+                      </div>
+                      {image.isPrimary && (
+                        <div className="absolute top-2 left-2 bg-blue-500 text-white px-2 py-1 rounded text-xs">
+                          Primary
+                        </div>
+                      )}
+                      {/* Make primary button */}
+                      {!image.isPrimary && (
+                        <button
+                          onClick={() => {
+                            setFormData(prev => ({
+                              ...prev,
+                              images: prev.images?.map((img, i) => ({
+                                ...img,
+                                isPrimary: i === index
+                              })) || []
+                            }));
+                          }}
+                          className="absolute bottom-2 left-2 bg-green-500 text-white px-2 py-1 rounded text-xs hover:bg-green-600"
+                        >
+                          Make Primary
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Date and Time */}

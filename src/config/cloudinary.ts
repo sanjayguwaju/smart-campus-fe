@@ -1,7 +1,7 @@
 export const cloudinaryConfig = {
-  cloudName: import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || 'your-cloud-name',
-  uploadPreset: import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || 'your-upload-preset',
-  apiKey: import.meta.env.VITE_CLOUDINARY_API_KEY || 'your-api-key',
+  cloudName: import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || 'dvtw2zpbt',
+  uploadPreset: import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || 'z9xc6rdt',
+  apiKey: import.meta.env.VITE_CLOUDINARY_API_KEY || 'N4c2bnmtAfg6Sfz0jdslXYeEkm0',
 };
 
 export const CLOUDINARY_UPLOAD_URL = `https://api.cloudinary.com/v1_1/${cloudinaryConfig.cloudName}/image/upload`;

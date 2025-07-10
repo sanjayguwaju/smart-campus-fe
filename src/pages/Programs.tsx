@@ -1,16 +1,27 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { GraduationCap, Clock, BookOpen, Users, Download, Search, Filter, ChevronDown, Star, Award, Calendar, MapPin } from 'lucide-react';
-import { useAppStore } from '../store/appStore';
-import { Program } from '../types';
+import { Calendar, Clock, MapPin, Users, Filter, Search, ChevronDown, Heart, Share2 } from 'lucide-react';
+import { usePrograms } from '../api/hooks/usePrograms';
+import { Program } from '../api/types/programs';
 
 const Programs: React.FC = () => {
-  const { programs } = useAppStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedLevel, setSelectedLevel] = useState<string>('all');
   const [selectedDepartment, setSelectedDepartment] = useState<string>('all');
+  const [sortBy, setSortBy] = useState<'name' | 'department'>('name');
   const [showFilters, setShowFilters] = useState(false);
   const [selectedProgram, setSelectedProgram] = useState<Program | null>(null);
+
+  const { programsQuery } = usePrograms();
+  let programs: Program[] = [];
+  const raw = programsQuery.data;
+  if (raw && typeof raw === 'object' && 'data' in raw) {
+    const backendData = (raw as any).data;
+    if (backendData && typeof backendData === 'object' && 'data' in backendData && Array.isArray(backendData.data)) {
+      programs = backendData.data;
+    }
+  }
+  const publishedPrograms = programs.filter((p: Program) => p.isPublished === true);
 
   const levels = [
     { value: 'all', label: 'All Levels' },
@@ -21,42 +32,87 @@ const Programs: React.FC = () => {
 
   const departments = [
     { value: 'all', label: 'All Departments' },
-    { value: 'Engineering', label: 'Engineering' },
-    { value: 'Management', label: 'Management' },
-    { value: 'Computer Science', label: 'Computer Science' },
-    { value: 'Medicine', label: 'Medicine' },
-    { value: 'Law', label: 'Law' },
-    { value: 'Arts & Sciences', label: 'Arts & Sciences' },
-    { value: 'Education', label: 'Education' },
-    { value: 'Architecture', label: 'Architecture' },
+    ...Array.from(new Set(publishedPrograms.map(p => typeof p.department === 'object' && p.department !== null ? p.department._id : p.department)))
+      .map(depId => {
+        const depObj = publishedPrograms.find(p => typeof p.department === 'object' && p.department !== null && p.department._id === depId)?.department;
+        return depObj && typeof depObj === 'object' ? { value: depObj._id, label: depObj.name } : { value: depId, label: depId };
+      })
   ];
 
-  const filteredPrograms = programs.filter(program => {
-    const matchesSearch = program.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  const filteredPrograms = publishedPrograms
+    .filter(program => {
+      const departmentName =
+        typeof program.department === 'string'
+          ? program.department
+          : program.department && program.department.name
+            ? program.department.name
+            : '';
+      const matchesSearch =
+        program.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          program.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         program.department.toLowerCase().includes(searchTerm.toLowerCase());
+        departmentName.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesLevel = selectedLevel === 'all' || program.level === selectedLevel;
-    const matchesDepartment = selectedDepartment === 'all' || program.department === selectedDepartment;
+      const matchesDepartment = selectedDepartment === 'all' || departmentName === selectedDepartment;
     return matchesSearch && matchesLevel && matchesDepartment;
+    })
+    .sort((a, b) => {
+      const aDept =
+        typeof a.department === 'string'
+          ? a.department
+          : a.department && a.department.name
+            ? a.department.name
+            : '';
+      const bDept =
+        typeof b.department === 'string'
+          ? b.department
+          : b.department && b.department.name
+            ? b.department.name
+            : '';
+      if (sortBy === 'name') return a.name.localeCompare(b.name);
+      return aDept.localeCompare(bDept);
   });
 
   const getLevelColor = (level: string) => {
     const colors = {
-      undergraduate: 'bg-blue-100 text-blue-800 border-blue-200',
-      postgraduate: 'bg-green-100 text-green-800 border-green-200',
-      professional: 'bg-purple-100 text-purple-800 border-purple-200',
+      undergraduate: 'bg-blue-100 text-blue-800',
+      postgraduate: 'bg-green-100 text-green-800',
+      professional: 'bg-purple-100 text-purple-800',
     };
     return colors[level as keyof typeof colors] || colors.undergraduate;
   };
 
-  const getLevelIcon = (level: string) => {
-    const icons = {
-      undergraduate: GraduationCap,
-      postgraduate: Award,
-      professional: Star,
-    };
-    return icons[level as keyof typeof icons] || GraduationCap;
+  const getProgramImage = (program: Program) => {
+    if (program.image && program.image.startsWith('http')) return program.image;
+    return 'https://images.pexels.com/photos/1595391/pexels-photo-1595391.jpeg?auto=compress&cs=tinysrgb&w=800';
   };
+
+  // Loading state
+  if (programsQuery.isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading programs...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (programsQuery.error) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center py-12">
+            <div className="text-red-600 text-xl mb-4">Error loading programs</div>
+            <p className="text-gray-600">Please try again later.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -68,15 +124,11 @@ const Programs: React.FC = () => {
           transition={{ duration: 0.6 }}
           className="text-center mb-12"
         >
-          <div className="flex items-center justify-center mb-4">
-            <GraduationCap className="h-12 w-12 text-blue-600 mr-3" />
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-900">
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
               Academic Programs
             </h1>
-          </div>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-            Explore our comprehensive range of academic programs designed to prepare you for success 
-            in your chosen field. From undergraduate to professional courses, find your perfect path.
+            Discover our diverse academic programs designed to empower your future. Find the right path for your ambitions.
           </p>
         </motion.div>
 
@@ -123,11 +175,24 @@ const Programs: React.FC = () => {
                 onChange={(e) => setSelectedDepartment(e.target.value)}
                 className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-3 pr-8 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
-                {departments.map((department) => (
-                  <option key={department.value} value={department.value}>
+                {departments.map((department, idx) => (
+                  <option key={department.value || idx} value={department.value}>
                     {department.label}
                   </option>
                 ))}
+              </select>
+              <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5 pointer-events-none" />
+            </div>
+
+            {/* Sort Options */}
+            <div className="relative">
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as 'name' | 'department')}
+                className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-3 pr-8 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="name">Sort by Name</option>
+                <option value="department">Sort by Department</option>
               </select>
               <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5 pointer-events-none" />
             </div>
@@ -142,7 +207,7 @@ const Programs: React.FC = () => {
             </button>
           </div>
 
-          {/* Advanced Filters */}
+          {/* Advanced Filters (placeholder, not functional) */}
           <AnimatePresence>
             {showFilters && (
               <motion.div
@@ -156,13 +221,11 @@ const Programs: React.FC = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Duration
                     </label>
-                    <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                      <option value="">Any Duration</option>
-                      <option value="1">1 Year</option>
-                      <option value="2">2 Years</option>
-                      <option value="3">3 Years</option>
-                      <option value="4">4 Years</option>
-                    </select>
+                    <input
+                      type="text"
+                      placeholder="e.g. 4 Years"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -194,12 +257,9 @@ const Programs: React.FC = () => {
         {/* Programs Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           <AnimatePresence>
-            {filteredPrograms.map((program, index) => {
-              const LevelIcon = getLevelIcon(program.level);
-              
-              return (
+            {filteredPrograms.map((program, index) => (
                 <motion.div
-                  key={program.id}
+                key={program._id}
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -30 }}
@@ -211,21 +271,26 @@ const Programs: React.FC = () => {
                   {/* Program Image */}
                   <div className="relative h-48 overflow-hidden">
                     <img
-                      src={program.image}
+                    src={getProgramImage(program)}
                       alt={program.name}
                       className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.src = 'https://images.pexels.com/photos/1595391/pexels-photo-1595391.jpeg?auto=compress&cs=tinysrgb&w=800';
+                    }}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
                     <div className="absolute top-4 left-4">
-                      <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${getLevelColor(program.level)}`}>
+                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getLevelColor(program.level)}`}>
                         {program.level.charAt(0).toUpperCase() + program.level.slice(1)}
                       </span>
                     </div>
-                    <div className="absolute bottom-4 left-4 text-white">
-                      <div className="flex items-center space-x-2">
-                        <LevelIcon className="h-5 w-5" />
-                        <span className="text-sm font-medium">{program.department}</span>
-                      </div>
+                  <div className="absolute top-4 right-4 flex space-x-2">
+                    <button className="p-2 bg-white bg-opacity-90 rounded-full hover:bg-opacity-100 transition-all duration-200">
+                      <Heart className="h-4 w-4 text-gray-600" />
+                    </button>
+                    <button className="p-2 bg-white bg-opacity-90 rounded-full hover:bg-opacity-100 transition-all duration-200">
+                      <Share2 className="h-4 w-4 text-gray-600" />
+                    </button>
                     </div>
                   </div>
 
@@ -240,13 +305,19 @@ const Programs: React.FC = () => {
 
                     {/* Program Details */}
                     <div className="space-y-2 mb-4">
+                    <div className="flex items-center text-sm text-gray-500">
+                      <Calendar className="h-4 w-4 mr-2 text-blue-600" />
+                      {program.createdAt ? new Intl.DateTimeFormat('en-US', {
+                        year: 'numeric', month: 'long', day: 'numeric',
+                      }).format(new Date(program.createdAt)) : 'Date Unavailable'}
+                    </div>
                       <div className="flex items-center text-sm text-gray-500">
                         <Clock className="h-4 w-4 mr-2 text-blue-600" />
                         Duration: {program.duration}
                       </div>
                       <div className="flex items-center text-sm text-gray-500">
-                        <BookOpen className="h-4 w-4 mr-2 text-blue-600" />
-                        Department: {program.department}
+                      <MapPin className="h-4 w-4 mr-2 text-blue-600" />
+                      {typeof program.department === 'object' && program.department !== null ? program.department.name : program.department}
                       </div>
                       <div className="flex items-center text-sm text-gray-500">
                         <Users className="h-4 w-4 mr-2 text-blue-600" />
@@ -258,15 +329,19 @@ const Programs: React.FC = () => {
                     <div className="mb-4">
                       <h4 className="text-sm font-semibold text-gray-700 mb-2">Prerequisites:</h4>
                       <div className="flex flex-wrap gap-2">
-                        {program.prerequisites.slice(0, 2).map((prereq, idx) => (
+                      {program.prerequisites && program.prerequisites.length > 0 ? (
+                        program.prerequisites.slice(0, 2).map((prereq, idx) => (
                           <span
                             key={idx}
                             className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full"
                           >
                             {prereq}
                           </span>
-                        ))}
-                        {program.prerequisites.length > 2 && (
+                        ))
+                      ) : (
+                        <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">None</span>
+                      )}
+                      {program.prerequisites && program.prerequisites.length > 2 && (
                           <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
                             +{program.prerequisites.length - 2} more
                           </span>
@@ -280,15 +355,19 @@ const Programs: React.FC = () => {
                         Apply Now
                       </button>
                       {program.brochureUrl && (
-                        <button className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200">
-                          <Download className="h-4 w-4" />
-                        </button>
+                      <a
+                        href={program.brochureUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200"
+                      >
+                        Download
+                      </a>
                       )}
                     </div>
                   </div>
                 </motion.div>
-              );
-            })}
+            ))}
           </AnimatePresence>
         </div>
 
@@ -299,69 +378,30 @@ const Programs: React.FC = () => {
             animate={{ opacity: 1 }}
             className="text-center py-12"
           >
-            <GraduationCap className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+            <Calendar className="h-16 w-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-600 mb-2">No programs found</h3>
             <p className="text-gray-500">
-              Try adjusting your search criteria or explore different departments.
+              Try adjusting your search criteria or check back later for new programs.
             </p>
           </motion.div>
         )}
-
-        {/* Program Statistics */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-          className="mt-16 grid grid-cols-1 md:grid-cols-4 gap-6"
-        >
-          <div className="bg-white rounded-xl p-6 text-center shadow-lg">
-            <div className="text-3xl font-bold text-blue-600 mb-2">
-              {programs.length}
-            </div>
-            <div className="text-gray-600">Total Programs</div>
-          </div>
-          <div className="bg-white rounded-xl p-6 text-center shadow-lg">
-            <div className="text-3xl font-bold text-green-600 mb-2">
-              {programs.filter(p => p.level === 'undergraduate').length}
-            </div>
-            <div className="text-gray-600">Undergraduate</div>
-          </div>
-          <div className="bg-white rounded-xl p-6 text-center shadow-lg">
-            <div className="text-3xl font-bold text-purple-600 mb-2">
-              {programs.filter(p => p.level === 'postgraduate').length}
-            </div>
-            <div className="text-gray-600">Postgraduate</div>
-          </div>
-          <div className="bg-white rounded-xl p-6 text-center shadow-lg">
-            <div className="text-3xl font-bold text-orange-600 mb-2">
-              {new Set(programs.map(p => p.department)).size}
-            </div>
-            <div className="text-gray-600">Departments</div>
-          </div>
-        </motion.div>
 
         {/* Call to Action */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.6 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
           className="mt-16 bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl p-8 text-center text-white"
         >
           <h2 className="text-2xl md:text-3xl font-bold mb-4">
-            Ready to Start Your Academic Journey?
+            Ready to start your academic journey?
           </h2>
           <p className="text-blue-100 mb-6 max-w-2xl mx-auto">
-            Join thousands of students who have transformed their careers through our world-class programs. 
-            Get personalized guidance from our admissions team.
+            Join thousands of students who have transformed their careers through our world-class programs. Get personalized guidance from our admissions team.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button className="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-blue-50 transition-colors duration-200">
               Schedule Consultation
             </button>
-            <button className="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-blue-600 transition-colors duration-200">
-              Download Brochure
-            </button>
-          </div>
         </motion.div>
       </div>
 
@@ -384,9 +424,13 @@ const Programs: React.FC = () => {
             >
               <div className="relative">
                 <img
-                  src={selectedProgram.image}
+                  src={selectedProgram.image && selectedProgram.image.startsWith('http') ? selectedProgram.image : 'https://images.pexels.com/photos/1595391/pexels-photo-1595391.jpeg?auto=compress&cs=tinysrgb&w=800'}
                   alt={selectedProgram.name}
                   className="w-full h-64 object-cover"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = 'https://images.pexels.com/photos/1595391/pexels-photo-1595391.jpeg?auto=compress&cs=tinysrgb&w=800';
+                  }}
                 />
                 <button
                   onClick={() => setSelectedProgram(null)}
@@ -397,73 +441,62 @@ const Programs: React.FC = () => {
                   </svg>
                 </button>
               </div>
-
               <div className="p-8">
-                <div className="flex items-center justify-between mb-6">
+                <h2 className="text-3xl font-bold text-gray-900 mb-4">{selectedProgram.name}</h2>
+                <p className="text-gray-700 mb-6">{selectedProgram.description}</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                   <div>
-                    <h2 className="text-3xl font-bold text-gray-900 mb-2">
-                      {selectedProgram.name}
-                    </h2>
-                    <div className="flex items-center space-x-4">
-                      <span className={`px-3 py-1 rounded-full text-sm font-semibold border ${getLevelColor(selectedProgram.level)}`}>
-                        {selectedProgram.level.charAt(0).toUpperCase() + selectedProgram.level.slice(1)}
-                      </span>
-                      <span className="text-gray-600">{selectedProgram.department}</span>
+                    <div className="flex items-center mb-2 text-gray-600">
+                      <Calendar className="h-5 w-5 mr-2 text-blue-600" />
+                      {selectedProgram.createdAt ? new Intl.DateTimeFormat('en-US', {
+                        year: 'numeric', month: 'long', day: 'numeric',
+                      }).format(new Date(selectedProgram.createdAt)) : 'Date Unavailable'}
+                    </div>
+                    <div className="flex items-center mb-2 text-gray-600">
+                      <Clock className="h-5 w-5 mr-2 text-blue-600" />
+                      Duration: {selectedProgram.duration}
+                  </div>
+                    <div className="flex items-center mb-2 text-gray-600">
+                      <MapPin className="h-5 w-5 mr-2 text-blue-600" />
+                      {typeof selectedProgram.department === 'object' && selectedProgram.department !== null ? selectedProgram.department.name : selectedProgram.department}
+                </div>
+                    <div className="flex items-center mb-2 text-gray-600">
+                      <Users className="h-5 w-5 mr-2 text-blue-600" />
+                      Level: {selectedProgram.level.charAt(0).toUpperCase() + selectedProgram.level.slice(1)}
+                    </div>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-semibold text-gray-700 mb-2">Prerequisites:</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedProgram.prerequisites && selectedProgram.prerequisites.length > 0 ? (
+                        selectedProgram.prerequisites.map((prereq, idx) => (
+                          <span
+                            key={idx}
+                            className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full"
+                          >
+                            {prereq}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">None</span>
+                        )}
                     </div>
                   </div>
                 </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div>
-                    <h3 className="text-xl font-semibold text-gray-900 mb-4">Program Overview</h3>
-                    <p className="text-gray-700 leading-relaxed mb-6">
-                      {selectedProgram.description}
-                    </p>
-
-                    <div className="space-y-3">
-                      <div className="flex items-center">
-                        <Clock className="h-5 w-5 text-blue-600 mr-3" />
-                        <span className="text-gray-700">Duration: {selectedProgram.duration}</span>
-                      </div>
-                      <div className="flex items-center">
-                        <MapPin className="h-5 w-5 text-blue-600 mr-3" />
-                        <span className="text-gray-700">Department: {selectedProgram.department}</span>
-                      </div>
-                      <div className="flex items-center">
-                        <Calendar className="h-5 w-5 text-blue-600 mr-3" />
-                        <span className="text-gray-700">Next Intake: September 2024</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <h3 className="text-xl font-semibold text-gray-900 mb-4">Prerequisites</h3>
-                    <div className="space-y-2 mb-6">
-                      {selectedProgram.prerequisites.map((prereq, idx) => (
-                        <div key={idx} className="flex items-center">
-                          <div className="w-2 h-2 bg-blue-600 rounded-full mr-3"></div>
-                          <span className="text-gray-700">{prereq}</span>
-                        </div>
-                      ))}
-                    </div>
-
-                    <div className="space-y-4">
-                      <button className="w-full bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors duration-200">
-                        Apply Now
-                      </button>
-                      <div className="flex space-x-3">
-                        <button className="flex-1 border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors duration-200">
-                          Save Program
-                        </button>
-                        {selectedProgram.brochureUrl && (
-                          <button className="flex-1 border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors duration-200 flex items-center justify-center">
-                            <Download className="h-4 w-4 mr-2" />
-                            Brochure
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
+                <div className="flex space-x-2">
+                  <button className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors duration-200">
+                    Apply Now
+                  </button>
+                  {selectedProgram.brochureUrl && (
+                    <a
+                      href={selectedProgram.brochureUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200"
+                    >
+                      Download
+                    </a>
+                  )}
                 </div>
               </div>
             </motion.div>

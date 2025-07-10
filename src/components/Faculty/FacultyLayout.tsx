@@ -10,6 +10,7 @@ import {
   Award,
   Clock,
   LogOut,
+  FileText as BlogIcon
 } from 'lucide-react';
 
 const FacultyLayout: React.FC = () => {
@@ -22,6 +23,7 @@ const FacultyLayout: React.FC = () => {
     { name: 'Students', href: '/faculty/students', icon: Users },
     { name: 'Events', href: '/faculty/events', icon: Calendar },
     { name: 'Notices', href: '/faculty/notices', icon: FileText },
+    { name: 'Blog', href: '/faculty/blog', icon: BlogIcon },
     { name: 'Grades', href: '/faculty/grades', icon: Award },
     { name: 'Office Hours', href: '/faculty/office-hours', icon: Clock },
   ];

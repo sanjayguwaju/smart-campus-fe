@@ -52,6 +52,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
 
       // Upload to Cloudinary
       const imageUrl = await uploadToCloudinary(file);
+      console.log('ImageUpload: Upload successful, URL:', imageUrl);
       onImageUpload(imageUrl);
       toast.success('Image uploaded successfully!');
     } catch (error) {
