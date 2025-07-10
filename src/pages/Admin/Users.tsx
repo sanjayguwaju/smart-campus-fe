@@ -374,16 +374,6 @@ const Users: React.FC = () => {
             </div>
           </div>
           <div className="flex gap-2">
-            <select
-              value={roleFilter}
-              onChange={(e) => setRoleFilter(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="all">All Roles</option>
-              <option value="admin">Admin</option>
-              <option value="faculty">Faculty</option>
-              <option value="student">Student</option>
-            </select>
             <button 
               onClick={() => setIsFilterDrawerOpen(true)}
               className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center"
