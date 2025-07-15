@@ -3,60 +3,60 @@ import { GraduationCap, Users, Calendar, Award, Globe, Target, Heart, Zap } from
 
 const About: React.FC = () => {
   const stats = [
-    { number: '10,000+', label: 'Students', icon: Users },
-    { number: '500+', label: 'Faculty Members', icon: GraduationCap },
-    { number: '50+', label: 'Programs', icon: Award },
-    { number: '100+', label: 'Events Yearly', icon: Calendar },
+    { number: '3', label: 'Team Members', icon: Users },
+    { number: '5', label: 'Modules Built', icon: Award },
+    { number: '20+', label: 'Test Users', icon: GraduationCap },
+    { number: '0', label: 'Campus Events Managed', icon: Calendar },
   ];
 
   const values = [
     {
       icon: Target,
-      title: 'Excellence',
-      description: 'Committed to academic excellence and continuous improvement in all aspects of education.',
+      title: 'Collaboration',
+      description: 'Working together as a team to solve real problems and support each other throughout the project.',
     },
     {
       icon: Heart,
-      title: 'Community',
-      description: 'Fostering a supportive and inclusive community where every member feels valued and heard.',
+      title: 'Learning',
+      description: 'Embracing new technologies and concepts, and growing our skills through hands-on experience.',
     },
     {
       icon: Globe,
-      title: 'Innovation',
-      description: 'Embracing technology and innovative approaches to enhance the learning experience.',
+      title: 'Practicality',
+      description: 'Focusing on building features that are useful and relevant for our campus community.',
     },
     {
       icon: Zap,
-      title: 'Leadership',
-      description: 'Developing future leaders through comprehensive education and practical experience.',
+      title: 'Growth',
+      description: 'Continuously improving our project and ourselves, both technically and personally.',
     },
   ];
 
   const timeline = [
     {
-      year: '2020',
-      title: 'Foundation',
-      description: 'Smart Campus was established with a vision to revolutionize higher education.',
+      year: 'Jan 2025',
+      title: 'Project Kickoff',
+      description: 'Formed our team and chose Smart Campus as our college project idea.',
     },
     {
-      year: '2021',
-      title: 'Digital Transformation',
-      description: 'Launched comprehensive digital platforms for students and faculty.',
+      year: 'Feb 2025',
+      title: 'Planning & Prototyping',
+      description: 'Outlined features, designed wireframes, and started building the core modules.',
     },
     {
-      year: '2022',
-      title: 'Expansion',
-      description: 'Expanded programs and introduced new departments and facilities.',
+      year: 'Mar 2025',
+      title: 'First Demo',
+      description: 'Presented our MVP to faculty and classmates for initial feedback.',
     },
     {
-      year: '2023',
-      title: 'Innovation Hub',
-      description: 'Established innovation centers and research facilities.',
+      year: 'Apr 2025',
+      title: 'Campus Testing',
+      description: 'Tested the platform with a small group of students and improved based on their input.',
     },
     {
-      year: '2024',
-      title: 'Future Ready',
-      description: 'Leading the way in smart education with cutting-edge technology.',
+      year: 'Now',
+      title: 'Ongoing Development',
+      description: 'Continuing to refine features and documentation as part of our college project journey.',
     },
   ];
 
@@ -85,9 +85,9 @@ const About: React.FC = () => {
           <div>
             <h2 className="text-3xl font-bold text-gray-900 mb-6">Our Mission</h2>
             <p className="text-lg text-gray-600 mb-6">
-              To provide exceptional education through innovative technology, fostering a community of learners 
-              who are prepared to meet the challenges of tomorrow. We strive to create an inclusive environment 
-              where every student can thrive and achieve their full potential.
+            We want to be a leader in smart education — known for our creative approach to learning, groundbreaking research, and most importantly, helping our students succeed.
+
+We see a future where technology makes learning better, easier, and more accessible for everyone. By continually innovating and working together, we’re shaping the future of education and empowering the next generation to lead, create, and solve big challenges.
             </p>
             <p className="text-lg text-gray-600">
               Our commitment to excellence extends beyond the classroom, as we prepare students to become 
@@ -97,9 +97,9 @@ const About: React.FC = () => {
           <div>
             <h2 className="text-3xl font-bold text-gray-900 mb-6">Our Vision</h2>
             <p className="text-lg text-gray-600 mb-6">
-              To be a leading institution in smart education, recognized for our innovative approach to 
-              learning, cutting-edge research, and commitment to student success. We envision a future 
-              where technology enhances every aspect of the educational experience.
+             we dream of a future where technology makes learning better, easier, and more accessible for everyone.
+             through continuous innovation and collaboration, we're thinking how education works--making it more accessible in one place.
+             out vision if simple:empower students to be creative and keep building technology that helps them succeed.
             </p>
             <p className="text-lg text-gray-600">
               Through continuous innovation and collaboration, we aim to shape the future of education 
