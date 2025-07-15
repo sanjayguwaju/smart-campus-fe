@@ -34,7 +34,6 @@ const Programs: React.FC = () => {
       enabled: true, // Always enabled
     }
   );
-
   const createProgramMutation = useCreateProgram();
   const updateProgramMutation = useUpdateProgram();
   const deleteProgramMutation = useDeleteProgram();
@@ -42,11 +41,9 @@ const Programs: React.FC = () => {
   // Extract programs and pagination from data
   const programs = data?.programs || [];
   const pagination = data?.pagination;
-  console.log("programs --->", data?.programs);
-  console.log("pagination --->", data?.pagination);
 
   // Get unique departments from programs
-  const departments = Array.from(new Set(programs.map((p: Program) => p.department)));
+  const departments = Array.from(new Set(programs.map((p: Program) => p.department.name)));
 
   const handleEdit = (program: Program) => {
     setEditingProgram(program);
@@ -195,7 +192,7 @@ const Programs: React.FC = () => {
                       <div className="space-y-2">
                         <div className="flex items-center text-sm text-gray-500">
                           <GraduationCap className="h-4 w-4 mr-2" />
-                          {program.department}
+                          {program.department.name}
                         </div>
                         <div className="flex items-center text-sm text-gray-500">
                           <Clock className="h-4 w-4 mr-2" />

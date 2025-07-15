@@ -1,29 +1,47 @@
-import { useMutation, useQuery, useQueryClient, UseQueryOptions } from '@tanstack/react-query';
-import { programService, ProgramsResponse } from '../services/programService';
-import { Program } from '../types/programs';
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  UseQueryOptions,
+} from "@tanstack/react-query";
+import { programService, ProgramsResponse } from "../services/programService";
+import { Program } from "../types/programs";
 
 export const usePrograms = (
-  page = 1, 
-  limit = 10, 
+  page = 1,
+  limit = 10,
   search?: string,
   department?: string,
   level?: string,
-  options?: Partial<UseQueryOptions<ProgramsResponse, Error, ProgramsResponse, readonly (string | number | undefined)[]>>
+  options?: Partial<
+    UseQueryOptions<
+      ProgramsResponse,
+      Error,
+      ProgramsResponse,
+      readonly (string | number | undefined)[]
+    >
+  >
 ) => {
   return useQuery({
-    queryKey: ['programs', page, limit, search, department, level],
-    queryFn: () => programService.getPrograms({ 
-      page, 
-      limit, 
-      search, 
-      department, 
-      level 
-    }),
-    select: (data) => {
-      console.log('usePrograms select - input data:', data);
-      console.log('usePrograms select - output data:', data);
-      return data;
-    },
+    queryKey: ["programs", page, limit, search, department, level],
+    queryFn: () =>
+      programService.getPrograms({
+        page,
+        limit,
+        search,
+        department,
+        level,
+      }),
+      select: (response) => {
+        return {
+          programs: response.data,
+          pagination: response.pagination,
+          success: response.success,
+          message: response.message,
+          timestamp: response.timestamp,
+        };
+      },
+
     staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
     ...options,
   });
@@ -31,7 +49,7 @@ export const usePrograms = (
 
 export const useProgramData = (id: string) => {
   return useQuery({
-    queryKey: ['programs', id],
+    queryKey: ["programs", id],
     queryFn: () => programService.getProgramById(id),
     select: (data) => data.data,
     enabled: !!id,
@@ -42,10 +60,11 @@ export const useCreateProgram = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (programData: Partial<Program>) => programService.createProgram(programData),
+    mutationFn: (programData: Partial<Program>) =>
+      programService.createProgram(programData),
     onSuccess: () => {
       // Invalidate and refetch programs list
-      queryClient.invalidateQueries({ queryKey: ['programs'] });
+      queryClient.invalidateQueries({ queryKey: ["programs"] });
     },
   });
 };
@@ -54,13 +73,18 @@ export const useUpdateProgram = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, programData }: { id: string; programData: Partial<Program> }) => 
-      programService.updateProgram(id, programData),
+    mutationFn: ({
+      id,
+      programData,
+    }: {
+      id: string;
+      programData: Partial<Program>;
+    }) => programService.updateProgram(id, programData),
     onSuccess: (data, variables) => {
       // Update specific program in cache
-      queryClient.setQueryData(['programs', variables.id], data);
+      queryClient.setQueryData(["programs", variables.id], data);
       // Invalidate programs list
-      queryClient.invalidateQueries({ queryKey: ['programs'] });
+      queryClient.invalidateQueries({ queryKey: ["programs"] });
     },
   });
 };
@@ -72,9 +96,9 @@ export const useDeleteProgram = () => {
     mutationFn: (id: string) => programService.deleteProgram(id),
     onSuccess: (_, deletedId) => {
       // Remove from cache
-      queryClient.removeQueries({ queryKey: ['programs', deletedId] });
+      queryClient.removeQueries({ queryKey: ["programs", deletedId] });
       // Invalidate programs list
-      queryClient.invalidateQueries({ queryKey: ['programs'] });
+      queryClient.invalidateQueries({ queryKey: ["programs"] });
     },
   });
-}; 
+};
