@@ -1,4 +1,3 @@
-import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Outlet } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { useAuthInit } from './hooks/useAuthInit';
@@ -27,6 +26,21 @@ import Analytics from './pages/Admin/Analytics';
 import Settings from './pages/Admin/Settings';
 import AdminBlog from './pages/Admin/Blog';
 import StudentProfile from './pages/Student/Profile';
+import StudentCourses from './pages/Student/Courses';
+import StudentGrades from './pages/Student/Grades';
+import StudentEvents from './pages/Student/Events';
+import StudentNotices from './pages/Student/Notices';
+import StudentCalendar from './pages/Student/Calendar';
+import StudentServices from './pages/Student/Services';
+import StudentPrograms from './pages/Student/Programs';
+import Courses from './pages/Faculty/Courses';
+import Students from './pages/Faculty/Students';
+import FacultyEvents from './pages/Faculty/Events';
+import FacultyNotices from './pages/Faculty/Notices';
+import Grades from './pages/Faculty/Grades';
+import OfficeHours from './pages/Faculty/OfficeHours';
+import FacultyBlog from './pages/Faculty/Blog';
+
 
 function App() {
   // Initialize authentication state
@@ -91,12 +105,13 @@ function App() {
           }
         >
           <Route index element={<Dashboard />} />
-          <Route path="courses" element={<div className="p-6">Faculty Courses Page</div>} />
-          <Route path="students" element={<div className="p-6">Faculty Students Page</div>} />
-          <Route path="events" element={<div className="p-6">Faculty Events Page</div>} />
-          <Route path="notices" element={<div className="p-6">Faculty Notices Page</div>} />
-          <Route path="grades" element={<div className="p-6">Faculty Grades Page</div>} />
-          <Route path="office-hours" element={<div className="p-6">Faculty Office Hours Page</div>} />
+          <Route path="courses" element={<Courses />} />
+          <Route path="students" element={<Students />} />
+          <Route path="events" element={<FacultyEvents />} />
+          <Route path="notices" element={<FacultyNotices />} />
+          <Route path="grades" element={<Grades />} />
+          <Route path="office-hours" element={<OfficeHours />} />
+          <Route path="blog" element={<FacultyBlog />} />
         </Route>
 
         {/* Student routes with role-based protection */}
@@ -109,13 +124,13 @@ function App() {
           }
         >
           <Route index element={<Dashboard />} />
-          <Route path="courses" element={<div className="p-6">Student Courses Page</div>} />
-          <Route path="grades" element={<div className="p-6">Student Grades Page</div>} />
-          <Route path="events" element={<div className="p-6">Student Events Page</div>} />
-          <Route path="notices" element={<div className="p-6">Student Notices Page</div>} />
-          <Route path="calendar" element={<div className="p-6">Student Calendar Page</div>} />
-          <Route path="services" element={<div className="p-6">Student Services Page</div>} />
-          <Route path="programs" element={<div className="p-6">Student Programs Page</div>} />
+          <Route path="courses" element={<StudentCourses />} />
+          <Route path="grades" element={<StudentGrades />} />
+          <Route path="events" element={<StudentEvents />} />
+          <Route path="notices" element={<StudentNotices />} />
+          <Route path="calendar" element={<StudentCalendar />} />
+          <Route path="services" element={<StudentServices />} />
+          <Route path="programs" element={<StudentPrograms />} />
           <Route path="profile" element={<StudentProfile />} />
         </Route>
 
