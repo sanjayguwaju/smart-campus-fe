@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Calendar, User, Tag, ArrowRight, Search, Filter } from 'lucide-react';
+import { getBlogs } from '../api/services/blogService'
 
 interface BlogPost {
   id: string;
@@ -27,6 +28,19 @@ const Blog: React.FC = () => {
     { key: 'events', name: 'Events' },
   ];
 
+  const [blogs,setBlogs]= useState()
+  useEffect(() => {
+    const fetchBlogs = async () => {
+      try {
+        const response = await getBlogs();
+        setBlogs(response.data);
+      } catch (error) {
+        console.error('Error fetching blogs:', error);
+      }
+      fetchBlogs();
+    };
+    getBlogs()
+  },[])
   const blogPosts: BlogPost[] = [
     {
       id: '1',
