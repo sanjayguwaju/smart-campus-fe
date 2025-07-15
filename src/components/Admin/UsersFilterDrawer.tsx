@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { X, Filter, Search } from 'lucide-react';
+import React, { useState } from "react";
+import { X, Filter, Search } from "lucide-react";
 
 interface FilterState {
   role: string;
@@ -25,14 +25,14 @@ const UsersFilterDrawer: React.FC<UsersFilterDrawerProps> = ({
   filters,
   onApplyFilters,
   onClearFilters,
-  departments
+  departments,
 }) => {
   const [localFilters, setLocalFilters] = useState(filters);
 
   const handleFilterChange = (key: string, value: string) => {
-    setLocalFilters(prev => ({
+    setLocalFilters((prev) => ({
       ...prev,
-      [key]: value
+      [key]: value,
     }));
   };
 
@@ -43,37 +43,43 @@ const UsersFilterDrawer: React.FC<UsersFilterDrawerProps> = ({
 
   const handleClearFilters = () => {
     setLocalFilters({
-      role: '',
-      status: '',
-      department: '',
-      searchTerm: '',
-      dateRange: '',
-      isEmailVerified: ''
+      role: "",
+      status: "",
+      department: "",
+      searchTerm: "",
+      dateRange: "",
+      isEmailVerified: "",
     });
     onClearFilters();
   };
 
-  const hasActiveFilters = Object.values(localFilters).some(value => value !== '');
+  const hasActiveFilters = Object.values(localFilters).some(
+    (value) => value !== ""
+  );
 
   return (
     <>
       {/* Backdrop */}
       {isOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-50 z-40"
           onClick={onClose}
         />
       )}
 
       {/* Drawer */}
-      <div className={`fixed top-0 right-0 h-full w-80 bg-white shadow-2xl transform transition-transform duration-300 ease-in-out z-50 ${
-        isOpen ? 'translate-x-0' : 'translate-x-full'
-      }`}>
+      <div
+        className={`fixed top-10 right-0 h-full w-80 bg-white shadow-2xl transform transition-transform duration-300 ease-in-out z-50 ${
+          isOpen ? "translate-x-0" : "translate-x-full"
+        }`}
+      >
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div className="flex items-center">
             <Filter className="h-5 w-5 text-blue-600 mr-2" />
-            <h3 className="text-lg font-semibold text-gray-900">Filter Users</h3>
+            <h3 className="text-lg font-semibold text-gray-900">
+              Filter Users
+            </h3>
           </div>
           <button
             onClick={onClose}
@@ -86,21 +92,6 @@ const UsersFilterDrawer: React.FC<UsersFilterDrawerProps> = ({
         {/* Filter Content */}
         <div className="p-6 space-y-6 overflow-y-auto h-full">
           {/* Search */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Search
-            </label>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search by name or email..."
-                value={localFilters.searchTerm}
-                onChange={(e) => handleFilterChange('searchTerm', e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-          </div>
 
           {/* Role Filter */}
           <div>
@@ -109,7 +100,7 @@ const UsersFilterDrawer: React.FC<UsersFilterDrawerProps> = ({
             </label>
             <select
               value={localFilters.role}
-              onChange={(e) => handleFilterChange('role', e.target.value)}
+              onChange={(e) => handleFilterChange("role", e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="">All Roles</option>
@@ -126,7 +117,7 @@ const UsersFilterDrawer: React.FC<UsersFilterDrawerProps> = ({
             </label>
             <select
               value={localFilters.status}
-              onChange={(e) => handleFilterChange('status', e.target.value)}
+              onChange={(e) => handleFilterChange("status", e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="">All Status</option>
@@ -142,12 +133,14 @@ const UsersFilterDrawer: React.FC<UsersFilterDrawerProps> = ({
             </label>
             <select
               value={localFilters.department}
-              onChange={(e) => handleFilterChange('department', e.target.value)}
+              onChange={(e) => handleFilterChange("department", e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="">All Departments</option>
               {departments.map((dept) => (
-                <option key={dept} value={dept}>{dept}</option>
+                <option key={dept} value={dept}>
+                  {dept}
+                </option>
               ))}
             </select>
           </div>
@@ -159,7 +152,9 @@ const UsersFilterDrawer: React.FC<UsersFilterDrawerProps> = ({
             </label>
             <select
               value={localFilters.isEmailVerified}
-              onChange={(e) => handleFilterChange('isEmailVerified', e.target.value)}
+              onChange={(e) =>
+                handleFilterChange("isEmailVerified", e.target.value)
+              }
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="">All Users</option>
@@ -175,7 +170,7 @@ const UsersFilterDrawer: React.FC<UsersFilterDrawerProps> = ({
             </label>
             <select
               value={localFilters.dateRange}
-              onChange={(e) => handleFilterChange('dateRange', e.target.value)}
+              onChange={(e) => handleFilterChange("dateRange", e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="">All Time</option>
@@ -190,13 +185,17 @@ const UsersFilterDrawer: React.FC<UsersFilterDrawerProps> = ({
           {/* Active Filters Display */}
           {hasActiveFilters && (
             <div className="bg-gray-50 rounded-lg p-4">
-              <h4 className="text-sm font-medium text-gray-700 mb-2">Active Filters:</h4>
+              <h4 className="text-sm font-medium text-gray-700 mb-2">
+                Active Filters:
+              </h4>
               <div className="space-y-1">
                 {localFilters.role && (
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-600">Role: {localFilters.role}</span>
+                    <span className="text-xs text-gray-600">
+                      Role: {localFilters.role}
+                    </span>
                     <button
-                      onClick={() => handleFilterChange('role', '')}
+                      onClick={() => handleFilterChange("role", "")}
                       className="text-red-500 hover:text-red-700 text-xs"
                     >
                       ×
@@ -205,9 +204,11 @@ const UsersFilterDrawer: React.FC<UsersFilterDrawerProps> = ({
                 )}
                 {localFilters.status && (
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-600">Status: {localFilters.status}</span>
+                    <span className="text-xs text-gray-600">
+                      Status: {localFilters.status}
+                    </span>
                     <button
-                      onClick={() => handleFilterChange('status', '')}
+                      onClick={() => handleFilterChange("status", "")}
                       className="text-red-500 hover:text-red-700 text-xs"
                     >
                       ×
@@ -216,9 +217,11 @@ const UsersFilterDrawer: React.FC<UsersFilterDrawerProps> = ({
                 )}
                 {localFilters.department && (
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-600">Department: {localFilters.department}</span>
+                    <span className="text-xs text-gray-600">
+                      Department: {localFilters.department}
+                    </span>
                     <button
-                      onClick={() => handleFilterChange('department', '')}
+                      onClick={() => handleFilterChange("department", "")}
                       className="text-red-500 hover:text-red-700 text-xs"
                     >
                       ×
@@ -227,9 +230,11 @@ const UsersFilterDrawer: React.FC<UsersFilterDrawerProps> = ({
                 )}
                 {localFilters.isEmailVerified && (
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-600">Email: {localFilters.isEmailVerified}</span>
+                    <span className="text-xs text-gray-600">
+                      Email: {localFilters.isEmailVerified}
+                    </span>
                     <button
-                      onClick={() => handleFilterChange('isEmailVerified', '')}
+                      onClick={() => handleFilterChange("isEmailVerified", "")}
                       className="text-red-500 hover:text-red-700 text-xs"
                     >
                       ×
@@ -238,9 +243,11 @@ const UsersFilterDrawer: React.FC<UsersFilterDrawerProps> = ({
                 )}
                 {localFilters.dateRange && (
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-600">Date: {localFilters.dateRange}</span>
+                    <span className="text-xs text-gray-600">
+                      Date: {localFilters.dateRange}
+                    </span>
                     <button
-                      onClick={() => handleFilterChange('dateRange', '')}
+                      onClick={() => handleFilterChange("dateRange", "")}
                       className="text-red-500 hover:text-red-700 text-xs"
                     >
                       ×
@@ -274,4 +281,4 @@ const UsersFilterDrawer: React.FC<UsersFilterDrawerProps> = ({
   );
 };
 
-export default UsersFilterDrawer; 
+export default UsersFilterDrawer;
