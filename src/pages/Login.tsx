@@ -25,7 +25,11 @@ const Login: React.FC = () => {
 
   const onSubmit: SubmitHandler<LoginForm> = async (data) => {
     try {
-      const success = await login(data.email, data.password);
+      // Trim whitespace from email and password
+      const trimmedEmail = data.email.trim();
+      const trimmedPassword = data.password.trim();
+      
+      const success = await login(trimmedEmail, trimmedPassword);
       if (success) {
         toast.success('Login successful!');
         // Use a small delay to ensure the store is updated
