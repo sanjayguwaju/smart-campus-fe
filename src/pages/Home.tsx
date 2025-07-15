@@ -60,10 +60,10 @@ const Home: React.FC = () => {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
-              className="text-4xl md:text-6xl font-bold mb-6 leading-tight"
+              className="text-4xl md:text-6xl font-bold mb-8 leading-tight"
             >
-              Welcome to the Future of
-              <span className="block text-blue-300">Smart Education</span>
+              WELCOME TO YOUR SMART
+              <span className="block text-blue-300">SMART CAMPUS</span>
             </motion.h1>
             
             <motion.p
@@ -72,7 +72,7 @@ const Home: React.FC = () => {
               transition={{ duration: 0.8, delay: 0.2 }}
               className="text-xl md:text-2xl mb-8 text-blue-100 max-w-3xl mx-auto leading-relaxed"
             >
-              Experience cutting-edge technology integrated with world-class education in our innovative smart campus environment.
+              Learn, connect, and grow in a campus.
             </motion.p>
             
             <motion.div
@@ -99,7 +99,7 @@ const Home: React.FC = () => {
                 to="/contact"
                 className="inline-flex items-center px-8 py-4 border-2 border-white text-white font-semibold rounded-lg hover:bg-white hover:text-blue-600 transition-colors duration-200"
               >
-                Request Campus Tour
+                Explore the campus
               </Link>
             </motion.div>
           </div>
