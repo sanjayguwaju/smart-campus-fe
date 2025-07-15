@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Users, BookOpen, Wifi, Shield, MapPin, Star } from 'lucide-react';
+import { ArrowRight, Users, BookOpen, Wifi, Shield, MapPin, Star, Calendar, FileText, GraduationCap } from 'lucide-react';
 
 const Home: React.FC = () => {
   const features = [
@@ -160,8 +160,8 @@ const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* Why Choose Us Section */}
-      <section className="py-20 bg-blue-600 text-white">
+      {/* Why Choose Our Smart Campus? */}
+      <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -170,61 +170,79 @@ const Home: React.FC = () => {
             viewport={{ once: true }}
             className="text-center mb-16"
           >
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
               Why Choose Our Smart Campus?
             </h2>
-            <p className="text-xl text-blue-100 max-w-3xl mx-auto">
-              Experience the benefits of next-generation education technology
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Experience seamless campus life with our integrated digital platform
             </p>
           </motion.div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
               viewport={{ once: true }}
-              className="text-center"
+              className="text-center p-8 rounded-xl bg-blue-50 hover:bg-blue-100 shadow-md transition-colors duration-200"
             >
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-500 rounded-full mb-4">
-                <BookOpen className="h-8 w-8" />
-              </div>
-              <h3 className="text-xl font-semibold mb-4">Enhanced Learning</h3>
-              <p className="text-blue-100">
-                Immersive learning experiences with interactive technology and personalized education paths.
-              </p>
+              <BookOpen className="h-10 w-10 mx-auto text-blue-600 mb-4" />
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Course Management</h3>
+              <p className="text-gray-600">Enroll, track, and manage your courses with ease.</p>
             </motion.div>
-            
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+              viewport={{ once: true }}
+              className="text-center p-8 rounded-xl bg-blue-50 hover:bg-blue-100 shadow-md transition-colors duration-200"
+            >
+              <Calendar className="h-10 w-10 mx-auto text-blue-600 mb-4" />
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Event Management</h3>
+              <p className="text-gray-600">Stay updated and participate in campus events and activities.</p>
+            </motion.div>
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
               viewport={{ once: true }}
-              className="text-center"
+              className="text-center p-8 rounded-xl bg-blue-50 hover:bg-blue-100 shadow-md transition-colors duration-200"
             >
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-500 rounded-full mb-4">
-                <Shield className="h-8 w-8" />
-              </div>
-              <h3 className="text-xl font-semibold mb-4">Campus Safety</h3>
-              <p className="text-blue-100">
-                Advanced security systems and emergency response protocols ensure a safe learning environment.
-              </p>
+              <FileText className="h-10 w-10 mx-auto text-blue-600 mb-4" />
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Noticeboard</h3>
+              <p className="text-gray-600">Access important announcements and notices in one place.</p>
             </motion.div>
-            
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              viewport={{ once: true }}
+              className="text-center p-8 rounded-xl bg-blue-50 hover:bg-blue-100 shadow-md transition-colors duration-200"
+            >
+              <GraduationCap className="h-10 w-10 mx-auto text-blue-600 mb-4" />
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Program Catalog</h3>
+              <p className="text-gray-600">Explore academic programs and find the right fit for you.</p>
+            </motion.div>
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.4 }}
               viewport={{ once: true }}
-              className="text-center"
+              className="text-center p-8 rounded-xl bg-blue-50 hover:bg-blue-100 shadow-md transition-colors duration-200"
             >
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-500 rounded-full mb-4">
-                <Users className="h-8 w-8" />
-              </div>
-              <h3 className="text-xl font-semibold mb-4">Resource Availability</h3>
-              <p className="text-blue-100">
-                Real-time access to campus resources, facilities, and services through our integrated platform.
-              </p>
+              <Users className="h-10 w-10 mx-auto text-blue-600 mb-4" />
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">User Management</h3>
+              <p className="text-gray-600">Manage student, faculty, and admin accounts securely.</p>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.5 }}
+              viewport={{ once: true }}
+              className="text-center p-8 rounded-xl bg-blue-50 hover:bg-blue-100 shadow-md transition-colors duration-200"
+            >
+              <MapPin className="h-10 w-10 mx-auto text-blue-600 mb-4" />
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Department Directory</h3>
+              <p className="text-gray-600">Browse departments and connect with the right people.</p>
             </motion.div>
           </div>
         </div>
