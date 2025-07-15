@@ -106,64 +106,6 @@ const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* Interactive Campus Map Section */}
-      <section className="py-20 bg-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <motion.div
-              initial={{ opacity: 0, x: -50 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8 }}
-              viewport={{ once: true }}
-            >
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
-                Interactive Campus Map
-              </h2>
-              <p className="text-lg text-gray-600 mb-6 leading-relaxed">
-                Navigate our smart campus with ease using our interactive mapping system. Find buildings, 
-                facilities, and services quickly with real-time information and optimal routing.
-              </p>
-              <ul className="space-y-3 mb-8">
-                <li className="flex items-center text-gray-700">
-                  <MapPin className="h-5 w-5 text-blue-600 mr-3" />
-                  Real-time navigation and directions
-                </li>
-                <li className="flex items-center text-gray-700">
-                  <Users className="h-5 w-5 text-blue-600 mr-3" />
-                  Facility availability and capacity
-                </li>
-                <li className="flex items-center text-gray-700">
-                  <BookOpen className="h-5 w-5 text-blue-600 mr-3" />
-                  Academic building locations
-                </li>
-              </ul>
-              <Link
-                to="/contact"
-                className="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors duration-200"
-              >
-                Explore Campus Map
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Link>
-            </motion.div>
-            
-            <motion.div
-              initial={{ opacity: 0, x: 50 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8 }}
-              viewport={{ once: true }}
-              className="relative"
-            >
-              <img
-                src="https://images.pexels.com/photos/1595391/pexels-photo-1595391.jpeg?auto=compress&cs=tinysrgb&w=800"
-                alt="Campus Map"
-                className="rounded-xl shadow-2xl"
-              />
-              <div className="absolute inset-0 bg-blue-600 opacity-10 rounded-xl"></div>
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
       {/* Testimonials Section */}
       <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
