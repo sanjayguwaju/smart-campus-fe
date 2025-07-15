@@ -1,8 +1,6 @@
 import { apiClient } from '../config/axios';
 import {
-  Event,
   CreateEventRequest,
-  UpdateEventRequest,
   EventsResponse,
   EventResponse,
   CreateEventResponse

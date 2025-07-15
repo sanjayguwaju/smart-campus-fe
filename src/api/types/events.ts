@@ -20,7 +20,7 @@ export interface Event {
     firstName: string;
     lastName: string;
     email: string;
-    fullName: string;
+    avatar?: string | null;
   };
   coOrganizers?: Array<{
     _id: string;
@@ -35,10 +35,10 @@ export interface Event {
       firstName: string;
       lastName: string;
       email: string;
-      fullName: string;
-    };
+    } | null;
     status: 'registered' | 'attended' | 'cancelled' | 'waitlist';
     registeredAt: string;
+    _id: string;
   }>;
   maxAttendees?: number;
   currentAttendees: number;
@@ -68,6 +68,16 @@ export interface Event {
   visibility: 'public' | 'private' | 'restricted';
   priority: 'low' | 'medium' | 'high' | 'urgent';
   featured: boolean;
+  statistics?: {
+    views: number;
+    shares: number;
+    registrations: number;
+    attendance: number;
+  };
+  averageRating?: number;
+  totalReviews?: number;
+  createdBy?: string;
+  updatedBy?: string;
   highlights?: string[];
   requirements?: string[];
   benefits?: string[];
@@ -127,16 +137,16 @@ export interface UpdateEventRequest extends Partial<CreateEventRequest> {
 export interface EventsResponse {
   success: boolean;
   message: string;
-  data: {
-    events: Event[];
-    pagination: {
-      page: number;
-      limit: number;
-      total: number;
-      pages: number;
-    };
-  };
   timestamp: string;
+  data: Event[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    pages: number;
+    hasNext?: boolean;
+    hasPrev?: boolean;
+  };
 }
 
 export interface EventResponse {

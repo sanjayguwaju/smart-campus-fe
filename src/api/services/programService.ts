@@ -1,8 +1,74 @@
 import { apiClient } from '../config/axios';
 import { Program } from '../types/programs';
 
-export const getPrograms = () => apiClient.get('/programs');
-export const getProgramById = (id: string) => apiClient.get(`/programs/${id}`);
-export const createProgram = (data: Partial<Program>) => apiClient.post('/programs', data);
-export const updateProgram = (id: string, data: Partial<Program>) => apiClient.put(`/programs/${id}`, data);
-export const deleteProgram = (id: string) => apiClient.delete(`/programs/${id}`); 
+export interface ProgramsResponse {
+  programs: Program[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    pages: number;
+  };
+}
+
+export interface ProgramResponse {
+  success: boolean;
+  message: string;
+  data: Program;
+  timestamp: string;
+}
+
+export interface CreateProgramResponse {
+  success: boolean;
+  message: string;
+  data: Program;
+  timestamp: string;
+}
+
+export async function getPrograms(params?: { 
+  page?: number, 
+  limit?: number,
+  search?: string,
+  department?: string,
+  level?: string
+}): Promise<ProgramsResponse> {
+  let url = '/programs';
+  const query: string[] = [];
+  
+  if (params?.page) query.push(`page=${params.page}`);
+  if (params?.limit) query.push(`limit=${params.limit}`);
+  if (params?.search) query.push(`search=${encodeURIComponent(params.search)}`);
+  if (params?.department) query.push(`department=${encodeURIComponent(params.department)}`);
+  if (params?.level) query.push(`level=${params.level}`);
+  
+  if (query.length) url += `?${query.join('&')}`;
+  const response = await apiClient.get<ProgramsResponse>(url);
+  console.log('Raw API Response:', response.data);
+  console.log('Response structure:', {
+    hasPrograms: 'programs' in response.data,
+    hasPagination: 'pagination' in response.data,
+    hasData: 'data' in response.data,
+    keys: Object.keys(response.data)
+  });
+  return response.data;
+}
+
+export const programService = {
+  getPrograms,
+  async getProgramById(id: string): Promise<ProgramResponse> {
+    const response = await apiClient.get<ProgramResponse>(`/programs/${id}`);
+    return response.data;
+  },
+  async createProgram(data: Partial<Program>): Promise<CreateProgramResponse> {
+    const response = await apiClient.post<CreateProgramResponse>('/programs', data);
+    return response.data;
+  },
+  async updateProgram(id: string, data: Partial<Program>): Promise<ProgramResponse> {
+    const response = await apiClient.put<ProgramResponse>(`/programs/${id}`, data);
+    return response.data;
+  },
+  async deleteProgram(id: string): Promise<{ success: boolean; message: string }> {
+    const response = await apiClient.delete<{ success: boolean; message: string }>(`/programs/${id}`);
+    return response.data;
+  },
+}; 

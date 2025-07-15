@@ -4,7 +4,7 @@ export interface UserData {
   lastName?: string;
   name?: string; // For legacy users
   email: string;
-  role: 'admin' | 'faculty' | 'student';
+  role: "admin" | "faculty" | "student";
   department?: string;
   phone?: string;
   avatar?: string | null;
@@ -28,7 +28,7 @@ export interface CreateUserRequest {
   lastName: string;
   email: string;
   password: string;
-  role: 'admin' | 'faculty' | 'student';
+  role: "admin" | "faculty" | "student";
   department?: string;
   phone?: string;
 }
@@ -37,7 +37,7 @@ export interface UpdateUserRequest {
   firstName?: string;
   lastName?: string;
   email?: string;
-  role?: 'admin' | 'faculty' | 'student';
+  role?: "admin" | "faculty" | "student";
   department?: string;
   phone?: string;
   isActive?: boolean;
@@ -51,7 +51,10 @@ export interface PaginationInfo {
 }
 
 export interface UsersResponse {
-  users: UserData[];
+  success: boolean;
+  message: string;
+  timestamp: string;
+  data: UserData[];
   pagination: PaginationInfo;
 }
 
@@ -74,4 +77,4 @@ export interface ResetPasswordResponse {
   message: string;
   data: UserData;
   timestamp: string;
-} 
+}

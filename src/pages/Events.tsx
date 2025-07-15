@@ -1,6 +1,19 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, Clock, MapPin, Users, Filter, Search, Heart, Share2, ChevronDown } from 'lucide-react';
+import { 
+  motion, 
+  AnimatePresence
+} from 'framer-motion';
+import { 
+  Calendar, 
+  Clock, 
+  MapPin, 
+  Users, 
+  Filter, 
+  Search, 
+  Heart, 
+  Share2, 
+  ChevronDown,
+ } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useAuthStore } from '../store/authStore';
 import { useEvents, useRegisterForEvent } from '../api/hooks/useEvents';
@@ -22,7 +35,8 @@ const Events: React.FC = () => {
   // Use the register for event hook
   const registerForEvent = useRegisterForEvent();
 
-  const events = (eventsData?.data?.events || []).filter((event: Event) => event.isPublished === true);
+  const events = (eventsData?.events || []).filter((event: Event) => event.isPublished === true);
+
 
   const categories = [
     { value: 'all', label: 'All Events' },
@@ -295,7 +309,7 @@ const Events: React.FC = () => {
                   {/* Organizer */}
                   <div className="mb-4">
                     <p className="text-sm text-gray-500">
-                      Organized by <span className="font-medium text-gray-700">{event.organizer.fullName}</span>
+                      Organized by <span className="font-medium text-gray-700">{event.organizer.firstName} {event.organizer.lastName}</span>
                     </p>
                   </div>
 
@@ -320,12 +334,12 @@ const Events: React.FC = () => {
                         (user ? (user.role === 'admin' || user.role === 'faculty') : false)
                       }
                       className={`px-6 py-2 rounded-lg font-semibold transition-colors duration-200 ${user && event.attendees.some(attendee => attendee.user && attendee.user._id === user.id)
-                          ? 'bg-green-600 text-white hover:bg-green-700'
-                          : event.maxAttendees && event.currentAttendees >= event.maxAttendees
+                        ? 'bg-green-600 text-white hover:bg-green-700'
+                        : event.maxAttendees && event.currentAttendees >= event.maxAttendees
+                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                          : user && (user.role === 'admin' || user.role === 'faculty')
                             ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                            : user && (user.role === 'admin' || user.role === 'faculty')
-                              ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                              : 'bg-blue-600 text-white hover:bg-blue-700'
+                            : 'bg-blue-600 text-white hover:bg-blue-700'
                         }`}
                     >
                       {user && event.attendees.some(attendee => attendee.user && attendee.user._id === user.id)
