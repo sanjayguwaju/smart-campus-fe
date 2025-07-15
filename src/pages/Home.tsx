@@ -60,10 +60,10 @@ const Home: React.FC = () => {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
-              className="text-4xl md:text-6xl font-bold mb-6 leading-tight"
+              className="text-4xl md:text-6xl font-bold mb-8 leading-tight"
             >
-              Welcome to the Future of
-              <span className="block text-blue-300">Smart Education</span>
+              WELCOME TO YOUR SMART
+              <span className="block text-blue-300">SMART CAMPUS</span>
             </motion.h1>
             
             <motion.p
@@ -72,7 +72,7 @@ const Home: React.FC = () => {
               transition={{ duration: 0.8, delay: 0.2 }}
               className="text-xl md:text-2xl mb-8 text-blue-100 max-w-3xl mx-auto leading-relaxed"
             >
-              Experience cutting-edge technology integrated with world-class education in our innovative smart campus environment.
+              Learn, connect, and grow in a campus.
             </motion.p>
             
             <motion.div
@@ -99,53 +99,9 @@ const Home: React.FC = () => {
                 to="/contact"
                 className="inline-flex items-center px-8 py-4 border-2 border-white text-white font-semibold rounded-lg hover:bg-white hover:text-blue-600 transition-colors duration-200"
               >
-                Request Campus Tour
+                Explore the campus
               </Link>
             </motion.div>
-          </div>
-        </div>
-      </section>
-
-      {/* Features Section */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Smart Campus Features
-            </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Discover how our innovative technology enhances every aspect of campus life
-            </p>
-          </motion.div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {features.map((feature, index) => (
-              <motion.div
-                key={feature.title}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                viewport={{ once: true }}
-                whileHover={{ y: -5 }}
-                className="text-center p-6 rounded-xl bg-blue-50 hover:bg-blue-100 transition-colors duration-200"
-              >
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 text-white rounded-full mb-4">
-                  <feature.icon className="h-8 w-8" />
-                </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                  {feature.title}
-                </h3>
-                <p className="text-gray-600">
-                  {feature.description}
-                </p>
-              </motion.div>
-            ))}
           </div>
         </div>
       </section>
