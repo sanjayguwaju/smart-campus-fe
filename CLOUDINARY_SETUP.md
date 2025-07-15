@@ -1,4 +1,4 @@
-# Cloudinary Setup Guide
+no# Cloudinary Setup Guide
 
 This guide will help you set up Cloudinary for image uploads in your Smart Campus application.
 
