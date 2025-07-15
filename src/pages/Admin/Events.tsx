@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, Edit, Trash2, ChevronLeft, ChevronRight, Calendar, MapPin, Users, Eye, X } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, ChevronLeft, ChevronRight, Calendar, MapPin, Users, Eye, X, Filter } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useEvents, usePublishEvent, useUnpublishEvent } from '../../api/hooks/useEvents';
 import { Event } from '../../api/types/events';
@@ -7,40 +7,46 @@ import AddEventModal from '../../components/Admin/AddEventModal';
 import EditEventModal from '../../components/Admin/EditEventModal';
 import DeleteEventModal from '../../components/Admin/DeleteEventModal';
 import LoadingSpinner from '../../components/Layout/LoadingSpinner';
+import EventsFilterDrawer from '../../components/Admin/EventsFilterDrawer';
 
 const Events: React.FC = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [eventTypeFilter, setEventTypeFilter] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [deletingEvent, setDeletingEvent] = useState<{ id: string; title: string } | null>(null);
   const [viewedEvent, setViewedEvent] = useState<Event | null>(null);
+  const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
+  const [filters, setFilters] = useState({
+    eventType: '',
+    status: '',
+    category: '',
+    searchTerm: '',
+    dateRange: '',
+    featured: '',
+    location: '',
+  });
 
   // Debounce searchTerm
   useEffect(() => {
     const handler = setTimeout(() => {
-      setDebouncedSearch(searchTerm);
       setCurrentPage(1);
     }, 400);
     return () => clearTimeout(handler);
-  }, [searchTerm]);
+  }, [filters.searchTerm]);
 
   const { data: eventsData, isLoading, error } = useEvents({
     page: currentPage,
     limit: 10,
-    search: debouncedSearch,
-    eventType: eventTypeFilter,
-    status: statusFilter
+    search: filters.searchTerm,
+    eventType: filters.eventType,
+    status: filters.status
   });
 
   const publishEventMutation = usePublishEvent();
   const unpublishEventMutation = useUnpublishEvent();
 
-  const events = eventsData?.data?.events || [];
-  const pagination = eventsData?.data?.pagination;
+  const events = eventsData?.events || [];
+  const pagination = eventsData?.pagination;
 
   const handleEdit = (event: Event) => {
     setEditingEvent(event);
@@ -87,8 +93,6 @@ const Events: React.FC = () => {
     }
   };
 
-
-
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -134,57 +138,40 @@ const Events: React.FC = () => {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Events</h1>
+          <p className="text-gray-600">Manage all events in the system</p>
         </div>
-        <button
+        <button 
           onClick={() => setIsAddModalOpen(true)}
-          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center"
         >
-          <Plus className="w-5 h-5" />
+          <Plus className="h-4 w-4 mr-2" />
           Add Event
         </button>
       </div>
 
-      {/* Search and Filters */}
-      <div className="bg-white rounded-lg shadow p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div className="flex items-center w-full md:w-1/2 bg-gray-50 rounded-md px-3 py-2 border border-gray-200">
-          <Search className="w-5 h-5 text-gray-400 mr-2" />
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search events by title or description..."
-            className="w-full bg-transparent outline-none text-gray-700"
-          />
-        </div>
-        <div className="flex gap-4 w-full md:w-auto">
-          <select
-            value={eventTypeFilter}
-            onChange={(e) => setEventTypeFilter(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-          >
-            <option value="">All Types</option>
-            <option value="academic">Academic</option>
-            <option value="cultural">Cultural</option>
-            <option value="sports">Sports</option>
-            <option value="technical">Technical</option>
-            <option value="social">Social</option>
-            <option value="workshop">Workshop</option>
-            <option value="seminar">Seminar</option>
-            <option value="conference">Conference</option>
-            <option value="other">Other</option>
-          </select>
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-          >
-            <option value="">All Status</option>
-            <option value="draft">Draft</option>
-            <option value="published">Published</option>
-            <option value="cancelled">Cancelled</option>
-            <option value="completed">Completed</option>
-            <option value="postponed">Postponed</option>
-          </select>
+      {/* Filters and search */}
+      <div className="bg-white rounded-lg shadow p-6">
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex-1">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search events..."
+                value={filters.searchTerm}
+                onChange={(e) => setFilters(prev => ({ ...prev, searchTerm: e.target.value }))}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setIsFilterDrawerOpen(true)}
+              className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center"
+            >
+              <Filter className="h-4 w-4" />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -249,7 +236,7 @@ const Events: React.FC = () => {
             </div>
             <hr className="my-3" />
             <div className="flex items-center justify-between mt-auto">
-              <span className="text-xs text-gray-400">Created by {event.organizer?.fullName || event.organizer?.email || 'Unknown'}</span>
+              <span className="text-xs text-gray-400">Created by {event.organizer?.firstName && event.organizer?.lastName ? `${event.organizer.firstName} ${event.organizer.lastName}` : event.organizer?.email || 'Unknown'}</span>
               <div className="flex items-center space-x-2">
                 <button
                   className="text-blue-600 hover:text-blue-900"
@@ -369,7 +356,7 @@ const Events: React.FC = () => {
                 <div className="mb-2 flex items-center"><MapPin className="h-4 w-4 mr-2" /> <span>{[viewedEvent.location.venue, viewedEvent.location.room, viewedEvent.location.building, viewedEvent.location.campus].filter(Boolean).join(', ')}</span></div>
               </div>
               <div>
-                <div className="mb-2"><span className="font-semibold">Organizer:</span> {viewedEvent.organizer?.fullName || viewedEvent.organizer?.email || 'Unknown'}</div>
+                <div className="mb-2"><span className="font-semibold">Organizer:</span> {viewedEvent.organizer?.firstName && viewedEvent.organizer?.lastName ? `${viewedEvent.organizer.firstName} ${viewedEvent.organizer.lastName}` : viewedEvent.organizer?.email || 'Unknown'}</div>
                 {viewedEvent.coOrganizers && viewedEvent.coOrganizers.length > 0 && (
                   <div className="mb-2">
                     <span className="font-semibold">Co-Organizers:</span>
@@ -439,6 +426,29 @@ const Events: React.FC = () => {
         onClose={() => setDeletingEvent(null)}
         eventId={deletingEvent?.id || ''}
         eventTitle={deletingEvent?.title || ''}
+      />
+
+      {/* Filter Drawer */}
+      <EventsFilterDrawer
+        isOpen={isFilterDrawerOpen}
+        onClose={() => setIsFilterDrawerOpen(false)}
+        filters={filters}
+        onApplyFilters={(newFilters) => {
+          setFilters(newFilters);
+          setCurrentPage(1);
+        }}
+        onClearFilters={() => {
+          setFilters({
+            eventType: '',
+            status: '',
+            category: '',
+            searchTerm: '',
+            dateRange: '',
+            featured: '',
+            location: '',
+          });
+          setCurrentPage(1);
+        }}
       />
     </div>
   );

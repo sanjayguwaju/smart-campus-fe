@@ -1,43 +1,52 @@
-import React, { useState } from 'react';
-import { Plus, Search, Edit, Trash2, Eye, Filter, GraduationCap, Clock, BookOpen } from 'lucide-react';
-import { usePrograms } from '../../api/hooks/usePrograms';
+import React, { useState, useEffect } from 'react';
+import { Plus, Search, Edit, Trash2, Filter, GraduationCap, Clock, BookOpen } from 'lucide-react';
+import { usePrograms, useCreateProgram, useUpdateProgram, useDeleteProgram } from '../../api/hooks/usePrograms';
 import { Program } from '../../api/types/programs';
 import AddProgramModal from '../../components/Admin/AddProgramModal';
 import EditProgramModal from '../../components/Admin/EditProgramModal';
 import DeleteProgramModal from '../../components/Admin/DeleteProgramModal';
 import LoadingSpinner from '../../components/Layout/LoadingSpinner';
-import { AxiosResponse } from 'axios';
 
 const Programs: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [levelFilter, setLevelFilter] = useState<string>('all');
   const [departmentFilter, setDepartmentFilter] = useState<string>('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingProgram, setEditingProgram] = useState<Program | null>(null);
   const [deletingProgram, setDeletingProgram] = useState<{ id: string; name: string } | null>(null);
 
-  // Correctly type the Axios response
-  const { programsQuery, createProgram, updateProgram, deleteProgram } = usePrograms();
+  // Reset to first page when search term changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
 
-  // Type guard for backend response
-  function isBackendProgramsResponse(obj: any): obj is { success: boolean; message: string; data: Program[] } {
-    return obj && Array.isArray(obj.data);
-  }
-  let programs: Program[] = [];
-  if (programsQuery.data && isBackendProgramsResponse((programsQuery.data as any).data)) {
-    programs = (programsQuery.data as any).data.data;
-  }
-  console.log('Programs:', programs);
-  const isLoading = programsQuery.isLoading;
-  const error = programsQuery.error;
+  // TanStack Query hooks with refetchInterval
+  const { data, isLoading, error } = usePrograms(
+    currentPage, 
+    pageSize, 
+    searchTerm || undefined,
+    departmentFilter !== 'all' ? departmentFilter : undefined,
+    levelFilter !== 'all' ? levelFilter : undefined,
+    {
+      refetchInterval: searchTerm ? 3000 : false, // Auto-refetch every 3 seconds while searching
+      enabled: true, // Always enabled
+    }
+  );
 
-  const filteredPrograms = programs.filter((program: Program) => {
-    const matchesSearch = program.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         program.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesLevel = levelFilter === 'all' || program.level === levelFilter;
-    const matchesDepartment = departmentFilter === 'all' || program.department === departmentFilter;
-    return matchesSearch && matchesLevel && matchesDepartment;
-  });
+  const createProgramMutation = useCreateProgram();
+  const updateProgramMutation = useUpdateProgram();
+  const deleteProgramMutation = useDeleteProgram();
+
+  // Extract programs and pagination from data
+  const programs = data?.programs || [];
+  const pagination = data?.pagination;
+  console.log("programs --->", data?.programs);
+  console.log("pagination --->", data?.pagination);
+
+  // Get unique departments from programs
+  const departments = Array.from(new Set(programs.map((p: Program) => p.department)));
 
   const handleEdit = (program: Program) => {
     setEditingProgram(program);
@@ -48,7 +57,7 @@ const Programs: React.FC = () => {
   };
 
   const handleAdd = (data: Omit<Program, '_id' | 'createdAt' | 'updatedAt'>) => {
-    createProgram.mutate(data, {
+    createProgramMutation.mutate(data, {
       onSuccess: () => {
         setIsAddModalOpen(false);
       }
@@ -56,7 +65,7 @@ const Programs: React.FC = () => {
   };
 
   const handleEditSubmit = (id: string, data: Partial<Program>) => {
-    updateProgram.mutate({ id, data }, {
+    updateProgramMutation.mutate({ id, programData: data }, {
       onSuccess: () => {
         setEditingProgram(null);
       }
@@ -65,7 +74,7 @@ const Programs: React.FC = () => {
 
   const handleDeleteConfirm = () => {
     if (deletingProgram) {
-      deleteProgram.mutate(deletingProgram.id, {
+      deleteProgramMutation.mutate(deletingProgram.id, {
         onSuccess: () => {
           setDeletingProgram(null);
         }
@@ -85,8 +94,6 @@ const Programs: React.FC = () => {
         return 'bg-gray-100 text-gray-800';
     }
   };
-
-  const departments = Array.from(new Set(programs.map((p: Program) => p.department)));
 
   if (isLoading) {
     return <LoadingSpinner size="lg" className="min-h-screen" />;
@@ -165,14 +172,14 @@ const Programs: React.FC = () => {
         <div className="px-6 py-4 border-b border-gray-200">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-medium text-gray-900">
-              {filteredPrograms.length} programs found
+              {pagination ? `${pagination.total} programs found` : `${programs.length} programs found`}
             </h3>
           </div>
         </div>
 
         <div className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredPrograms.map((program: Program) => (
+            {programs.map((program: Program) => (
               <div key={program._id} className="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow">
                 <div className="p-6">
                   <div className="flex items-start justify-between">
