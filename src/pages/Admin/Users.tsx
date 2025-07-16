@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Search, Edit, Trash2, Eye, Filter, UserCheck, UserX, ChevronLeft, ChevronRight, MoreHorizontal, Key } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import Select, { StylesConfig } from 'react-select';
 import { useUsers, useDeleteUser, useActivateUser, useDeactivateUser, useResetPassword } from '../../api/hooks/useUsers';
 import { UserData } from '../../api/types/users';
 import LoadingSpinner from '../../components/Layout/LoadingSpinner';
@@ -14,6 +15,12 @@ import {
   UsersFilterDrawer 
 } from '../../components/Admin/Users';
 import { DeleteConfirmationModal } from '../../components/Admin/Shared';
+
+// Select option interface
+interface SelectOption {
+  value: string;
+  label: string;
+}
 
 const Users: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -44,6 +51,40 @@ const Users: React.FC = () => {
     dateRange: '',
     isEmailVerified: ''
   });
+
+  // Role filter options
+  const roleOptions: SelectOption[] = [
+    { value: 'all', label: 'All Roles' },
+    { value: 'admin', label: 'Admin' },
+    { value: 'faculty', label: 'Faculty' },
+    { value: 'student', label: 'Student' }
+  ];
+
+  // Custom styles for React Select
+  const selectStyles: StylesConfig<SelectOption, false> = {
+    control: (provided) => ({
+      ...provided,
+      border: '1px solid #d1d5db',
+      borderRadius: '0.5rem',
+      minHeight: '40px',
+      boxShadow: 'none',
+      '&:hover': {
+        border: '1px solid #d1d5db'
+      }
+    }),
+    option: (provided, state) => ({
+      ...provided,
+      backgroundColor: state.isSelected ? '#3b82f6' : state.isFocused ? '#f3f4f6' : 'white',
+      color: state.isSelected ? 'white' : '#374151',
+      '&:hover': {
+        backgroundColor: state.isSelected ? '#3b82f6' : '#f3f4f6'
+      }
+    }),
+    menu: (provided) => ({
+      ...provided,
+      zIndex: 9999
+    })
+  };
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -376,16 +417,15 @@ const Users: React.FC = () => {
             </div>
           </div>
           <div className="flex gap-2">
-            <select
-              value={roleFilter}
-              onChange={(e) => setRoleFilter(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="all">All Roles</option>
-              <option value="admin">Admin</option>
-              <option value="faculty">Faculty</option>
-              <option value="student">Student</option>
-            </select>
+            <Select
+              options={roleOptions}
+              value={roleOptions.find(option => option.value === roleFilter)}
+              onChange={(selectedOption) => setRoleFilter(selectedOption?.value || 'all')}
+              styles={selectStyles}
+              placeholder="Select Role"
+              isSearchable={false}
+              className="w-full"
+            />
             <button 
               onClick={() => setIsFilterDrawerOpen(true)}
               className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center"

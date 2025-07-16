@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { X, Filter, Search } from 'lucide-react';
+import { X, Filter } from 'lucide-react';
+import Select, { StylesConfig } from 'react-select';
 
 interface FilterState {
   role: string;
@@ -19,6 +20,12 @@ interface UsersFilterDrawerProps {
   departments: string[];
 }
 
+// Select option interface
+interface SelectOption {
+  value: string;
+  label: string;
+}
+
 const UsersFilterDrawer: React.FC<UsersFilterDrawerProps> = ({
   isOpen,
   onClose,
@@ -28,6 +35,40 @@ const UsersFilterDrawer: React.FC<UsersFilterDrawerProps> = ({
   departments
 }) => {
   const [localFilters, setLocalFilters] = useState(filters);
+
+  // Select options
+  const roleOptions: SelectOption[] = [
+    { value: '', label: 'All Roles' },
+    { value: 'admin', label: 'Admin' },
+    { value: 'faculty', label: 'Faculty' },
+    { value: 'student', label: 'Student' }
+  ];
+
+  const statusOptions: SelectOption[] = [
+    { value: '', label: 'All Status' },
+    { value: 'active', label: 'Active' },
+    { value: 'inactive', label: 'Inactive' }
+  ];
+
+  const departmentOptions: SelectOption[] = [
+    { value: '', label: 'All Departments' },
+    ...departments.map(dept => ({ value: dept, label: dept }))
+  ];
+
+  const emailVerificationOptions: SelectOption[] = [
+    { value: '', label: 'All Users' },
+    { value: 'verified', label: 'Verified' },
+    { value: 'unverified', label: 'Unverified' }
+  ];
+
+  const dateRangeOptions: SelectOption[] = [
+    { value: '', label: 'All Time' },
+    { value: 'today', label: 'Today' },
+    { value: 'week', label: 'This Week' },
+    { value: 'month', label: 'This Month' },
+    { value: 'quarter', label: 'This Quarter' },
+    { value: 'year', label: 'This Year' }
+  ];
 
   const handleFilterChange = (key: string, value: string) => {
     setLocalFilters(prev => ({
@@ -55,20 +96,45 @@ const UsersFilterDrawer: React.FC<UsersFilterDrawerProps> = ({
 
   const hasActiveFilters = Object.values(localFilters).some(value => value !== '');
 
+  // Custom styles for React Select
+  const selectStyles: StylesConfig<SelectOption, false> = {
+    control: (provided) => ({
+      ...provided,
+      border: '1px solid #d1d5db',
+      borderRadius: '0.5rem',
+      minHeight: '40px',
+      boxShadow: 'none',
+      '&:hover': {
+        border: '1px solid #d1d5db'
+      }
+    }),
+    option: (provided, state) => ({
+      ...provided,
+      backgroundColor: state.isSelected ? '#3b82f6' : state.isFocused ? '#f3f4f6' : 'white',
+      color: state.isSelected ? 'white' : '#374151',
+      '&:hover': {
+        backgroundColor: state.isSelected ? '#3b82f6' : '#f3f4f6'
+      }
+    }),
+    menu: (provided) => ({
+      ...provided,
+      zIndex: 9999
+    })
+  };
+
   return (
     <>
       {/* Backdrop */}
       {isOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-50 z-40"
           onClick={onClose}
         />
       )}
 
       {/* Drawer */}
-      <div className={`fixed -top-5 right-0 h-full w-80 bg-white shadow-2xl transform transition-transform duration-300 ease-in-out z-50 ${
-        isOpen ? 'translate-x-0' : 'translate-x-full'
-      }`}>
+      <div className={`fixed -top-5 right-0 h-full w-80 bg-white shadow-2xl transform transition-transform duration-300 ease-in-out z-50 ${isOpen ? 'translate-x-0' : 'translate-x-full'
+        }`}>
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div className="flex items-center">
@@ -91,16 +157,14 @@ const UsersFilterDrawer: React.FC<UsersFilterDrawerProps> = ({
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Role
             </label>
-            <select
-              value={localFilters.role}
-              onChange={(e) => handleFilterChange('role', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="">All Roles</option>
-              <option value="admin">Admin</option>
-              <option value="faculty">Faculty</option>
-              <option value="student">Student</option>
-            </select>
+            <Select
+              value={roleOptions.find(option => option.value === localFilters.role)}
+              onChange={(option) => handleFilterChange('role', option?.value || '')}
+              options={roleOptions}
+              styles={selectStyles}
+              isClearable={false}
+              placeholder="Select role..."
+            />
           </div>
 
           {/* Status Filter */}
@@ -108,15 +172,14 @@ const UsersFilterDrawer: React.FC<UsersFilterDrawerProps> = ({
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Status
             </label>
-            <select
-              value={localFilters.status}
-              onChange={(e) => handleFilterChange('status', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="">All Status</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </select>
+            <Select
+              value={statusOptions.find(option => option.value === localFilters.status)}
+              onChange={(option) => handleFilterChange('status', option?.value || '')}
+              options={statusOptions}
+              styles={selectStyles}
+              isClearable={false}
+              placeholder="Select status..."
+            />
           </div>
 
           {/* Department Filter */}
@@ -124,16 +187,14 @@ const UsersFilterDrawer: React.FC<UsersFilterDrawerProps> = ({
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Department
             </label>
-            <select
-              value={localFilters.department}
-              onChange={(e) => handleFilterChange('department', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="">All Departments</option>
-              {departments.map((dept) => (
-                <option key={dept} value={dept}>{dept}</option>
-              ))}
-            </select>
+            <Select
+              value={departmentOptions.find(option => option.value === localFilters.department)}
+              onChange={(option) => handleFilterChange('department', option?.value || '')}
+              options={departmentOptions}
+              styles={selectStyles}
+              isClearable={false}
+              placeholder="Select department..."
+            />
           </div>
 
           {/* Email Verification Filter */}
@@ -141,15 +202,14 @@ const UsersFilterDrawer: React.FC<UsersFilterDrawerProps> = ({
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Email Verification
             </label>
-            <select
-              value={localFilters.isEmailVerified}
-              onChange={(e) => handleFilterChange('isEmailVerified', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="">All Users</option>
-              <option value="verified">Verified</option>
-              <option value="unverified">Unverified</option>
-            </select>
+            <Select
+              value={emailVerificationOptions.find(option => option.value === localFilters.isEmailVerified)}
+              onChange={(option) => handleFilterChange('isEmailVerified', option?.value || '')}
+              options={emailVerificationOptions}
+              styles={selectStyles}
+              isClearable={false}
+              placeholder="Select verification status..."
+            />
           </div>
 
           {/* Date Range Filter */}
@@ -157,18 +217,14 @@ const UsersFilterDrawer: React.FC<UsersFilterDrawerProps> = ({
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Joined Date
             </label>
-            <select
-              value={localFilters.dateRange}
-              onChange={(e) => handleFilterChange('dateRange', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="">All Time</option>
-              <option value="today">Today</option>
-              <option value="week">This Week</option>
-              <option value="month">This Month</option>
-              <option value="quarter">This Quarter</option>
-              <option value="year">This Year</option>
-            </select>
+            <Select
+              value={dateRangeOptions.find(option => option.value === localFilters.dateRange)}
+              onChange={(option) => handleFilterChange('dateRange', option?.value || '')}
+              options={dateRangeOptions}
+              styles={selectStyles}
+              isClearable={false}
+              placeholder="Select date range..."
+            />
           </div>
 
           {/* Active Filters Display */}
