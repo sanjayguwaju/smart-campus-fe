@@ -2,10 +2,7 @@ import React, { useState } from "react";
 import { Plus, Search, Edit, Trash2, Eye, Filter, Pin } from "lucide-react";
 import { useNotices, useDeleteNotice } from "../../api/hooks/useNotices";
 import { Notice } from "../../api/types/notices";
-import AddNoticeModal from "../../components/Admin/AddNoticeModal";
-import ViewNoticeModal from "../../components/Admin/ViewNoticeModal";
-import EditNoticeModal from "../../components/Admin/EditNoticeModal";
-import NoticeFilterDrawer from "../../components/Admin/NoticeFilterDrawer";
+import { AddNoticeModal, ViewNoticeModal, EditNoticeModal, NoticeFilterDrawer } from "../../components/Admin/Notices";
 
 const Notices: React.FC = () => {
   const [selectedNotices, setSelectedNotices] = useState<string[]>([]);

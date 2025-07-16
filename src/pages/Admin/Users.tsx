@@ -4,14 +4,16 @@ import { toast } from 'react-hot-toast';
 import { useUsers, useDeleteUser, useActivateUser, useDeactivateUser, useResetPassword } from '../../api/hooks/useUsers';
 import { UserData } from '../../api/types/users';
 import LoadingSpinner from '../../components/Layout/LoadingSpinner';
-import AddUserModal from '../../components/Admin/AddUserModal';
-import EditUserModal from '../../components/Admin/EditUserModal';
-import DeleteConfirmationModal from '../../components/Admin/DeleteConfirmationModal';
-import ResetPasswordModal from '../../components/Admin/ResetPasswordModal';
-import DeactivateUserModal from '../../components/Admin/DeactivateUserModal';
-import ActivateUserModal from '../../components/Admin/ActivateUserModal';
-import ViewUserModal from '../../components/Admin/ViewUserModal';
-import UsersFilterDrawer from '../../components/Admin/UsersFilterDrawer';
+import { AddUserModal } from '../../components/Admin/Users';
+import { 
+  EditUserModal, 
+  ResetPasswordModal, 
+  DeactivateUserModal, 
+  ActivateUserModal, 
+  ViewUserModal, 
+  UsersFilterDrawer 
+} from '../../components/Admin/Users';
+import { DeleteConfirmationModal } from '../../components/Admin/Shared';
 
 const Users: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');

@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, Edit, Trash2, ChevronLeft, ChevronRight, Calendar, MapPin, Users, Eye, X, Filter } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, ChevronLeft, ChevronRight, Calendar, MapPin, Users, Eye, Filter } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useEvents, usePublishEvent, useUnpublishEvent } from '../../api/hooks/useEvents';
 import { Event } from '../../api/types/events';
-import AddEventModal from '../../components/Admin/AddEventModal';
-import EditEventModal from '../../components/Admin/EditEventModal';
-import DeleteEventModal from '../../components/Admin/DeleteEventModal';
+import { 
+  AddEventModal, 
+  EditEventModal, 
+  DeleteEventModal, 
+  ViewEventModal, 
+  EventsFilterDrawer 
+} from '../../components/Admin/Events';
 import LoadingSpinner from '../../components/Layout/LoadingSpinner';
-import EventsFilterDrawer from '../../components/Admin/EventsFilterDrawer';
 
 const Events: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -334,80 +337,11 @@ const Events: React.FC = () => {
       )}
 
       {/* View Event Modal */}
-      {viewedEvent && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl p-8 relative overflow-y-auto max-h-[90vh]">
-            <button
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
-              onClick={() => setViewedEvent(null)}
-              aria-label="Close"
-            >
-              <X className="h-6 w-6" />
-            </button>
-            <h2 className="text-2xl font-bold mb-2">{viewedEvent.title}</h2>
-            <p className="text-gray-600 mb-4">{viewedEvent.description}</p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              <div>
-                <div className="mb-2"><span className="font-semibold">Type:</span> {viewedEvent.eventType}</div>
-                <div className="mb-2"><span className="font-semibold">Category:</span> {viewedEvent.category}</div>
-                <div className="mb-2"><span className="font-semibold">Status:</span> <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeColor(viewedEvent.status)} border border-gray-200`}>{viewedEvent.status}</span></div>
-                <div className="mb-2 flex items-center"><Calendar className="h-4 w-4 mr-2" /> <span><span className="font-semibold">Start:</span> {formatDate(viewedEvent.startDate)} {formatTime(viewedEvent.startTime)}</span></div>
-                <div className="mb-2 flex items-center"><Calendar className="h-4 w-4 mr-2" /> <span><span className="font-semibold">End:</span> {formatDate(viewedEvent.endDate)} {formatTime(viewedEvent.endTime)}</span></div>
-                <div className="mb-2 flex items-center"><MapPin className="h-4 w-4 mr-2" /> <span>{[viewedEvent.location.venue, viewedEvent.location.room, viewedEvent.location.building, viewedEvent.location.campus].filter(Boolean).join(', ')}</span></div>
-              </div>
-              <div>
-                <div className="mb-2"><span className="font-semibold">Organizer:</span> {viewedEvent.organizer?.firstName && viewedEvent.organizer?.lastName ? `${viewedEvent.organizer.firstName} ${viewedEvent.organizer.lastName}` : viewedEvent.organizer?.email || 'Unknown'}</div>
-                {viewedEvent.coOrganizers && viewedEvent.coOrganizers.length > 0 && (
-                  <div className="mb-2">
-                    <span className="font-semibold">Co-Organizers:</span>
-                    <ul className="list-disc list-inside ml-2">
-                      {viewedEvent.coOrganizers.map((co, idx) => (
-                        <li key={co._id || idx}>{co.fullName || co.email}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-                <div className="mb-2 flex items-center"><Users className="h-4 w-4 mr-2" /> <span>{viewedEvent.currentAttendees} / {viewedEvent.maxAttendees || '∞'} attendees</span></div>
-                <div className="mb-2"><span className="font-semibold">Registration:</span> {viewedEvent.isRegistrationRequired ? (viewedEvent.isRegistrationOpen ? 'Open' : 'Closed') : 'Not required'}</div>
-                {viewedEvent.registrationDeadline && (
-                  <div className="mb-2"><span className="font-semibold">Registration Deadline:</span> {formatDate(viewedEvent.registrationDeadline)}</div>
-                )}
-              </div>
-            </div>
-            {viewedEvent.tags && viewedEvent.tags.length > 0 && (
-              <div className="mb-4">
-                <span className="font-semibold">Tags:</span>
-                <div className="flex flex-wrap gap-2 mt-1">
-                  {viewedEvent.tags.map((tag, idx) => (
-                    <span key={idx} className="px-2 py-1 bg-gray-100 rounded text-xs text-gray-700">{tag}</span>
-                  ))}
-                </div>
-              </div>
-            )}
-            {viewedEvent.attachments && viewedEvent.attachments.length > 0 && (
-              <div className="mb-4">
-                <span className="font-semibold">Attachments:</span>
-                <ul className="list-disc list-inside ml-2">
-                  {viewedEvent.attachments.map((att, idx) => (
-                    <li key={att.url || idx}><a href={att.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">{att.name || att.url}</a></li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            {viewedEvent.contactInfo && (
-              <div className="mb-4">
-                <span className="font-semibold">Contact Info:</span>
-                <div className="ml-2">
-                  {viewedEvent.contactInfo.email && <div>Email: {viewedEvent.contactInfo.email}</div>}
-                  {viewedEvent.contactInfo.phone && <div>Phone: {viewedEvent.contactInfo.phone}</div>}
-                  {viewedEvent.contactInfo.website && <div>Website: <a href={viewedEvent.contactInfo.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">{viewedEvent.contactInfo.website}</a></div>}
-                </div>
-              </div>
-            )}
-            <div className="text-xs text-gray-400 mt-4">Created at: {formatDate(viewedEvent.createdAt)} | Updated at: {formatDate(viewedEvent.updatedAt)}</div>
-          </div>
-        </div>
-      )}
+      <ViewEventModal
+        isOpen={!!viewedEvent}
+        onClose={() => setViewedEvent(null)}
+        event={viewedEvent}
+      />
 
       {/* Modals */}
       <AddEventModal

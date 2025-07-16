@@ -5,7 +5,7 @@ import Layout from './components/Layout/Layout';
 import AdminLayout from './components/Admin/AdminLayout';
 import FacultyLayout from './components/Faculty/FacultyLayout';
 import StudentLayout from './components/Student/StudentLayout';
-import ProtectedRoute from './components/Admin/ProtectedRoute';
+import { ProtectedRoute } from './components/Admin/Shared';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';

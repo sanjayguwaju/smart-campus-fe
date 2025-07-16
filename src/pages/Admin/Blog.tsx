@@ -6,7 +6,7 @@ import 'react-quill/dist/quill.snow.css';
 import { useBlogs } from '../../api/hooks/useBlogs';
 import { BlogPost } from '../../api/services/blogService';
 import { Eye, Pencil, Trash2, Filter, Search } from 'lucide-react';
-import ViewBlogModal from '../../components/Admin/ViewBlogModal';
+import { ViewBlogModal } from '../../components/Admin/Blogs';
 
 const AdminBlog: React.FC = () => {
   const { user } = useAuthStore();

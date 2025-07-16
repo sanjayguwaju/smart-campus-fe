@@ -1,13 +1,24 @@
-import React, { useState, useEffect } from 'react';
-import { useUpdateNotice } from '../../api/hooks/useNotices';
-import { Notice } from '../../api/types/notices';
+import React, { useState } from 'react';
+import { useCreateNotice } from '../../../api/hooks/useNotices';
+import { Notice } from '../../../api/types/notices';
 
-interface EditNoticeModalProps {
+interface AddNoticeModalProps {
   isOpen: boolean;
-  notice: Notice | null;
   onClose: () => void;
   onSuccess?: () => void;
 }
+
+const initialForm: Partial<Notice> = {
+  title: '',
+  content: '',
+  type: 'announcement',
+  category: 'all',
+  priority: 'medium',
+  publishDate: new Date().toISOString().slice(0, 10),
+  expiryDate: '',
+  author: '',
+  pinned: false,
+};
 
 const initialValidationErrors = {
   title: '',
@@ -20,22 +31,12 @@ const initialValidationErrors = {
   expiryDate: '',
 };
 
-const EditNoticeModal: React.FC<EditNoticeModalProps> = ({ isOpen, notice, onClose, onSuccess }) => {
-  const [form, setForm] = useState<Partial<Notice>>({});
+const AddNoticeModal: React.FC<AddNoticeModalProps> = ({ isOpen, onClose, onSuccess }) => {
+  const [form, setForm] = useState<Partial<Notice>>(initialForm);
   const [error, setError] = useState<string | null>(null);
   const [validationErrors, setValidationErrors] = useState<{ [key: string]: string }>(initialValidationErrors);
   const [serverError, setServerError] = useState<string | null>(null);
-  const updateNotice = useUpdateNotice();
-
-  useEffect(() => {
-    if (notice) {
-      setForm({
-        ...notice,
-        pinned: notice.settings?.pinToTop || false,
-      });
-      setValidationErrors(initialValidationErrors);
-    }
-  }, [notice, isOpen]);
+  const createNotice = useCreateNotice();
 
   const validateField = (name: string, value: any) => {
     let message = '';
@@ -116,27 +117,27 @@ const EditNoticeModal: React.FC<EditNoticeModalProps> = ({ isOpen, notice, onClo
     e.preventDefault();
     setError(null);
     setServerError(null);
-    if (!validateForm() || !notice) {
+    if (!validateForm()) {
       setError('Please fix the errors above.');
       return;
     }
     const payload = {
       ...form,
-      settings: { pinToTop: form.pinned },
-      author: typeof notice.author === 'object' && notice.author !== null ? notice.author : form.author
+      settings: { pinToTop: form.pinned }
     };
     delete payload.pinned;
     try {
-      await updateNotice.mutateAsync({ id: notice.id || notice._id, data: payload });
+      await createNotice.mutateAsync(payload);
+      setForm(initialForm);
       setValidationErrors(initialValidationErrors);
       onClose();
       if (onSuccess) onSuccess();
     } catch (err: any) {
-      setServerError(err.response?.data?.message || 'Failed to update notice');
+      setServerError(err.response?.data?.message || 'Failed to create notice');
     }
   };
 
-  if (!isOpen || !notice) return null;
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
@@ -147,7 +148,7 @@ const EditNoticeModal: React.FC<EditNoticeModalProps> = ({ isOpen, notice, onClo
         >
           &times;
         </button>
-        <h2 className="text-xl font-bold mb-4">Edit Notice</h2>
+        <h2 className="text-xl font-bold mb-4">Post New Notice</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700">Title *</label>
@@ -258,9 +259,9 @@ const EditNoticeModal: React.FC<EditNoticeModalProps> = ({ isOpen, notice, onClo
               <input
                 type="text"
                 name="author"
-                value={typeof form.author === 'object' && form.author !== null ? form.author.name : form.author || ''}
-                readOnly
-                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-100"
+                value={typeof form.author === 'string' ? form.author : ''}
+                onChange={handleChange}
+                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
                 required
               />
               {validationErrors.author && <div className="text-red-600 text-xs mt-1">{validationErrors.author}</div>}
@@ -277,14 +278,13 @@ const EditNoticeModal: React.FC<EditNoticeModalProps> = ({ isOpen, notice, onClo
             <label className="text-sm text-gray-700">Pin to top</label>
           </div>
           {error && <div className="text-red-600 text-sm">{error}</div>}
-          {serverError && <div className="text-red-600 text-sm mb-2">{serverError}</div>}
           <div className="flex justify-end">
             <button
               type="submit"
               className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-              disabled={Object.values(validationErrors).some((msg) => msg) || updateNotice.status === 'pending'}
+              disabled={Object.values(validationErrors).some((msg) => msg) || createNotice.status === 'pending'}
             >
-              {updateNotice.status === 'pending' ? 'Saving...' : 'Save Changes'}
+              {createNotice.status === 'pending' ? 'Posting...' : 'Post Notice'}
             </button>
           </div>
         </form>
@@ -293,4 +293,4 @@ const EditNoticeModal: React.FC<EditNoticeModalProps> = ({ isOpen, notice, onClo
   );
 };
 
-export default EditNoticeModal; 
+export default AddNoticeModal; 

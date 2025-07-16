@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Upload, X, Image as ImageIcon } from 'lucide-react';
-import { uploadToCloudinary } from '../../config/cloudinary';
+import { uploadToCloudinary } from '../../api/config/cloudinary';
 import { toast } from 'react-hot-toast';
 
 interface ImageUploadProps {
