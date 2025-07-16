@@ -13,11 +13,13 @@ import {
   Heart, 
   Share2, 
   ChevronDown,
+  Eye,
  } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useAuthStore } from '../store/authStore';
 import { useEvents, useRegisterForEvent } from '../api/hooks/useEvents';
 import { Event } from '../api/types/events';
+import { ViewEventModal } from '../components/Admin/Events';
 
 const Events: React.FC = () => {
   const { user, isAuthenticated } = useAuthStore();
@@ -25,6 +27,8 @@ const Events: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'date' | 'popularity'>('date');
   const [showFilters, setShowFilters] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
 
   // Use the events hook with search and category filters
   const { data: eventsData, isLoading, error } = useEvents({
@@ -69,6 +73,16 @@ const Events: React.FC = () => {
     }
 
     registerForEvent.mutate(eventId);
+  };
+
+  const handleViewEvent = (event: Event) => {
+    setSelectedEvent(event);
+    setIsViewModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsViewModalOpen(false);
+    setSelectedEvent(null);
   };
 
   const formatDate = (date: string) => {
@@ -268,6 +282,12 @@ const Events: React.FC = () => {
                     </span>
                   </div>
                   <div className="absolute top-4 right-4 flex space-x-2">
+                    <button 
+                      onClick={() => handleViewEvent(event)}
+                      className="p-2 bg-white bg-opacity-90 rounded-full hover:bg-opacity-100 transition-all duration-200"
+                    >
+                      <Eye className="h-4 w-4 text-gray-600" />
+                    </button>
                     <button className="p-2 bg-white bg-opacity-90 rounded-full hover:bg-opacity-100 transition-all duration-200">
                       <Heart className="h-4 w-4 text-gray-600" />
                     </button>
@@ -392,6 +412,13 @@ const Events: React.FC = () => {
           </button>
         </motion.div>
       </div>
+
+      {/* View Event Modal */}
+      <ViewEventModal
+        isOpen={isViewModalOpen}
+        onClose={handleCloseModal}
+        event={selectedEvent}
+      />
     </div>
   );
 };

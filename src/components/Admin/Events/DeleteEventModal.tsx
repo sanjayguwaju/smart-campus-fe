@@ -1,5 +1,5 @@
 import React from 'react';
-import { useDeleteEvent } from '../../api/hooks/useEvents';
+import { useDeleteEvent } from '../../../api/hooks/useEvents';
 
 interface DeleteEventModalProps {
   isOpen: boolean;

@@ -1,47 +1,53 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-hot-toast';
-import { X, User, Mail, Lock, Phone, Building, UserCheck } from 'lucide-react';
-import { useCreateUser } from '../../api/hooks/useUsers';
-import { CreateUserRequest } from '../../api/types/users';
+import { X, User, Mail, Phone, Building, UserCheck } from 'lucide-react';
+import { useUpdateUser } from '../../../api/hooks/useUsers';
+import { UserData, UpdateUserRequest } from '../../../api/types/users';
 
-interface AddUserModalProps {
+interface EditUserModalProps {
   isOpen: boolean;
   onClose: () => void;
+  user: UserData | null;
 }
 
-const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose }) => {
-  const createUserMutation = useCreateUser();
+const EditUserModal: React.FC<EditUserModalProps> = ({ isOpen, onClose, user }) => {
+  const updateUserMutation = useUpdateUser();
   
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
     reset,
-    watch
-  } = useForm<CreateUserRequest>({
-    defaultValues: {
-      firstName: '',
-      lastName: '',
-      email: '',
-      password: '',
-      role: 'student',
-      department: '',
-      phone: ''
-    }
-  });
+    watch,
+    setValue
+  } = useForm<UpdateUserRequest>();
 
   const watchedRole = watch('role');
 
-  const onSubmit = async (data: CreateUserRequest) => {
+  // Populate form when user data changes
+  useEffect(() => {
+    if (user) {
+      setValue('firstName', user.firstName || '');
+      setValue('lastName', user.lastName || '');
+      setValue('email', user.email || '');
+      setValue('role', user.role || 'student');
+      setValue('department', user.department || '');
+      setValue('phone', user.phone || '');
+      setValue('isActive', user.isActive);
+    }
+  }, [user, setValue]);
+
+  const onSubmit = async (data: UpdateUserRequest) => {
+    if (!user) return;
+    
     try {
-      await createUserMutation.mutateAsync(data);
-      reset();
+      await updateUserMutation.mutateAsync({ id: user._id, userData: data });
       onClose();
-      toast.success('User created successfully');
+      toast.success('User updated successfully');
     } catch (error) {
-      console.error('Failed to create user:', error);
-      toast.error('Failed to create user. Please try again.');
+      console.error('Failed to update user:', error);
+      toast.error('Failed to update user. Please try again.');
     }
   };
 
@@ -50,7 +56,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose }) => {
     onClose();
   };
 
-  if (!isOpen) return null;
+  if (!isOpen || !user) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -58,12 +64,12 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose }) => {
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div className="flex items-center space-x-3">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <User className="h-5 w-5 text-blue-600" />
+            <div className="p-2 bg-green-100 rounded-lg">
+              <User className="h-5 w-5 text-green-600" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-gray-900">Add New User</h2>
-              <p className="text-sm text-gray-500">Create a new user account</p>
+              <h2 className="text-lg font-semibold text-gray-900">Edit User</h2>
+              <p className="text-sm text-gray-500">Update user information</p>
             </div>
           </div>
           <button
@@ -82,12 +88,11 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose }) => {
               {/* First Name */}
               <div>
                 <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1">
-                  First Name *
+                  First Name
                 </label>
                 <div className="relative">
                   <input
                     {...register('firstName', {
-                      required: 'First name is required',
                       minLength: { value: 2, message: 'First name must be at least 2 characters' }
                     })}
                     type="text"
@@ -107,12 +112,11 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose }) => {
               {/* Email */}
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                  Email Address *
+                  Email Address
                 </label>
                 <div className="relative">
                   <input
                     {...register('email', {
-                      required: 'Email is required',
                       pattern: {
                         value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
                         message: 'Invalid email address'
@@ -135,11 +139,11 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose }) => {
               {/* Role */}
               <div>
                 <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">
-                  Role *
+                  Role
                 </label>
                 <div className="relative">
                   <select
-                    {...register('role', { required: 'Role is required' })}
+                    {...register('role')}
                     id="role"
                     className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                       errors.role ? 'border-red-300' : 'border-gray-300'
@@ -189,12 +193,11 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose }) => {
               {/* Last Name */}
               <div>
                 <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-1">
-                  Last Name *
+                  Last Name
                 </label>
                 <div className="relative">
                   <input
                     {...register('lastName', {
-                      required: 'Last name is required',
                       minLength: { value: 2, message: 'Last name must be at least 2 characters' }
                     })}
                     type="text"
@@ -208,31 +211,6 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose }) => {
                 </div>
                 {errors.lastName && (
                   <p className="mt-1 text-sm text-red-600">{errors.lastName.message}</p>
-                )}
-              </div>
-
-              {/* Password */}
-              <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                  Password *
-                </label>
-                <div className="relative">
-                  <input
-                    {...register('password', {
-                      required: 'Password is required',
-                      minLength: { value: 6, message: 'Password must be at least 6 characters' }
-                    })}
-                    type="password"
-                    id="password"
-                    className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      errors.password ? 'border-red-300' : 'border-gray-300'
-                    }`}
-                    placeholder="Enter password"
-                  />
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                </div>
-                {errors.password && (
-                  <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
                 )}
               </div>
 
@@ -250,6 +228,34 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose }) => {
                     placeholder="Enter department"
                   />
                   <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                </div>
+              </div>
+
+              {/* Status */}
+              <div>
+                <label htmlFor="isActive" className="block text-sm font-medium text-gray-700 mb-1">
+                  Status
+                </label>
+                <div className="relative">
+                  <select
+                    {...register('isActive')}
+                    id="isActive"
+                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="true">Active</option>
+                    <option value="false">Inactive</option>
+                  </select>
+                  <UserCheck className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                </div>
+              </div>
+
+              {/* User ID Display (Read-only) */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  User ID
+                </label>
+                <div className="w-full pl-3 pr-3 py-2 bg-gray-50 border border-gray-300 rounded-lg text-sm text-gray-600">
+                  {user.studentId || user.facultyId || user.employeeId || user._id}
                 </div>
               </div>
             </div>
@@ -273,10 +279,10 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose }) => {
           )}
 
           {/* Error message from API */}
-          {createUserMutation.error && (
+          {updateUserMutation.error && (
             <div className="mt-6 p-3 bg-red-50 border border-red-200 rounded-lg">
               <p className="text-sm text-red-600">
-                Failed to create user. Please try again.
+                Failed to update user. Please try again.
               </p>
             </div>
           )}
@@ -292,16 +298,16 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose }) => {
             </button>
             <button
               type="submit"
-              disabled={isSubmitting || createUserMutation.isPending}
-              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              disabled={isSubmitting || updateUserMutation.isPending}
+              className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {isSubmitting || createUserMutation.isPending ? (
+              {isSubmitting || updateUserMutation.isPending ? (
                 <div className="flex items-center justify-center">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Creating...
+                  Updating...
                 </div>
               ) : (
-                'Create User'
+                'Update User'
               )}
             </button>
           </div>
@@ -311,4 +317,4 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose }) => {
   );
 };
 
-export default AddUserModal; 
+export default EditUserModal; 

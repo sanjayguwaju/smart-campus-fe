@@ -2,9 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Search, Edit, Trash2, Filter, GraduationCap, Clock, BookOpen } from 'lucide-react';
 import { usePrograms, useCreateProgram, useUpdateProgram, useDeleteProgram } from '../../api/hooks/usePrograms';
 import { Program } from '../../api/types/programs';
-import AddProgramModal from '../../components/Admin/AddProgramModal';
-import EditProgramModal from '../../components/Admin/EditProgramModal';
-import DeleteProgramModal from '../../components/Admin/DeleteProgramModal';
+import { AddProgramModal, EditProgramModal, DeleteProgramModal } from '../../components/Admin/Programs';
 import LoadingSpinner from '../../components/Layout/LoadingSpinner';
 
 const Programs: React.FC = () => {

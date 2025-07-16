@@ -160,11 +160,6 @@ export const useNotices = () => {
     queryFn: noticeService.getNotices,
   });
 };
-```
-
-## Example Component
-
-See `src/components/Events/EventsList.tsx` for a complete example of how to use the API hooks in a React component.
 
 ## Error Handling
 

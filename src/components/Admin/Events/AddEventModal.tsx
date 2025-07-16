@@ -1,16 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { useUpdateEvent } from '../../api/hooks/useEvents';
-import { Event, CreateEventRequest } from '../../api/types/events';
-import { useAuthStore } from '../../store/authStore';
+import React, { useState } from 'react';
+import { useCreateEvent } from '../../../api/hooks/useEvents';
+import { CreateEventRequest } from '../../../api/types/events';
+import { useAuthStore } from '../../../store/authStore';
+import ImageUpload from '../../common/ImageUpload';
 
-interface EditEventModalProps {
+interface AddEventModalProps {
   isOpen: boolean;
   onClose: () => void;
-  event: Event | null;
 }
 
-const EditEventModal: React.FC<EditEventModalProps> = ({ isOpen, onClose, event }) => {
-  const updateEventMutation = useUpdateEvent();
+const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose }) => {
+  const createEventMutation = useCreateEvent();
   const currentUser = useAuthStore((state) => state.user);
   const [formData, setFormData] = useState<Partial<CreateEventRequest>>({
     title: '',
@@ -45,49 +45,9 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ isOpen, onClose, event 
     highlights: [],
     requirements: [],
     benefits: [],
-    externalLinks: []
+    externalLinks: [],
+    imageUrl: ''
   });
-  const [serverError, setServerError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (event) {
-      setFormData({
-        title: event.title,
-        description: event.description,
-        shortDescription: event.shortDescription,
-        eventType: event.eventType,
-        category: event.category,
-        startDate: event.startDate,
-        endDate: event.endDate,
-        startTime: event.startTime,
-        endTime: event.endTime,
-        location: {
-          venue: event.location.venue,
-          room: event.location.room,
-          building: event.location.building,
-          campus: event.location.campus
-        },
-        maxAttendees: event.maxAttendees,
-        registrationDeadline: event.registrationDeadline,
-        isRegistrationRequired: event.isRegistrationRequired,
-        isRegistrationOpen: event.isRegistrationOpen,
-        tags: event.tags,
-        contactInfo: {
-          email: event.contactInfo?.email,
-          phone: event.contactInfo?.phone,
-          website: event.contactInfo?.website
-        },
-        status: event.status,
-        visibility: event.visibility,
-        priority: event.priority,
-        featured: event.featured,
-        highlights: event.highlights,
-        requirements: event.requirements,
-        benefits: event.benefits,
-        externalLinks: event.externalLinks
-      });
-    }
-  }, [event]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -128,27 +88,61 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ isOpen, onClose, event 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setServerError(null);
-    if (!event) return;
     try {
-      const payload = { ...formData };
-      await updateEventMutation.mutateAsync({
-        id: event._id,
-        data: payload as Partial<CreateEventRequest>
-      });
+      const payload = {
+        ...formData,
+        organizer: currentUser?._id,
+      };
+      await createEventMutation.mutateAsync(payload as CreateEventRequest);
       onClose();
-    } catch (error: any) {
-      setServerError(error?.response?.data?.message || 'Failed to update event');
+      // Reset form
+      setFormData({
+        title: '',
+        description: '',
+        shortDescription: '',
+        eventType: 'academic',
+        category: 'public',
+        startDate: '',
+        endDate: '',
+        startTime: '',
+        endTime: '',
+        location: {
+          venue: '',
+          room: '',
+          building: '',
+          campus: ''
+        },
+        maxAttendees: undefined,
+        registrationDeadline: '',
+        isRegistrationRequired: false,
+        isRegistrationOpen: true,
+        tags: [],
+        contactInfo: {
+          email: '',
+          phone: '',
+          website: ''
+        },
+        status: 'draft',
+        visibility: 'public',
+        priority: 'medium',
+        featured: false,
+        highlights: [],
+        requirements: [],
+        benefits: [],
+        externalLinks: []
+      });
+    } catch (error) {
+      // Error is handled by the mutation
     }
   };
 
-  if (!isOpen || !event) return null;
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">Edit Event</h2>
+          <h2 className="text-2xl font-bold text-gray-900">Add New Event</h2>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 text-2xl font-bold"
@@ -158,7 +152,6 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ isOpen, onClose, event 
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {serverError && <div className="text-red-600 text-sm mb-2">{serverError}</div>}
           {/* Basic Information */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
@@ -262,6 +255,20 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ isOpen, onClose, event 
               required
               rows={4}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          {/* Event Image */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Event Image
+            </label>
+            <ImageUpload
+              onImageUpload={(url) => setFormData(prev => ({ ...prev, imageUrl: url }))}
+              onImageRemove={() => setFormData(prev => ({ ...prev, imageUrl: '' }))}
+              currentImage={formData.imageUrl}
+              maxSize={5}
+              className="max-w-md"
             />
           </div>
 
@@ -536,10 +543,10 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ isOpen, onClose, event 
             </button>
             <button
               type="submit"
-              disabled={updateEventMutation.isPending}
+              disabled={createEventMutation.isPending}
               className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {updateEventMutation.isPending ? 'Updating...' : 'Update Event'}
+              {createEventMutation.isPending ? 'Creating...' : 'Create Event'}
             </button>
           </div>
         </form>
@@ -548,4 +555,4 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ isOpen, onClose, event 
   );
 };
 
-export default EditEventModal; 
+export default AddEventModal; 
