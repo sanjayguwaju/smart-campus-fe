@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Program } from '../../api/types/programs';
+import { Program } from '../../../api/types/programs';
 import Select, { StylesConfig } from 'react-select';
+import { useDepartments } from '../../../api/hooks/useDepartments';
 
 interface EditProgramModalProps {
   isOpen: boolean;
@@ -55,7 +56,10 @@ const EditProgramModal: React.FC<EditProgramModalProps> = ({ isOpen, onClose, pr
 
   useEffect(() => {
     if (program) {
-      setForm({ ...program });
+      setForm({
+        ...program,
+        level: program.level === 'undergraduate' ? 'Undergraduate' : program.level === 'postgraduate' ? 'Postgraduate' : program.level
+      });
     }
   }, [program]);
 
@@ -86,7 +90,7 @@ const EditProgramModal: React.FC<EditProgramModalProps> = ({ isOpen, onClose, pr
   const validate = () => {
     const newErrors: { [key: string]: string } = {};
     if (!form.name?.trim()) newErrors.name = 'Name is required';
-    if (!form.department?.trim()) newErrors.department = 'Department is required';
+    if (!form.department) newErrors.department = 'Department is required';
     if (!form.duration?.trim()) newErrors.duration = 'Duration is required';
     if (!form.description?.trim()) newErrors.description = 'Description is required';
     setErrors(newErrors);
@@ -104,6 +108,9 @@ const EditProgramModal: React.FC<EditProgramModalProps> = ({ isOpen, onClose, pr
     }
   };
 
+  const { data: departmentData } = useDepartments(1, 100);
+  const departments = departmentData?.departments || [];
+
   if (!isOpen || !program) return null;
 
   return (
@@ -120,16 +127,40 @@ const EditProgramModal: React.FC<EditProgramModalProps> = ({ isOpen, onClose, pr
           </div>
           <div>
             <label className="block text-sm font-medium">Department</label>
-            <input name="department" value={form.department || ''} onChange={handleChange} className="w-full border rounded px-3 py-2" />
+            <select
+              name="department"
+              value={form.department}
+              onChange={handleChange}
+              className="w-full border rounded px-3 py-2"
+              required
+            >
+              <option value="">Select Department</option>
+              {departments.map((dep: any) => (
+                <option key={dep._id} value={dep._id}>{dep.name}</option>
+              ))}
+            </select>
             {errors.department && <span className="text-red-500 text-xs">{errors.department}</span>}
           </div>
           <div>
             <label className="block text-sm font-medium">Level</label>
-            <select name="level" value={form.level || 'undergraduate'} onChange={handleChange} className="w-full border rounded px-3 py-2">
-              <option value="undergraduate">Undergraduate</option>
-              <option value="postgraduate">Postgraduate</option>
-              <option value="professional">Professional</option>
+            <select name="level" value={form.level || 'Undergraduate'} onChange={handleChange} className="w-full border rounded px-3 py-2" required>
+              <option value="Undergraduate">Undergraduate</option>
+              <option value="Postgraduate">Postgraduate</option>
             </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium">Semesters</label>
+            <input
+              type="number"
+              name="semesters"
+              min={1}
+              max={20}
+              value={form.semesters || ''}
+              onChange={handleChange}
+              className="w-full border rounded px-3 py-2"
+              required
+            />
+            {errors.semesters && <span className="text-red-500 text-xs">{errors.semesters}</span>}
           </div>
           <div>
             <label className="block text-sm font-medium">Duration</label>
@@ -158,7 +189,14 @@ const EditProgramModal: React.FC<EditProgramModalProps> = ({ isOpen, onClose, pr
             <Select
               options={statusOptions}
               value={statusOptions.find(opt => opt.value === form.status)}
-              onChange={option => setForm(f => ({ ...f, status: option?.value || 'draft', isPublished: option?.value === 'published' }))}
+              onChange={option => {
+                const selected = option as { value: string; label: string } | null;
+                setForm(f => ({
+                  ...f,
+                  status: selected?.value || 'draft',
+                  isPublished: selected?.value === 'published'
+                }));
+              }}
               styles={selectStyles}
               className="w-full"
               placeholder="Select status"

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Program } from '../../api/types/programs';
+import { Program } from '../../../api/types/programs';
 import Select, { StylesConfig } from 'react-select';
+import { useDepartments } from '../../../api/hooks/useDepartments';
 
 interface AddProgramModalProps {
   isOpen: boolean;
@@ -47,10 +48,27 @@ const selectStyles: StylesConfig<{ value: string; label: string }> = {
   })
 };
 
-const initialState = {
+// Add this type for the form
+interface ProgramForm {
+  name: string;
+  department: string;
+  level: 'Undergraduate' | 'Postgraduate';
+  semesters: number;
+  duration: string;
+  description: string;
+  prerequisites: string[];
+  image?: string;
+  brochureUrl?: string;
+  isPublished: boolean;
+  status: string;
+}
+
+// Use ProgramForm for form state
+const initialState: ProgramForm = {
   name: '',
   department: '',
-  level: 'undergraduate' as 'undergraduate' | 'postgraduate' | 'professional',
+  level: 'Undergraduate',
+  semesters: 1,
   duration: '',
   description: '',
   prerequisites: [''],
@@ -61,9 +79,12 @@ const initialState = {
 };
 
 const AddProgramModal: React.FC<AddProgramModalProps> = ({ isOpen, onClose, onAdd }) => {
-  const [form, setForm] = useState(initialState);
+  const [form, setForm] = useState<ProgramForm>(initialState);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [serverError, setServerError] = useState<string | null>(null);
+
+  const { data: departmentData } = useDepartments(1, 100);
+  const departments = departmentData?.departments || [];
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -92,7 +113,7 @@ const AddProgramModal: React.FC<AddProgramModalProps> = ({ isOpen, onClose, onAd
   const validate = () => {
     const newErrors: { [key: string]: string } = {};
     if (!form.name.trim()) newErrors.name = 'Name is required';
-    if (!form.department.trim()) newErrors.department = 'Department is required';
+    if (!form.department) newErrors.department = 'Department is required';
     if (!form.duration.trim()) newErrors.duration = 'Duration is required';
     if (!form.description.trim()) newErrors.description = 'Description is required';
     setErrors(newErrors);
@@ -104,7 +125,11 @@ const AddProgramModal: React.FC<AddProgramModalProps> = ({ isOpen, onClose, onAd
     setServerError(null);
     if (!validate()) return;
     try {
-      await onAdd({ ...form, prerequisites: form.prerequisites.filter((p) => p.trim()) });
+      // Map department string to expected object
+      await onAdd({
+        ...form,
+        department: { _id: form.department, name: '' },
+      });
       setForm(initialState);
     } catch (err: any) {
       setServerError(err?.response?.data?.message || 'Failed to add program');
@@ -127,16 +152,40 @@ const AddProgramModal: React.FC<AddProgramModalProps> = ({ isOpen, onClose, onAd
           </div>
           <div>
             <label className="block text-sm font-medium">Department</label>
-            <input name="department" value={form.department} onChange={handleChange} className="w-full border rounded px-3 py-2" />
+            <select
+              name="department"
+              value={form.department}
+              onChange={handleChange}
+              className="w-full border rounded px-3 py-2"
+              required
+            >
+              <option value="">Select Department</option>
+              {departments.map((dep: any) => (
+                <option key={dep._id} value={dep._id}>{dep.name}</option>
+              ))}
+            </select>
             {errors.department && <span className="text-red-500 text-xs">{errors.department}</span>}
           </div>
           <div>
             <label className="block text-sm font-medium">Level</label>
-            <select name="level" value={form.level} onChange={handleChange} className="w-full border rounded px-3 py-2">
-              <option value="undergraduate">Undergraduate</option>
-              <option value="postgraduate">Postgraduate</option>
-              <option value="professional">Professional</option>
+            <select name="level" value={form.level} onChange={handleChange} className="w-full border rounded px-3 py-2" required>
+              <option value="Undergraduate">Undergraduate</option>
+              <option value="Postgraduate">Postgraduate</option>
             </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium">Semesters</label>
+            <input
+              type="number"
+              name="semesters"
+              min={1}
+              max={20}
+              value={form.semesters || ''}
+              onChange={handleChange}
+              className="w-full border rounded px-3 py-2"
+              required
+            />
+            {errors.semesters && <span className="text-red-500 text-xs">{errors.semesters}</span>}
           </div>
           <div>
             <label className="block text-sm font-medium">Duration</label>
@@ -165,7 +214,14 @@ const AddProgramModal: React.FC<AddProgramModalProps> = ({ isOpen, onClose, onAd
             <Select
               options={statusOptions}
               value={statusOptions.find(opt => opt.value === form.status)}
-              onChange={option => setForm(f => ({ ...f, status: option?.value || 'draft', isPublished: option?.value === 'published' }))}
+              onChange={option => {
+                const selected = option as { value: string; label: string } | null;
+                setForm(f => ({
+                  ...f,
+                  status: selected?.value || 'draft',
+                  isPublished: selected?.value === 'published'
+                }));
+              }}
               styles={selectStyles}
               className="w-full"
               placeholder="Select status"
