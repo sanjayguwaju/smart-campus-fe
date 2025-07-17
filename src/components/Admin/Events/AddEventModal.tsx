@@ -129,10 +129,12 @@ const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose }) => {
         highlights: [],
         requirements: [],
         benefits: [],
-        externalLinks: []
+        externalLinks: [],
+        imageUrl: ''
       });
     } catch (error) {
       // Error is handled by the mutation
+      console.error('Error creating event:', error);
     }
   };
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useUpdateEvent } from '../../../api/hooks/useEvents';
 import { Event, CreateEventRequest } from '../../../api/types/events';
-import { useAuthStore } from '../../../store/authStore';
+import ImageUpload from '../../common/ImageUpload';
 
 interface EditEventModalProps {
   isOpen: boolean;
@@ -11,7 +11,6 @@ interface EditEventModalProps {
 
 const EditEventModal: React.FC<EditEventModalProps> = ({ isOpen, onClose, event }) => {
   const updateEventMutation = useUpdateEvent();
-  const currentUser = useAuthStore((state) => state.user);
   const [formData, setFormData] = useState<Partial<CreateEventRequest>>({
     title: '',
     description: '',
@@ -45,7 +44,8 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ isOpen, onClose, event 
     highlights: [],
     requirements: [],
     benefits: [],
-    externalLinks: []
+    externalLinks: [],
+    imageUrl: ''
   });
   const [serverError, setServerError] = useState<string | null>(null);
 
@@ -84,7 +84,8 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ isOpen, onClose, event 
         highlights: event.highlights,
         requirements: event.requirements,
         benefits: event.benefits,
-        externalLinks: event.externalLinks
+        externalLinks: event.externalLinks,
+        imageUrl: event.imageUrl || ''
       });
     }
   }, [event]);
@@ -137,8 +138,11 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ isOpen, onClose, event 
         data: payload as Partial<CreateEventRequest>
       });
       onClose();
-    } catch (error: any) {
-      setServerError(error?.response?.data?.message || 'Failed to update event');
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : (error as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Failed to update event';
+      setServerError(errorMessage);
     }
   };
 
@@ -262,6 +266,20 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ isOpen, onClose, event 
               required
               rows={4}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          {/* Event Image */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Event Image
+            </label>
+            <ImageUpload
+              onImageUpload={(url) => setFormData(prev => ({ ...prev, imageUrl: url }))}
+              onImageRemove={() => setFormData(prev => ({ ...prev, imageUrl: '' }))}
+              currentImage={formData.imageUrl}
+              maxSize={5}
+              className="max-w-md"
             />
           </div>
 
