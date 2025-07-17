@@ -21,69 +21,125 @@ const DepartmentsFilterDrawer: React.FC<DepartmentsFilterDrawerProps> = ({ isOpe
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex">
-      <div className="fixed inset-0 bg-black bg-opacity-50" onClick={onClose} />
-      <div className="relative bg-white w-80 max-w-full h-full shadow-xl p-6 overflow-y-auto">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-semibold text-gray-900">Filter Departments</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
-            <X className="h-6 w-6" />
-          </button>
-        </div>
-        <form className="space-y-4">
-          <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">Department Name</label>
-            <input
-              type="text"
-              id="name"
-              name="name"
-              value={filters.name || ''}
-              onChange={handleChange}
-              className="w-full p-2 border rounded-lg"
-              placeholder="Search by name"
-            />
-          </div>
-          <div>
-            <label htmlFor="code" className="block text-sm font-medium text-gray-700 mb-1">Department Code</label>
-            <input
-              type="text"
-              id="code"
-              name="code"
-              value={filters.code || ''}
-              onChange={handleChange}
-              className="w-full p-2 border rounded-lg"
-              placeholder="Search by code"
-            />
-          </div>
-          <div>
-            <label htmlFor="headOfDepartment" className="block text-sm font-medium text-gray-700 mb-1">Head of Department</label>
-            <input
-              type="text"
-              id="headOfDepartment"
-              name="headOfDepartment"
-              value={filters.headOfDepartment || ''}
-              onChange={handleChange}
-              className="w-full p-2 border rounded-lg"
-              placeholder="Search by head of department"
-            />
-          </div>
-          <div>
-            <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-            <select
-              id="status"
-              name="status"
-              value={filters.status || ''}
-              onChange={handleChange}
-              className="w-full p-2 border rounded-lg"
+    <>
+      {/* Backdrop */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity duration-300"
+          onClick={onClose}
+        />
+      )}
+
+      {/* Drawer */}
+      <div className={`fixed -top-5 right-0 h-full w-96 bg-white shadow-2xl transform transition-transform duration-300 ease-in-out z-50 ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+        <div className="flex flex-col h-full">
+          {/* Header */}
+          <div className="flex items-center justify-between p-6 border-b border-gray-200">
+            <h2 className="text-lg font-semibold text-gray-900">Filter Departments</h2>
+            <button 
+              onClick={onClose} 
+              className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-100"
             >
-              <option value="">All</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </select>
+              <X className="h-6 w-6" />
+            </button>
           </div>
-        </form>
+          
+          {/* Content */}
+          <div className="flex-1 overflow-y-auto p-6">
+            <form className="space-y-6">
+              <div>
+                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                  Department Name
+                </label>
+                <input
+                  type="text"
+                  id="name"
+                  name="name"
+                  value={filters.name || ''}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                  placeholder="Search by name"
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="code" className="block text-sm font-medium text-gray-700 mb-2">
+                  Department Code
+                </label>
+                <input
+                  type="text"
+                  id="code"
+                  name="code"
+                  value={filters.code || ''}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                  placeholder="Search by code"
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="headOfDepartment" className="block text-sm font-medium text-gray-700 mb-2">
+                  Head of Department
+                </label>
+                <input
+                  type="text"
+                  id="headOfDepartment"
+                  name="headOfDepartment"
+                  value={filters.headOfDepartment || ''}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                  placeholder="Search by head of department"
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-2">
+                  Status
+                </label>
+                <select
+                  id="status"
+                  name="status"
+                  value={filters.status || ''}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                >
+                  <option value="">All Status</option>
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                </select>
+              </div>
+            </form>
+          </div>
+          
+          {/* Footer */}
+          <div className="p-6 border-t border-gray-200">
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setFilters({
+                    name: '',
+                    code: '',
+                    headOfDepartment: '',
+                    status: ''
+                  });
+                }}
+                className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+              >
+                Clear All
+              </button>
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Apply Filters
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 
