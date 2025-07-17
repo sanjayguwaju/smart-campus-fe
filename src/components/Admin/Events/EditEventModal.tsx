@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
+import { useForm, Controller } from 'react-hook-form';
 import { useUpdateEvent } from '../../../api/hooks/useEvents';
 import { Event, CreateEventRequest } from '../../../api/types/events';
 import ImageUpload from '../../common/ImageUpload';
@@ -10,49 +11,98 @@ interface EditEventModalProps {
   event: Event | null;
 }
 
+interface FormData {
+  title: string;
+  description: string;
+  shortDescription?: string;
+  eventType: 'academic' | 'cultural' | 'sports' | 'technical' | 'social' | 'workshop' | 'seminar' | 'conference' | 'other';
+  category: 'student' | 'faculty' | 'admin' | 'public' | 'invitation-only';
+  startDate: string;
+  endDate: string;
+  startTime: string;
+  endTime: string;
+  location: {
+    venue: string;
+    room?: string;
+    building?: string;
+    campus?: string;
+  };
+  maxAttendees?: number;
+  registrationDeadline?: string;
+  isRegistrationRequired: boolean;
+  isRegistrationOpen: boolean;
+  tags: string[];
+  contactInfo: {
+    email?: string;
+    phone?: string;
+    website?: string;
+  };
+  status: 'draft' | 'published' | 'cancelled' | 'completed' | 'postponed';
+  visibility: 'public' | 'private' | 'restricted';
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  featured: boolean;
+  highlights: string[];
+  requirements: string[];
+  benefits: string[];
+  externalLinks: Array<{
+    title: string;
+    url: string;
+  }>;
+  imageUrl: string;
+}
+
 const EditEventModal: React.FC<EditEventModalProps> = ({ isOpen, onClose, event }) => {
   const updateEventMutation = useUpdateEvent();
-  const [formData, setFormData] = useState<Partial<CreateEventRequest>>({
-    title: '',
-    description: '',
-    shortDescription: '',
-    eventType: 'academic',
-    category: 'public',
-    startDate: '',
-    endDate: '',
-    startTime: '',
-    endTime: '',
-    location: {
-      venue: '',
-      room: '',
-      building: '',
-      campus: ''
-    },
-    maxAttendees: undefined,
-    registrationDeadline: '',
-    isRegistrationRequired: false,
-    isRegistrationOpen: true,
-    tags: [],
-    contactInfo: {
-      email: '',
-      phone: '',
-      website: ''
-    },
-    status: 'draft',
-    visibility: 'public',
-    priority: 'medium',
-    featured: false,
-    highlights: [],
-    requirements: [],
-    benefits: [],
-    externalLinks: [],
-    imageUrl: ''
+  
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitting }
+  } = useForm<FormData>({
+    defaultValues: {
+      title: '',
+      description: '',
+      shortDescription: '',
+      eventType: 'academic',
+      category: 'public',
+      startDate: '',
+      endDate: '',
+      startTime: '',
+      endTime: '',
+      location: {
+        venue: '',
+        room: '',
+        building: '',
+        campus: ''
+      },
+      maxAttendees: undefined,
+      registrationDeadline: '',
+      isRegistrationRequired: false,
+      isRegistrationOpen: true,
+      tags: [],
+      contactInfo: {
+        email: '',
+        phone: '',
+        website: ''
+      },
+      status: 'draft',
+      visibility: 'public',
+      priority: 'medium',
+      featured: false,
+      highlights: [],
+      requirements: [],
+      benefits: [],
+      externalLinks: [],
+      imageUrl: ''
+    }
   });
-  const [serverError, setServerError] = useState<string | null>(null);
+
+
 
   useEffect(() => {
     if (event) {
-      setFormData({
+      reset({
         title: event.title,
         description: event.description,
         shortDescription: event.shortDescription,
@@ -89,65 +139,25 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ isOpen, onClose, event 
         imageUrl: event.imageUrl || ''
       });
     }
-  }, [event]);
+  }, [event, reset]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value, type } = e.target;
-    
-    if (name.startsWith('location.')) {
-      const locationField = name.split('.')[1];
-      setFormData(prev => ({
-        ...prev,
-        location: {
-          ...prev.location!,
-          [locationField]: value
-        }
-      }));
-    } else if (name.startsWith('contactInfo.')) {
-      const contactField = name.split('.')[1];
-      setFormData(prev => ({
-        ...prev,
-        contactInfo: {
-          ...prev.contactInfo!,
-          [contactField]: value
-        }
-      }));
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        [name]: type === 'number' ? (value ? parseInt(value) : undefined) : value
-      }));
-    }
-  };
-
-  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, checked } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: checked
-    }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setServerError(null);
+  const onSubmit = async (data: FormData) => {
     if (!event) return;
+    
     try {
       const payload = { 
-        ...formData,
-        startDate: dateInputToIso(formData.startDate || ''),
-        endDate: dateInputToIso(formData.endDate || '')
+        ...data,
+        startDate: dateInputToIso(data.startDate),
+        endDate: dateInputToIso(data.endDate)
       };
+      
       await updateEventMutation.mutateAsync({
         id: event._id,
         data: payload as Partial<CreateEventRequest>
       });
       onClose();
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error 
-        ? error.message 
-        : (error as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Failed to update event';
-      setServerError(errorMessage);
+      console.error('Error updating event:', error);
     }
   };
 
@@ -181,18 +191,7 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ isOpen, onClose, event 
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6">
-          <form onSubmit={handleSubmit} className="space-y-8">
-            {serverError && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                <div className="flex items-center">
-                  <svg className="h-5 w-5 text-red-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <span className="text-red-800 text-sm font-medium">{serverError}</span>
-                </div>
-              </div>
-            )}
-
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
             {/* Basic Information Section */}
             <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
               <div className="flex items-center mb-6">
@@ -209,76 +208,112 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ isOpen, onClose, event 
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Title *
                   </label>
-                  <input
-                    type="text"
+                  <Controller
                     name="title"
-                    value={formData.title}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
-                    placeholder="Enter event title"
+                    control={control}
+                    rules={{ required: 'Title is required' }}
+                    render={({ field }) => (
+                      <input
+                        {...field}
+                        type="text"
+                        className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 ${
+                          errors.title ? 'border-red-300' : 'border-gray-200'
+                        }`}
+                        placeholder="Enter event title"
+                      />
+                    )}
                   />
+                  {errors.title && (
+                    <p className="mt-1 text-sm text-red-600">{errors.title.message}</p>
+                  )}
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Event Type *
                   </label>
-                  <select
+                  <Controller
                     name="eventType"
-                    value={formData.eventType}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
-                  >
-                    <option value="academic">Academic</option>
-                    <option value="cultural">Cultural</option>
-                    <option value="sports">Sports</option>
-                    <option value="technical">Technical</option>
-                    <option value="social">Social</option>
-                    <option value="workshop">Workshop</option>
-                    <option value="seminar">Seminar</option>
-                    <option value="conference">Conference</option>
-                    <option value="other">Other</option>
-                  </select>
+                    control={control}
+                    rules={{ required: 'Event type is required' }}
+                    render={({ field }) => (
+                      <select
+                        {...field}
+                        className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 ${
+                          errors.eventType ? 'border-red-300' : 'border-gray-200'
+                        }`}
+                      >
+                        <option value="academic">Academic</option>
+                        <option value="cultural">Cultural</option>
+                        <option value="sports">Sports</option>
+                        <option value="technical">Technical</option>
+                        <option value="social">Social</option>
+                        <option value="workshop">Workshop</option>
+                        <option value="seminar">Seminar</option>
+                        <option value="conference">Conference</option>
+                        <option value="other">Other</option>
+                      </select>
+                    )}
+                  />
+                  {errors.eventType && (
+                    <p className="mt-1 text-sm text-red-600">{errors.eventType.message}</p>
+                  )}
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Category *
                   </label>
-                  <select
+                  <Controller
                     name="category"
-                    value={formData.category}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
-                  >
-                    <option value="public">Public</option>
-                    <option value="student">Student</option>
-                    <option value="faculty">Faculty</option>
-                    <option value="admin">Admin</option>
-                    <option value="invitation-only">Invitation Only</option>
-                  </select>
+                    control={control}
+                    rules={{ required: 'Category is required' }}
+                    render={({ field }) => (
+                      <select
+                        {...field}
+                        className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 ${
+                          errors.category ? 'border-red-300' : 'border-gray-200'
+                        }`}
+                      >
+                        <option value="public">Public</option>
+                        <option value="student">Student</option>
+                        <option value="faculty">Faculty</option>
+                        <option value="admin">Admin</option>
+                        <option value="invitation-only">Invitation Only</option>
+                      </select>
+                    )}
+                  />
+                  {errors.category && (
+                    <p className="mt-1 text-sm text-red-600">{errors.category.message}</p>
+                  )}
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Status *
                   </label>
-                  <select
+                  <Controller
                     name="status"
-                    value={formData.status}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
-                  >
-                    <option value="draft">Draft</option>
-                    <option value="published">Published</option>
-                    <option value="cancelled">Cancelled</option>
-                    <option value="completed">Completed</option>
-                    <option value="postponed">Postponed</option>
-                  </select>
+                    control={control}
+                    rules={{ required: 'Status is required' }}
+                    render={({ field }) => (
+                      <select
+                        {...field}
+                        className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 ${
+                          errors.status ? 'border-red-300' : 'border-gray-200'
+                        }`}
+                      >
+                        <option value="draft">Draft</option>
+                        <option value="published">Published</option>
+                        <option value="cancelled">Cancelled</option>
+                        <option value="completed">Completed</option>
+                        <option value="postponed">Postponed</option>
+                      </select>
+                    )}
+                  />
+                  {errors.status && (
+                    <p className="mt-1 text-sm text-red-600">{errors.status.message}</p>
+                  )}
                 </div>
               </div>
             </div>
@@ -299,13 +334,17 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ isOpen, onClose, event 
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Short Description
                   </label>
-                  <input
-                    type="text"
+                  <Controller
                     name="shortDescription"
-                    value={formData.shortDescription}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
-                    placeholder="Brief description for event cards"
+                    control={control}
+                    render={({ field }) => (
+                      <input
+                        {...field}
+                        type="text"
+                        className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+                        placeholder="Brief description for event cards"
+                      />
+                    )}
                   />
                 </div>
 
@@ -313,15 +352,24 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ isOpen, onClose, event 
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Full Description *
                   </label>
-                  <textarea
+                  <Controller
                     name="description"
-                    value={formData.description}
-                    onChange={handleInputChange}
-                    required
-                    rows={4}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 resize-none"
-                    placeholder="Detailed description of the event"
+                    control={control}
+                    rules={{ required: 'Description is required' }}
+                    render={({ field }) => (
+                      <textarea
+                        {...field}
+                        rows={4}
+                        className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 resize-none ${
+                          errors.description ? 'border-red-300' : 'border-gray-200'
+                        }`}
+                        placeholder="Detailed description of the event"
+                      />
+                    )}
                   />
+                  {errors.description && (
+                    <p className="mt-1 text-sm text-red-600">{errors.description.message}</p>
+                  )}
                 </div>
               </div>
             </div>
@@ -337,12 +385,18 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ isOpen, onClose, event 
                 <h3 className="text-lg font-semibold text-gray-900">Event Image</h3>
               </div>
               
-              <ImageUpload
-                onImageUpload={(url) => setFormData(prev => ({ ...prev, imageUrl: url }))}
-                onImageRemove={() => setFormData(prev => ({ ...prev, imageUrl: '' }))}
-                currentImage={formData.imageUrl}
-                maxSize={5}
-                className="max-w-md"
+              <Controller
+                name="imageUrl"
+                control={control}
+                render={({ field }) => (
+                  <ImageUpload
+                    onImageUpload={(url) => field.onChange(url)}
+                    onImageRemove={() => field.onChange('')}
+                    currentImage={field.value}
+                    maxSize={5}
+                    className="max-w-md"
+                  />
+                )}
               />
             </div>
 
@@ -362,56 +416,92 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ isOpen, onClose, event 
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Start Date *
                   </label>
-                  <input
-                    type="date"
+                  <Controller
                     name="startDate"
-                    value={formData.startDate}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+                    control={control}
+                    rules={{ required: 'Start date is required' }}
+                    render={({ field }) => (
+                      <input
+                        {...field}
+                        type="date"
+                        className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 ${
+                          errors.startDate ? 'border-red-300' : 'border-gray-200'
+                        }`}
+                      />
+                    )}
                   />
+                  {errors.startDate && (
+                    <p className="mt-1 text-sm text-red-600">{errors.startDate.message}</p>
+                  )}
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     End Date *
                   </label>
-                  <input
-                    type="date"
+                  <Controller
                     name="endDate"
-                    value={formData.endDate}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+                    control={control}
+                    rules={{ required: 'End date is required' }}
+                    render={({ field }) => (
+                      <input
+                        {...field}
+                        type="date"
+                        className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 ${
+                          errors.endDate ? 'border-red-300' : 'border-gray-200'
+                        }`}
+                      />
+                    )}
                   />
+                  {errors.endDate && (
+                    <p className="mt-1 text-sm text-red-600">{errors.endDate.message}</p>
+                  )}
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Start Time *
                   </label>
-                  <input
-                    type="time"
+                  <Controller
                     name="startTime"
-                    value={formData.startTime}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+                    control={control}
+                    rules={{ required: 'Start time is required' }}
+                    render={({ field }) => (
+                      <input
+                        {...field}
+                        type="time"
+                        className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 ${
+                          errors.startTime ? 'border-red-300' : 'border-gray-200'
+                        }`}
+                      />
+                    )}
                   />
+                  {errors.startTime && (
+                    <p className="mt-1 text-sm text-red-600">{errors.startTime.message}</p>
+                  )}
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     End Time *
                   </label>
-                  <input
-                    type="time"
+                  <Controller
                     name="endTime"
-                    value={formData.endTime}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+                    control={control}
+                    rules={{ required: 'End time is required' }}
+                    render={({ field }) => (
+                      <input
+                        {...field}
+                        type="time"
+                        className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 ${
+                          errors.endTime ? 'border-red-300' : 'border-gray-200'
+                        }`}
+                      />
+                    )}
                   />
+                  {errors.endTime && (
+                    <p className="mt-1 text-sm text-red-600">{errors.endTime.message}</p>
+                  )}
                 </div>
               </div>
             </div>
@@ -433,28 +523,41 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ isOpen, onClose, event 
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Venue *
                   </label>
-                  <input
-                    type="text"
+                  <Controller
                     name="location.venue"
-                    value={formData.location?.venue}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
-                    placeholder="Event venue"
+                    control={control}
+                    rules={{ required: 'Venue is required' }}
+                    render={({ field }) => (
+                      <input
+                        {...field}
+                        type="text"
+                        className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 ${
+                          errors.location?.venue ? 'border-red-300' : 'border-gray-200'
+                        }`}
+                        placeholder="Event venue"
+                      />
+                    )}
                   />
+                  {errors.location?.venue && (
+                    <p className="mt-1 text-sm text-red-600">{errors.location.venue.message}</p>
+                  )}
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Room
                   </label>
-                  <input
-                    type="text"
+                  <Controller
                     name="location.room"
-                    value={formData.location?.room}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
-                    placeholder="Room number"
+                    control={control}
+                    render={({ field }) => (
+                      <input
+                        {...field}
+                        type="text"
+                        className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+                        placeholder="Room number"
+                      />
+                    )}
                   />
                 </div>
 
@@ -462,13 +565,17 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ isOpen, onClose, event 
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Building
                   </label>
-                  <input
-                    type="text"
+                  <Controller
                     name="location.building"
-                    value={formData.location?.building}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
-                    placeholder="Building name"
+                    control={control}
+                    render={({ field }) => (
+                      <input
+                        {...field}
+                        type="text"
+                        className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+                        placeholder="Building name"
+                      />
+                    )}
                   />
                 </div>
 
@@ -476,13 +583,17 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ isOpen, onClose, event 
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Campus
                   </label>
-                  <input
-                    type="text"
+                  <Controller
                     name="location.campus"
-                    value={formData.location?.campus}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
-                    placeholder="Campus name"
+                    control={control}
+                    render={({ field }) => (
+                      <input
+                        {...field}
+                        type="text"
+                        className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+                        placeholder="Campus name"
+                      />
+                    )}
                   />
                 </div>
               </div>
@@ -504,14 +615,19 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ isOpen, onClose, event 
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Max Attendees
                   </label>
-                  <input
-                    type="number"
+                  <Controller
                     name="maxAttendees"
-                    value={formData.maxAttendees || ''}
-                    onChange={handleInputChange}
-                    min="1"
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
-                    placeholder="No limit"
+                    control={control}
+                    render={({ field }) => (
+                      <input
+                        {...field}
+                        type="number"
+                        min="1"
+                        className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+                        placeholder="No limit"
+                        onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                      />
+                    )}
                   />
                 </div>
 
@@ -519,51 +635,73 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ isOpen, onClose, event 
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Registration Deadline
                   </label>
-                  <input
-                    type="datetime-local"
+                  <Controller
                     name="registrationDeadline"
-                    value={formData.registrationDeadline}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+                    control={control}
+                    render={({ field }) => (
+                      <input
+                        {...field}
+                        type="datetime-local"
+                        className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+                      />
+                    )}
                   />
                 </div>
 
                 <div className="flex items-center space-x-4">
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      name="isRegistrationRequired"
-                      checked={formData.isRegistrationRequired}
-                      onChange={handleCheckboxChange}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                    />
-                    <span className="ml-2 text-sm text-gray-700">Registration Required</span>
-                  </label>
+                  <Controller
+                    name="isRegistrationRequired"
+                    control={control}
+                    render={({ field }) => (
+                      <label className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={field.value}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        />
+                        <span className="ml-2 text-sm text-gray-700">Registration Required</span>
+                      </label>
+                    )}
+                  />
                 </div>
               </div>
 
               <div className="flex items-center space-x-6 mt-6">
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="isRegistrationOpen"
-                    checked={formData.isRegistrationOpen}
-                    onChange={handleCheckboxChange}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                  />
-                  <span className="ml-2 text-sm text-gray-700">Registration Open</span>
-                </label>
+                <Controller
+                  name="isRegistrationOpen"
+                  control={control}
+                  render={({ field }) => (
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={field.value}
+                        onChange={field.onChange}
+                        onBlur={field.onBlur}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      />
+                      <span className="ml-2 text-sm text-gray-700">Registration Open</span>
+                    </label>
+                  )}
+                />
 
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="featured"
-                    checked={formData.featured}
-                    onChange={handleCheckboxChange}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                  />
-                  <span className="ml-2 text-sm text-gray-700">Featured Event</span>
-                </label>
+                <Controller
+                  name="featured"
+                  control={control}
+                  render={({ field }) => (
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={field.value}
+                        onChange={field.onChange}
+                        onBlur={field.onBlur}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      />
+                      <span className="ml-2 text-sm text-gray-700">Featured Event</span>
+                    </label>
+                  )}
+                />
               </div>
             </div>
 
@@ -583,13 +721,17 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ isOpen, onClose, event 
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Contact Email
                   </label>
-                  <input
-                    type="email"
+                  <Controller
                     name="contactInfo.email"
-                    value={formData.contactInfo?.email}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
-                    placeholder="contact@example.com"
+                    control={control}
+                    render={({ field }) => (
+                      <input
+                        {...field}
+                        type="email"
+                        className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+                        placeholder="contact@example.com"
+                      />
+                    )}
                   />
                 </div>
 
@@ -597,13 +739,17 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ isOpen, onClose, event 
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Contact Phone
                   </label>
-                  <input
-                    type="tel"
+                  <Controller
                     name="contactInfo.phone"
-                    value={formData.contactInfo?.phone}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
-                    placeholder="+1 (555) 123-4567"
+                    control={control}
+                    render={({ field }) => (
+                      <input
+                        {...field}
+                        type="tel"
+                        className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+                        placeholder="+1 (555) 123-4567"
+                      />
+                    )}
                   />
                 </div>
 
@@ -611,13 +757,17 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ isOpen, onClose, event 
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Website
                   </label>
-                  <input
-                    type="url"
+                  <Controller
                     name="contactInfo.website"
-                    value={formData.contactInfo?.website}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
-                    placeholder="https://example.com"
+                    control={control}
+                    render={({ field }) => (
+                      <input
+                        {...field}
+                        type="url"
+                        className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+                        placeholder="https://example.com"
+                      />
+                    )}
                   />
                 </div>
               </div>
@@ -640,33 +790,41 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ isOpen, onClose, event 
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Visibility
                   </label>
-                  <select
+                  <Controller
                     name="visibility"
-                    value={formData.visibility}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
-                  >
-                    <option value="public">Public</option>
-                    <option value="private">Private</option>
-                    <option value="restricted">Restricted</option>
-                  </select>
+                    control={control}
+                    render={({ field }) => (
+                      <select
+                        {...field}
+                        className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+                      >
+                        <option value="public">Public</option>
+                        <option value="private">Private</option>
+                        <option value="restricted">Restricted</option>
+                      </select>
+                    )}
+                  />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Priority
                   </label>
-                  <select
+                  <Controller
                     name="priority"
-                    value={formData.priority}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
-                  >
-                    <option value="low">Low</option>
-                    <option value="medium">Medium</option>
-                    <option value="high">High</option>
-                    <option value="urgent">Urgent</option>
-                  </select>
+                    control={control}
+                    render={({ field }) => (
+                      <select
+                        {...field}
+                        className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+                      >
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                        <option value="urgent">Urgent</option>
+                      </select>
+                    )}
+                  />
                 </div>
               </div>
             </div>
@@ -682,10 +840,10 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ isOpen, onClose, event 
               </button>
               <button
                 type="submit"
-                disabled={updateEventMutation.isPending}
+                disabled={isSubmitting}
                 className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium shadow-lg hover:shadow-xl"
               >
-                {updateEventMutation.isPending ? (
+                {isSubmitting ? (
                   <div className="flex items-center">
                     <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
