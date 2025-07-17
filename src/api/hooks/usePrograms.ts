@@ -102,3 +102,23 @@ export const useDeleteProgram = () => {
     },
   });
 };
+
+export const usePublishProgram = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (programId: string) => programService.publishProgram(programId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["programs"] });
+    },
+  });
+};
+
+export const useUnpublishProgram = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (programId: string) => programService.unpublishProgram(programId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["programs"] });
+    },
+  });
+};

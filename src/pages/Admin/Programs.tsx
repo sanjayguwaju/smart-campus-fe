@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, Edit, Trash2, Filter, GraduationCap, Clock, BookOpen } from 'lucide-react';
-import { usePrograms, useCreateProgram, useUpdateProgram, useDeleteProgram } from '../../api/hooks/usePrograms';
+import { Plus, Search, Edit, Trash2, Filter, GraduationCap, Clock, BookOpen, CheckCircle, XCircle } from 'lucide-react';
+import { usePrograms, useCreateProgram, useUpdateProgram, useDeleteProgram, usePublishProgram, useUnpublishProgram } from '../../api/hooks/usePrograms';
 import { Program } from '../../api/types/programs';
 import { AddProgramModal, EditProgramModal, DeleteProgramModal } from '../../components/Admin/Programs';
 import LoadingSpinner from '../../components/Layout/LoadingSpinner';
@@ -35,13 +35,15 @@ const Programs: React.FC = () => {
   const createProgramMutation = useCreateProgram();
   const updateProgramMutation = useUpdateProgram();
   const deleteProgramMutation = useDeleteProgram();
+  const publishProgramMutation = usePublishProgram();
+  const unpublishProgramMutation = useUnpublishProgram();
 
   // Extract programs and pagination from data
   const programs = data?.programs || [];
   const pagination = data?.pagination;
 
   // Get unique departments from programs
-  const departments = Array.from(new Set(programs.map((p: Program) => p.department.name)));
+  const departments: string[] = Array.from(new Set(programs.map((p: Program) => p.department.name)));
 
   const handleEdit = (program: Program) => {
     setEditingProgram(program);
@@ -77,14 +79,26 @@ const Programs: React.FC = () => {
     }
   };
 
-  const getLevelBadgeColor = (level: string) => {
-    switch (level) {
-      case 'undergraduate':
-        return 'bg-blue-100 text-blue-800';
-      case 'postgraduate':
+  const handlePublish = async (program: Program) => {
+    try {
+      await publishProgramMutation.mutateAsync(program._id);
+    } catch (error) {
+      // Optionally handle error
+    }
+  };
+  const handleUnpublish = async (program: Program) => {
+    try {
+      await unpublishProgramMutation.mutateAsync(program._id);
+    } catch (error) {
+      // Optionally handle error
+    }
+  };
+  const getStatusBadgeColor = (status: string) => {
+    switch (status) {
+      case 'published':
         return 'bg-green-100 text-green-800';
-      case 'professional':
-        return 'bg-purple-100 text-purple-800';
+      case 'draft':
+        return 'bg-gray-100 text-gray-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -180,9 +194,12 @@ const Programs: React.FC = () => {
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center space-x-2 mb-2">
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getLevelBadgeColor(program.level)}`}>
-                          {program.level}
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeColor(program.status)}`}>
+                          {program.status}
                         </span>
+                        {!program.isPublished && (
+                          <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full ml-2 bg-gray-100 text-gray-800 border border-gray-200">Unpublished</span>
+                        )}
                       </div>
                       <h3 className="text-lg font-semibold text-gray-900 mb-2">{program.name}</h3>
                       <p className="text-sm text-gray-600 mb-4 line-clamp-2">{program.description}</p>
@@ -203,20 +220,39 @@ const Programs: React.FC = () => {
                       </div>
                     </div>
                   </div>
-                  
-                  <div className="flex justify-end space-x-2 mt-4">
-                    <button
-                      onClick={() => handleEdit(program)}
-                      className="text-blue-600 hover:text-blue-800 p-1"
-                    >
-                      <Edit className="h-4 w-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(program)}
-                      className="text-red-600 hover:text-red-800 p-1"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
+                  {/* Publish/Unpublish button */}
+                  <div className="flex justify-between items-center mt-4">
+                    {!program.isPublished ? (
+                      <button
+                        onClick={() => handlePublish(program)}
+                        disabled={publishProgramMutation.isPending}
+                        className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed px-3 py-1 rounded-md transition-colors text-xs font-medium text-white"
+                      >
+                        Publish
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleUnpublish(program)}
+                        disabled={unpublishProgramMutation.isPending}
+                        className="bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed px-3 py-1 rounded-md transition-colors text-xs font-medium text-white"
+                      >
+                        Unpublish
+                      </button>
+                    )}
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => handleEdit(program)}
+                        className="text-blue-600 hover:text-blue-800 p-1"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(program)}
+                        className="text-red-600 hover:text-red-800 p-1"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>

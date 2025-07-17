@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Program } from '../../api/types/programs';
+import Select, { StylesConfig } from 'react-select';
 
 interface EditProgramModalProps {
   isOpen: boolean;
@@ -7,6 +8,45 @@ interface EditProgramModalProps {
   program: Program | null;
   onEdit: (id: string, data: Partial<Program>) => void;
 }
+
+const statusOptions = [
+  { value: 'draft', label: 'Draft' },
+  { value: 'published', label: 'Published' },
+];
+
+const selectStyles: StylesConfig<{ value: string; label: string }> = {
+  control: (provided, state) => ({
+    ...provided,
+    minHeight: '48px',
+    border: state.isFocused ? '2px solid #3b82f6' : '1px solid #e5e7eb',
+    borderRadius: '8px',
+    boxShadow: state.isFocused ? '0 0 0 2px rgba(59, 130, 246, 0.1)' : 'none',
+    '&:hover': {
+      border: '1px solid #d1d5db'
+    }
+  }),
+  option: (provided, state) => ({
+    ...provided,
+    backgroundColor: state.isSelected ? '#3b82f6' : state.isFocused ? '#f3f4f6' : 'white',
+    color: state.isSelected ? 'white' : '#374151',
+    '&:hover': {
+      backgroundColor: state.isSelected ? '#3b82f6' : '#f3f4f6'
+    }
+  }),
+  menu: (provided) => ({
+    ...provided,
+    borderRadius: '8px',
+    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'
+  }),
+  placeholder: (provided) => ({
+    ...provided,
+    color: '#9ca3af'
+  }),
+  singleValue: (provided) => ({
+    ...provided,
+    color: '#374151'
+  })
+};
 
 const EditProgramModal: React.FC<EditProgramModalProps> = ({ isOpen, onClose, program, onEdit }) => {
   const [form, setForm] = useState<Partial<Program>>({});
@@ -112,6 +152,27 @@ const EditProgramModal: React.FC<EditProgramModalProps> = ({ isOpen, onClose, pr
               </div>
             ))}
             <button type="button" onClick={addPrerequisite} className="text-blue-600 text-xs mt-1">+ Add Prerequisite</button>
+          </div>
+          <div>
+            <label className="block text-sm font-medium">Status</label>
+            <Select
+              options={statusOptions}
+              value={statusOptions.find(opt => opt.value === form.status)}
+              onChange={option => setForm(f => ({ ...f, status: option?.value || 'draft', isPublished: option?.value === 'published' }))}
+              styles={selectStyles}
+              className="w-full"
+              placeholder="Select status"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              className={`px-3 py-1 rounded ${form.isPublished ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-700'}`}
+              onClick={() => setForm(f => ({ ...f, isPublished: !f.isPublished, status: f.isPublished ? 'draft' : 'published' }))}
+            >
+              {form.isPublished ? 'Unpublish' : 'Publish'}
+            </button>
+            <span className="text-sm">Current: <b>{form.isPublished ? 'Published' : 'Draft'}</b></span>
           </div>
           <div>
             <label className="block text-sm font-medium">Image URL</label>
