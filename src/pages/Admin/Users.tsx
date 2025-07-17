@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Search, Edit, Trash2, Eye, Filter, UserCheck, UserX, ChevronLeft, ChevronRight, MoreHorizontal, Key } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import Select, { StylesConfig } from 'react-select';
+import { useDebounce } from '@uidotdev/usehooks';
 import { useUsers, useDeleteUser, useActivateUser, useDeactivateUser, useResetPassword } from '../../api/hooks/useUsers';
 import { UserData } from '../../api/types/users';
 import LoadingSpinner from '../../components/Layout/LoadingSpinner';
@@ -52,6 +53,9 @@ const Users: React.FC = () => {
     isEmailVerified: ''
   });
 
+  // Debounce search term
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+
   // Role filter options
   const roleOptions: SelectOption[] = [
     { value: 'all', label: 'All Roles' },
@@ -101,8 +105,13 @@ const Users: React.FC = () => {
     };
   }, []);
 
+  // Reset page when search term changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearchTerm]);
+
   // TanStack Query hooks
-  const { data, isLoading, error } = useUsers(currentPage, pageSize);
+  const { data, isLoading, error } = useUsers(currentPage, pageSize, debouncedSearchTerm, filters);
   const deleteUserMutation = useDeleteUser();
   const activateUserMutation = useActivateUser();
   const deactivateUserMutation = useDeactivateUser();
@@ -147,66 +156,8 @@ const Users: React.FC = () => {
   // Get unique departments from users
   const departments = Array.from(new Set(users.map((user: UserData) => user.department).filter(Boolean))) as string[];
 
-  const filteredUsers = users.filter((user: UserData) => {
-    const displayName = getDisplayName(user);
-    
-    // Search filter
-    const searchMatch = !filters.searchTerm || 
-      displayName.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(filters.searchTerm.toLowerCase());
-    
-    // Role filter
-    const roleMatch = !filters.role || user.role === filters.role;
-    
-    // Status filter
-    const statusMatch = !filters.status || 
-      (filters.status === 'active' && user.isActive) ||
-      (filters.status === 'inactive' && !user.isActive);
-    
-    // Department filter
-    const departmentMatch = !filters.department || user.department === filters.department;
-    
-    // Email verification filter
-    const emailMatch = !filters.isEmailVerified ||
-      (filters.isEmailVerified === 'verified' && user.isEmailVerified) ||
-      (filters.isEmailVerified === 'unverified' && !user.isEmailVerified);
-    
-    // Date range filter
-    let dateMatch = true;
-    if (filters.dateRange) {
-      const userDate = new Date(user.createdAt);
-      const now = new Date();
-      
-      switch (filters.dateRange) {
-        case 'today': {
-          dateMatch = userDate.toDateString() === now.toDateString();
-          break;
-        }
-        case 'week': {
-          const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-          dateMatch = userDate >= weekAgo;
-          break;
-        }
-        case 'month': {
-          const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-          dateMatch = userDate >= monthAgo;
-          break;
-        }
-        case 'quarter': {
-          const quarterAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
-          dateMatch = userDate >= quarterAgo;
-          break;
-        }
-        case 'year': {
-          const yearAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
-          dateMatch = userDate >= yearAgo;
-          break;
-        }
-      }
-    }
-    
-    return searchMatch && roleMatch && statusMatch && departmentMatch && emailMatch && dateMatch;
-  });
+  // Use users directly since filtering is now handled by the API
+  const filteredUsers = users;
 
   const handleSelectUser = (userId: string) => {
     setSelectedUsers(prev => 
@@ -420,7 +371,15 @@ const Users: React.FC = () => {
             <Select
               options={roleOptions}
               value={roleOptions.find(option => option.value === roleFilter)}
-              onChange={(selectedOption) => setRoleFilter(selectedOption?.value || 'all')}
+              onChange={(selectedOption) => {
+                const newRole = selectedOption?.value || 'all';
+                setRoleFilter(newRole);
+                setFilters(prev => ({
+                  ...prev,
+                  role: newRole === 'all' ? '' : newRole
+                }));
+                setCurrentPage(1); // Reset to first page when role filter changes
+              }}
               styles={selectStyles}
               placeholder="Select Role"
               isSearchable={false}
