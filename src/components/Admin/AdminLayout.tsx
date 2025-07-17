@@ -4,6 +4,7 @@ import { useAuthStore } from '../../store/authStore';
 import {
   Home,
   Users,
+  Building,
   Calendar,
   FileText,
   GraduationCap,
@@ -19,6 +20,7 @@ const AdminLayout: React.FC = () => {
   const navigation = [
     { name: 'Dashboard', href: '/admin', icon: Home },
     { name: 'Users', href: '/admin/users', icon: Users },
+    { name: 'Departments', href: '/admin/departments', icon: Building },
     { name: 'Events', href: '/admin/events', icon: Calendar },
     { name: 'Notices', href: '/admin/notices', icon: FileText },
     { name: 'Programs', href: '/admin/programs', icon: GraduationCap },

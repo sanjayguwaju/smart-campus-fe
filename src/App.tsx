@@ -40,6 +40,7 @@ import FacultyNotices from './pages/Faculty/Notices';
 import Grades from './pages/Faculty/Grades';
 import OfficeHours from './pages/Faculty/OfficeHours';
 import FacultyBlog from './pages/Faculty/Blog';
+import Departments from './pages/Admin/Departments';
 
 
 function App() {
@@ -87,6 +88,7 @@ function App() {
         >
           <Route index element={<AdminDashboard />} />
           <Route path="users" element={<Users />} />
+          <Route path="departments" element={<Departments />} />
           <Route path="events" element={<AdminEvents />} />
           <Route path="notices" element={<Notices />} />
           <Route path="programs" element={<AdminPrograms />} />
