@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-hot-toast';
 import { X, BookOpen, User, Building } from 'lucide-react';
 import { useCreateCourse } from '../../../api/hooks/useCourses';
 import { CreateCourseRequest } from '../../../api/types/courses';
+import ImageUpload from '../../common/ImageUpload';
 
 interface AddCourseModalProps {
   isOpen: boolean;
@@ -12,6 +13,7 @@ interface AddCourseModalProps {
 
 const AddCourseModal: React.FC<AddCourseModalProps> = ({ isOpen, onClose }) => {
   const createCourseMutation = useCreateCourse();
+  const [imageUrl, setImageUrl] = useState<string>('');
   const {
     register,
     handleSubmit,
@@ -33,8 +35,13 @@ const AddCourseModal: React.FC<AddCourseModalProps> = ({ isOpen, onClose }) => {
 
   const onSubmit = async (data: CreateCourseRequest) => {
     try {
-      await createCourseMutation.mutateAsync(data);
+      const courseData = {
+        ...data,
+        imageUrl: imageUrl || undefined
+      };
+      await createCourseMutation.mutateAsync(courseData);
       reset();
+      setImageUrl('');
       onClose();
       toast.success('Course created successfully');
     } catch (error) {
@@ -45,6 +52,7 @@ const AddCourseModal: React.FC<AddCourseModalProps> = ({ isOpen, onClose }) => {
 
   const handleClose = () => {
     reset();
+    setImageUrl('');
     onClose();
   };
 
@@ -121,6 +129,19 @@ const AddCourseModal: React.FC<AddCourseModalProps> = ({ isOpen, onClose }) => {
               id="description"
               className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[80px]"
               placeholder="Enter course description"
+            />
+          </div>
+
+          {/* Course Image */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Course Image
+            </label>
+            <ImageUpload
+              onImageUpload={setImageUrl}
+              onImageRemove={() => setImageUrl('')}
+              currentImage={imageUrl}
+              className="w-full"
             />
           </div>
           {/* Credits */}

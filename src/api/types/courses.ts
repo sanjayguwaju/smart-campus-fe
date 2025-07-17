@@ -11,6 +11,12 @@ export interface CourseData {
   maxStudents: number;
   enrolledStudents: number;
   isActive: boolean;
+  imageUrl?: string;
+  images?: Array<{
+    url: string;
+    caption?: string;
+    isPrimary: boolean;
+  }>;
   createdAt: string;
   updatedAt: string;
   id: string;
@@ -26,6 +32,7 @@ export interface CreateCourseRequest {
   semester: string;
   academicYear: string;
   maxStudents: number;
+  imageUrl?: string;
 }
 
 export interface UpdateCourseRequest {
@@ -39,6 +46,7 @@ export interface UpdateCourseRequest {
   academicYear?: string;
   maxStudents?: number;
   isActive?: boolean;
+  imageUrl?: string;
 }
 
 export interface PaginationInfo {
