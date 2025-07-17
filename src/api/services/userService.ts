@@ -9,10 +9,30 @@ import {
 } from "../types/users";
 
 export const userService = {
-  async getUsers(page = 1, limit = 10): Promise<UsersResponse> {
-    const response = await apiClient.get<UsersResponse>(
-      `/users?page=${page}&limit=${limit}`
-    );
+  async getUsers(page = 1, limit = 10, search?: string, filters?: {
+    role?: string;
+    status?: string;
+    department?: string;
+    isEmailVerified?: string;
+    dateRange?: string;
+  }): Promise<UsersResponse> {
+    const params = new URLSearchParams();
+    params.append('page', page.toString());
+    params.append('limit', limit.toString());
+    
+    if (search) {
+      params.append('search', search);
+    }
+    
+    if (filters) {
+      if (filters.role) params.append('role', filters.role);
+      if (filters.status) params.append('status', filters.status);
+      if (filters.department) params.append('department', filters.department);
+      if (filters.isEmailVerified) params.append('isEmailVerified', filters.isEmailVerified);
+      if (filters.dateRange) params.append('dateRange', filters.dateRange);
+    }
+
+    const response = await apiClient.get<UsersResponse>(`/users?${params.toString()}`);
     return response.data;
   },
 
