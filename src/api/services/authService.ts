@@ -39,4 +39,14 @@ export const authService = {
     const response = await apiClient.post<{ accessToken: string; refreshToken: string }>('/auth/refresh');
     return response.data;
   },
+};
+
+export const resetPasswordRequest = async (email: string): Promise<boolean> => {
+  try {
+    const response = await apiClient.post('/auth/reset-password-request', { email });
+    return response.data.success;
+  } catch (error) {
+    console.error('Reset password request failed:', error);
+    throw error;
+  }
 }; 

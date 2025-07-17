@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { authService } from '../services/authService';
+import { authService, resetPasswordRequest } from '../services/authService';
 import { LoginRequest, RegisterRequest } from '../types/auth';
 
 export const useLogin = () => {
@@ -86,9 +86,18 @@ export const useRefreshToken = () => {
   return useMutation({
     mutationFn: authService.refreshToken,
     onSuccess: (data) => {
-      localStorage.setItem('authToken', data.token);
+      localStorage.setItem('authToken', data.accessToken);
       // Refetch user data with new token
       queryClient.invalidateQueries({ queryKey: ['user'] });
+    },
+  });
+};
+
+export const useResetPasswordRequest = () => {
+  return useMutation({
+    mutationFn: (email: string) => resetPasswordRequest(email),
+    onError: (error) => {
+      console.error('Reset password request error:', error);
     },
   });
 }; 

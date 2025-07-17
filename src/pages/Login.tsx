@@ -153,10 +153,10 @@ const Login: React.FC = () => {
               </div>
 
               <Link
-                to="/forgot-password"
+                to="/reset-password-request"
                 className="text-sm text-blue-600 hover:text-blue-800 transition-colors duration-200"
               >
-                Forgot password?
+                Reset password request
               </Link>
             </div>
 

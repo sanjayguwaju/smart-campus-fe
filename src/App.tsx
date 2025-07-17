@@ -9,6 +9,7 @@ import { ProtectedRoute } from './components/Admin/Shared';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ResetPasswordRequest from './pages/ResetPasswordRequest';
 import Events from './pages/Events';
 import Noticeboard from './pages/Noticeboard';
 import Programs from './pages/Programs';
@@ -142,6 +143,7 @@ function App() {
           <Route index element={<Home />} />
           <Route path="login" element={<Login />} />
           <Route path="register" element={<Register />} />
+          <Route path="reset-password-request" element={<ResetPasswordRequest />} />
           <Route path="events" element={<Events />} />
           <Route path="noticeboard" element={<Noticeboard />} />
           <Route path="programs" element={<Programs />} />
