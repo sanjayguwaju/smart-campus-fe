@@ -1,34 +1,39 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, Edit, Trash2, Filter, GraduationCap, Clock, BookOpen, CheckCircle, XCircle } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Filter, GraduationCap, Clock, BookOpen } from 'lucide-react';
 import { usePrograms, useCreateProgram, useUpdateProgram, useDeleteProgram, usePublishProgram, useUnpublishProgram } from '../../api/hooks/usePrograms';
+import { useDepartments } from '../../api/hooks/useDepartments';
 import { Program } from '../../api/types/programs';
-import { AddProgramModal, EditProgramModal, DeleteProgramModal } from '../../components/Admin/Programs';
+import { AddProgramModal, EditProgramModal, DeleteProgramModal, ProgramsFilterDrawer } from '../../components/Admin/Programs';
 import LoadingSpinner from '../../components/Layout/LoadingSpinner';
 
 const Programs: React.FC = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [levelFilter, setLevelFilter] = useState<string>('all');
-  const [departmentFilter, setDepartmentFilter] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingProgram, setEditingProgram] = useState<Program | null>(null);
   const [deletingProgram, setDeletingProgram] = useState<{ id: string; name: string } | null>(null);
+  const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
+  const [filters, setFilters] = useState({
+    department: '',
+    level: '',
+    status: '',
+    searchTerm: '',
+  });
 
   // Reset to first page when search term changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm]);
+  }, [filters.searchTerm]);
 
   // TanStack Query hooks with refetchInterval
   const { data, isLoading, error } = usePrograms(
-    currentPage, 
-    pageSize, 
-    searchTerm || undefined,
-    departmentFilter !== 'all' ? departmentFilter : undefined,
-    levelFilter !== 'all' ? levelFilter : undefined,
+    currentPage,
+    pageSize,
+    filters.searchTerm || undefined,
+    filters.department || undefined,
+    filters.level || undefined,
     {
-      refetchInterval: searchTerm ? 3000 : false, // Auto-refetch every 3 seconds while searching
+      refetchInterval: filters.searchTerm ? 3000 : false, // Auto-refetch every 3 seconds while searching
       enabled: true, // Always enabled
     }
   );
@@ -37,6 +42,12 @@ const Programs: React.FC = () => {
   const deleteProgramMutation = useDeleteProgram();
   const publishProgramMutation = usePublishProgram();
   const unpublishProgramMutation = useUnpublishProgram();
+
+  const { data: departmentsData } = useDepartments(1, 100); // Use 100 instead of 1000
+  const departmentOptions = departmentsData?.departments?.map((dept: any) => ({
+    value: dept._id,
+    label: dept.name,
+  })) || [];
 
   // Extract programs and pagination from data
   const programs = data?.programs || [];
@@ -142,34 +153,17 @@ const Programs: React.FC = () => {
               <input
                 type="text"
                 placeholder="Search programs..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                value={filters.searchTerm}
+                onChange={(e) => setFilters(prev => ({ ...prev, searchTerm: e.target.value }))}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
           </div>
           <div className="flex gap-2">
-            <select
-              value={levelFilter}
-              onChange={(e) => setLevelFilter(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            <button
+              onClick={() => setIsFilterDrawerOpen(true)}
+              className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center"
             >
-              <option value="all">All Levels</option>
-              <option value="undergraduate">Undergraduate</option>
-              <option value="postgraduate">Postgraduate</option>
-              <option value="professional">Professional</option>
-            </select>
-            <select
-              value={departmentFilter}
-              onChange={(e) => setDepartmentFilter(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="all">All Departments</option>
-              {departments.map((dept: string) => (
-                <option key={dept} value={dept}>{dept}</option>
-              ))}
-            </select>
-            <button className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center">
               <Filter className="h-4 w-4" />
             </button>
           </div>
@@ -280,6 +274,26 @@ const Programs: React.FC = () => {
         onClose={() => setDeletingProgram(null)}
         onDelete={handleDeleteConfirm}
         programName={deletingProgram?.name || ''}
+      />
+
+      <ProgramsFilterDrawer
+        isOpen={isFilterDrawerOpen}
+        onClose={() => setIsFilterDrawerOpen(false)}
+        filters={filters}
+        onApplyFilters={(newFilters) => {
+          setFilters(newFilters);
+          setCurrentPage(1);
+        }}
+        onClearFilters={() => {
+          setFilters({
+            department: '',
+            level: '',
+            status: '',
+            searchTerm: '',
+          });
+          setCurrentPage(1);
+        }}
+        departmentOptions={departmentOptions}
       />
     </div>
   );
