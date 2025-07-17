@@ -82,4 +82,12 @@ export const programService = {
     }>(`/programs/${id}`);
     return response.data;
   },
+  async publishProgram(id: string): Promise<{ success: boolean; message: string }> {
+    const response = await apiClient.put(`/programs/${id}/publish`, { isPublished: true });
+    return response.data;
+  },
+  async unpublishProgram(id: string): Promise<{ success: boolean; message: string }> {
+    const response = await apiClient.put(`/programs/${id}/publish`, { isPublished: false });
+    return response.data;
+  },
 };
