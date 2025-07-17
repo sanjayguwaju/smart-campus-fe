@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useUpdateEvent } from '../../../api/hooks/useEvents';
 import { Event, CreateEventRequest } from '../../../api/types/events';
 import ImageUpload from '../../common/ImageUpload';
+import { isoToDateInput, dateInputToIso } from '../../../utils/dateUtils';
 
 interface EditEventModalProps {
   isOpen: boolean;
@@ -57,8 +58,8 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ isOpen, onClose, event 
         shortDescription: event.shortDescription,
         eventType: event.eventType,
         category: event.category,
-        startDate: event.startDate,
-        endDate: event.endDate,
+        startDate: isoToDateInput(event.startDate),
+        endDate: isoToDateInput(event.endDate),
         startTime: event.startTime,
         endTime: event.endTime,
         location: {
@@ -132,7 +133,11 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ isOpen, onClose, event 
     setServerError(null);
     if (!event) return;
     try {
-      const payload = { ...formData };
+      const payload = { 
+        ...formData,
+        startDate: dateInputToIso(formData.startDate || ''),
+        endDate: dateInputToIso(formData.endDate || '')
+      };
       await updateEventMutation.mutateAsync({
         id: event._id,
         data: payload as Partial<CreateEventRequest>

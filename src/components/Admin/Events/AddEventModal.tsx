@@ -3,6 +3,7 @@ import { useCreateEvent } from '../../../api/hooks/useEvents';
 import { CreateEventRequest } from '../../../api/types/events';
 import { useAuthStore } from '../../../store/authStore';
 import ImageUpload from '../../common/ImageUpload';
+import { dateInputToIso } from '../../../utils/dateUtils';
 
 interface AddEventModalProps {
   isOpen: boolean;
@@ -91,6 +92,8 @@ const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose }) => {
     try {
       const payload = {
         ...formData,
+        startDate: dateInputToIso(formData.startDate || ''),
+        endDate: dateInputToIso(formData.endDate || ''),
         organizer: currentUser?._id,
       };
       await createEventMutation.mutateAsync(payload as CreateEventRequest);

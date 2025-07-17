@@ -112,6 +112,11 @@ export interface CreateEventRequest {
   isRegistrationOpen?: boolean;
   tags?: string[];
   imageUrl?: string;
+  images?: Array<{
+    url: string;
+    caption?: string;
+    isPrimary: boolean;
+  }>;
   contactInfo?: {
     email?: string;
     phone?: string;

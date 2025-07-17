@@ -19,9 +19,10 @@ import {
   FileText,
   CheckCircle,
   AlertCircle,
-  Clock as ClockIcon
+  Clock as ClockIcon,
+  Image
 } from 'lucide-react';
-import { Event } from '../../api/types/events';
+import { Event } from '../../../api/types/events';
 
 interface ViewEventModalProps {
   isOpen: boolean;
@@ -212,6 +213,43 @@ const ViewEventModal: React.FC<ViewEventModalProps> = ({
               </div>
             </div>
           </div>
+
+          {/* Image Gallery - Show if there are multiple images */}
+          {event.images && event.images.length > 1 && (
+            <div className="bg-gray-50 rounded-lg p-4">
+              <h4 className="text-sm font-medium text-gray-900 mb-3 flex items-center">
+                <Image className="h-4 w-4 mr-2" />
+                Event Gallery ({event.images.length} images)
+              </h4>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {event.images.map((image, index) => (
+                  <div key={index} className="relative group">
+                    <img
+                      src={image.url}
+                      alt={image.caption || `${event.title} - Image ${index + 1}`}
+                      className="w-full h-24 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
+                      onClick={() => {
+                        // You can implement a lightbox here
+                        window.open(image.url, '_blank');
+                      }}
+                    />
+                    {image.isPrimary && (
+                      <div className="absolute top-1 left-1">
+                        <span className="px-1 py-0.5 bg-blue-500 text-white text-xs font-semibold rounded">
+                          Primary
+                        </span>
+                      </div>
+                    )}
+                    {image.caption && (
+                      <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs p-1 rounded-b-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                        {image.caption}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Event Details Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

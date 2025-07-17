@@ -186,13 +186,33 @@ const Events: React.FC = () => {
             className="bg-white rounded-2xl shadow p-7 flex flex-col border border-gray-100 hover:shadow-xl transition-shadow"
           >
             {/* Event Image */}
-            {event.imageUrl && (
+            {(event.images && event.images.length > 0) || event.imageUrl ? (
               <div className="mb-4">
                 <img
-                  src={event.imageUrl}
+                  src={event.images && event.images.length > 0 ? event.images[0].url : event.imageUrl}
                   alt={event.title}
                   className="w-full h-48 object-cover rounded-lg"
+                  onError={(e) => {
+                    // Fallback to a placeholder if image fails to load
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                    target.nextElementSibling?.classList.remove('hidden');
+                  }}
                 />
+                {/* Fallback placeholder */}
+                <div className="hidden w-full h-48 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-lg flex items-center justify-center">
+                  <div className="text-center">
+                    <Calendar className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                    <p className="text-sm text-gray-500">No Image</p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="mb-4 w-full h-48 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-lg flex items-center justify-center">
+                <div className="text-center">
+                  <Calendar className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                  <p className="text-sm text-gray-500">No Image</p>
+                </div>
               </div>
             )}
             <div className="flex items-center justify-between mb-4">
