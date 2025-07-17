@@ -10,6 +10,7 @@ export interface UserData {
   avatar?: string | null;
   isActive: boolean;
   isEmailVerified: boolean;
+  isVerified: boolean; // Admin verification status
   lastLogin?: string | null;
   passwordResetToken?: string | null;
   passwordResetExpires?: string | null;

@@ -3,6 +3,17 @@ export interface LoginRequest {
   password: string;
 }
 
+export interface LoginResponse {
+  success: boolean;
+  message: string;
+  data: {
+    user: User;
+    accessToken: string;
+    refreshToken: string;
+  };
+  timestamp: string;
+}
+
 export interface User {
   _id: string;
   firstName: string;
@@ -14,6 +25,7 @@ export interface User {
   avatar?: string | null;
   isActive: boolean;
   isEmailVerified: boolean;
+  isVerified: boolean; // Admin verification status
   lastLogin: string;
   passwordResetToken?: string | null;
   passwordResetExpires?: string | null;
@@ -24,15 +36,16 @@ export interface User {
   id: string;
 }
 
-export interface LoginResponse {
-  success: boolean;
-  message: string;
-  data: {
-    user: User;
-    accessToken: string;
-    refreshToken: string;
-  };
-  timestamp: string;
+// Registration request interface
+export interface RegisterRequest {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  role: 'student' | 'faculty';
+  department: string;
+  studentId?: string;
+  employeeId?: string;
 }
 
 export interface AuthState {

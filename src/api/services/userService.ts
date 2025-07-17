@@ -49,6 +49,20 @@ export const userService = {
     return response.data;
   },
 
+  async verifyUser(userId: string): Promise<UserResponse> {
+    const response = await apiClient.patch<UserResponse>(
+      `/users/${userId}/verify`
+    );
+    return response.data;
+  },
+
+  async unverifyUser(userId: string): Promise<UserResponse> {
+    const response = await apiClient.patch<UserResponse>(
+      `/users/${userId}/unverify`
+    );
+    return response.data;
+  },
+
   async updateUser(
     id: string,
     userData: UpdateUserRequest

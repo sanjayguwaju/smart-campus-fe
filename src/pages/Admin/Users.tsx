@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, Edit, Trash2, Eye, Filter, UserCheck, UserX, ChevronLeft, ChevronRight, MoreHorizontal, Key } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Eye, Filter, UserCheck, UserX, ChevronLeft, ChevronRight, MoreHorizontal, Key, ShieldCheck, ShieldX } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import Select, { StylesConfig } from 'react-select';
 import { useDebounce } from '@uidotdev/usehooks';
-import { useUsers, useDeleteUser, useActivateUser, useDeactivateUser, useResetPassword } from '../../api/hooks/useUsers';
+import { useUsers, useDeleteUser, useActivateUser, useDeactivateUser, useResetPassword, useVerifyUser, useUnverifyUser } from '../../api/hooks/useUsers';
 import { UserData } from '../../api/types/users';
 import LoadingSpinner from '../../components/Layout/LoadingSpinner';
 import { AddUserModal } from '../../components/Admin/Users';
@@ -52,6 +52,8 @@ const Users: React.FC = () => {
     dateRange: '',
     isEmailVerified: ''
   });
+  // Remove unused state variables for verification modals
+  // (If you want to implement modals for verification, add them in the UI section)
 
   // Debounce search term
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
@@ -116,6 +118,8 @@ const Users: React.FC = () => {
   const activateUserMutation = useActivateUser();
   const deactivateUserMutation = useDeactivateUser();
   const resetPasswordMutation = useResetPassword();
+  const verifyUserMutation = useVerifyUser();
+  const unverifyUserMutation = useUnverifyUser();
 
   // Extract users and pagination from data
   const users = data?.users || [];
@@ -219,6 +223,9 @@ const Users: React.FC = () => {
     setIsDeactivateModalOpen(true);
   };
 
+  // Remove unused handler assignments for verification modals
+  // ... existing code ...
+
   const handleActivateUserConfirm = async () => {
     if (!selectedUserForActivate) return;
     
@@ -246,6 +253,9 @@ const Users: React.FC = () => {
       toast.error('Failed to deactivate user. Please try again.');
     }
   };
+
+  // Remove unused handler assignments for verification modals
+  // ... existing code ...
 
   const handleEditUser = (user: UserData) => {
     setSelectedUserForEdit(user);
@@ -305,6 +315,12 @@ const Users: React.FC = () => {
     return isActive 
       ? 'bg-green-100 text-green-800' 
       : 'bg-red-100 text-red-800';
+  };
+
+  const getVerificationBadgeColor = (isVerified: boolean) => {
+    return isVerified
+      ? 'bg-blue-100 text-blue-800'
+      : 'bg-yellow-100 text-yellow-800';
   };
 
   const getUserId = (user: UserData) => {
@@ -437,6 +453,9 @@ const Users: React.FC = () => {
                   Status
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Verification
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Department
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -482,6 +501,11 @@ const Users: React.FC = () => {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeColor(user.isActive)}`}>
                       {user.isActive ? 'Active' : 'Inactive'}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getVerificationBadgeColor(user.isVerified)}`}>
+                      {user.isVerified ? 'Verified' : 'Pending'}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -557,6 +581,29 @@ const Users: React.FC = () => {
                               >
                                 <UserCheck className="h-4 w-4 mr-3" />
                                 Activate User
+                              </button>
+                            )}
+                            {user.isVerified ? (
+                              <button
+                                onClick={() => {
+                                  setOpenDropdown(null);
+                                  handleUnverifyUser(user);
+                                }}
+                                className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                              >
+                                <ShieldX className="h-4 w-4 mr-3" />
+                                Unverify User
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => {
+                                  setOpenDropdown(null);
+                                  handleVerifyUser(user);
+                                }}
+                                className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                              >
+                                <ShieldCheck className="h-4 w-4 mr-3" />
+                                Verify User
                               </button>
                             )}
                             <button

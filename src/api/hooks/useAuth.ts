@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { authService } from '../services/authService';
-import { LoginRequest } from '../types/auth';
+import { LoginRequest, RegisterRequest } from '../types/auth';
 
 export const useLogin = () => {
   const queryClient = useQueryClient();
@@ -10,7 +10,7 @@ export const useLogin = () => {
     onSuccess: (data) => {
       if (data.success && data.data) {
         // Store auth data
-        localStorage.setItem('authToken', data.data.token);
+        localStorage.setItem('authToken', data.data.accessToken);
         localStorage.setItem('user', JSON.stringify(data.data.user));
         
         // Invalidate and refetch user profile
@@ -24,18 +24,39 @@ export const useLogin = () => {
   });
 };
 
+export const useRegister = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (userData: RegisterRequest) => authService.register(userData),
+    onSuccess: () => {
+      // Invalidate users list to refresh admin view
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+    },
+    onError: (error) => {
+      console.error('Registration error:', error);
+    },
+  });
+};
+
 export const useLogout = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: () => authService.logout(),
+    mutationFn: authService.logout,
     onSuccess: () => {
-      // Clear all queries from cache
+      // Clear auth data
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('user');
+      
+      // Clear all queries
       queryClient.clear();
     },
     onError: (error) => {
       console.error('Logout error:', error);
-      // Still clear cache even if API call fails
+      // Still clear local data even if API call fails
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('user');
       queryClient.clear();
     },
   });
@@ -45,7 +66,6 @@ export const useUser = () => {
   return useQuery({
     queryKey: ['user'],
     queryFn: authService.getProfile,
-    enabled: !!localStorage.getItem('authToken'),
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: (failureCount, error: unknown) => {
       // Don't retry on 401 errors

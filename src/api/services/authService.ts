@@ -1,9 +1,24 @@
 import { apiClient } from '../config/axios';
-import { LoginRequest, LoginResponse, User } from '../types/auth';
+import { LoginRequest, LoginResponse, User, RegisterRequest } from '../types/auth';
+
+// Registration response interface
+export interface RegisterResponse {
+  success: boolean;
+  message: string;
+  data: {
+    user: User;
+  };
+  timestamp: string;
+}
 
 export const authService = {
   async login(credentials: LoginRequest): Promise<LoginResponse> {
     const response = await apiClient.post<LoginResponse>('/auth/login', credentials);
+    return response.data;
+  },
+
+  async register(userData: RegisterRequest): Promise<RegisterResponse> {
+    const response = await apiClient.post<RegisterResponse>('/auth/register', userData);
     return response.data;
   },
 

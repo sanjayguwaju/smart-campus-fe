@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useForm, Controller } from 'react-hook-form';
-import { Eye, EyeOff, UserPlus } from 'lucide-react';
+import { Eye, EyeOff, UserPlus, CheckCircle } from 'lucide-react';
 import Select, { StylesConfig } from 'react-select';
-
+import { toast } from 'react-hot-toast';
+import { useRegister } from '../api/hooks/useAuth';
+import { RegisterRequest } from '../api/types/auth';
 
 interface RegisterForm {
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   password: string;
   confirmPassword: string;
@@ -28,7 +31,8 @@ const Register: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [registerError, setRegisterError] = useState('');
-  const navigate = useNavigate();
+  const [isSuccess, setIsSuccess] = useState(false);
+  const registerMutation = useRegister();
   
   const {
     register,
@@ -100,14 +104,65 @@ const Register: React.FC = () => {
   const onSubmit = async (data: RegisterForm) => {
     setRegisterError('');
     try {
-      // TODO: Implement registration logic with data
-      console.log('Registration data:', data);
-      // For now, just navigate to login
-      navigate('/login');
-    } catch {
-      setRegisterError('An error occurred during registration');
+      const registerData: RegisterRequest = {
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email,
+        password: data.password,
+        role: data.role,
+        department: data.department,
+        ...(data.role === 'student' && { studentId: data.studentId }),
+        ...(data.role === 'faculty' && { employeeId: data.employeeId }),
+      };
+
+      await registerMutation.mutateAsync(registerData);
+      setIsSuccess(true);
+      toast.success('Registration successful! Please wait for admin verification.');
+    } catch (error: unknown) {
+      const errorMessage = error && typeof error === 'object' && 'response' in error 
+        ? (error as { response?: { data?: { message?: string } } }).response?.data?.message 
+        : 'An error occurred during registration';
+      setRegisterError(errorMessage || 'An error occurred during registration');
+      toast.error(errorMessage || 'An error occurred during registration');
     }
   };
+
+  if (isSuccess) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="max-w-md w-full space-y-8"
+        >
+          <div className="bg-white shadow-2xl p-8 border border-gray-200 rounded-xl text-center">
+            <CheckCircle className="mx-auto h-16 w-16 text-green-600 mb-4" />
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">
+              Registration Successful!
+            </h2>
+            <p className="text-gray-600 mb-6">
+              Your account has been created successfully. However, it needs to be verified by an administrator before you can access the system.
+            </p>
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+              <p className="text-yellow-800 text-sm">
+                <strong>Status:</strong> Pending Admin Verification
+              </p>
+              <p className="text-yellow-700 text-sm mt-1">
+                You will receive an email notification once your account is verified.
+              </p>
+            </div>
+            <Link
+              to="/login"
+              className="w-full flex justify-center py-3 px-4 border border-transparent shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+            >
+              Go to Login
+            </Link>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
@@ -141,23 +196,44 @@ const Register: React.FC = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                  Full Name
+                <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1">
+                  First Name
                 </label>
                 <input
-                  {...register('name', {
-                    required: 'Full name is required',
+                  {...register('firstName', {
+                    required: 'First name is required',
                     minLength: {
                       value: 2,
-                      message: 'Name must be at least 2 characters',
+                      message: 'First name must be at least 2 characters',
                     },
                   })}
                   type="text"
                   className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Enter your full name"
+                  placeholder="Enter your first name"
                 />
-                {errors.name && (
-                  <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>
+                {errors.firstName && (
+                  <p className="mt-1 text-sm text-red-600">{errors.firstName.message}</p>
+                )}
+              </div>
+
+              <div>
+                <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-1">
+                  Last Name
+                </label>
+                <input
+                  {...register('lastName', {
+                    required: 'Last name is required',
+                    minLength: {
+                      value: 2,
+                      message: 'Last name must be at least 2 characters',
+                    },
+                  })}
+                  type="text"
+                  className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Enter your last name"
+                />
+                {errors.lastName && (
+                  <p className="mt-1 text-sm text-red-600">{errors.lastName.message}</p>
                 )}
               </div>
 
@@ -362,10 +438,10 @@ const Register: React.FC = () => {
 
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || registerMutation.isPending}
               className="w-full flex justify-center py-3 px-4 border border-transparent shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
             >
-              {isSubmitting ? 'Creating account...' : 'Create account'}
+              {isSubmitting || registerMutation.isPending ? 'Creating account...' : 'Create account'}
             </button>
 
             <div className="text-center">

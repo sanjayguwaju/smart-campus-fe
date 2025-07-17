@@ -51,6 +51,30 @@ export const useCreateUser = () => {
   });
 };
 
+export const useVerifyUser = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (userId: string) => userService.verifyUser(userId),
+    onSuccess: () => {
+      // Invalidate and refetch users list
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+    },
+  });
+};
+
+export const useUnverifyUser = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (userId: string) => userService.unverifyUser(userId),
+    onSuccess: () => {
+      // Invalidate and refetch users list
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+    },
+  });
+};
+
 export const useUpdateUser = () => {
   const queryClient = useQueryClient();
 
