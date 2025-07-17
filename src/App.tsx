@@ -33,7 +33,6 @@ import StudentNotices from './pages/Student/Notices';
 import StudentCalendar from './pages/Student/Calendar';
 import StudentServices from './pages/Student/Services';
 import StudentPrograms from './pages/Student/Programs';
-import Courses from './pages/Faculty/Courses';
 import Students from './pages/Faculty/Students';
 import FacultyEvents from './pages/Faculty/Events';
 import FacultyNotices from './pages/Faculty/Notices';
@@ -41,6 +40,7 @@ import Grades from './pages/Faculty/Grades';
 import OfficeHours from './pages/Faculty/OfficeHours';
 import FacultyBlog from './pages/Faculty/Blog';
 import Departments from './pages/Admin/Departments';
+import Courses from './pages/Admin/Courses';
 
 
 function App() {
@@ -89,6 +89,7 @@ function App() {
           <Route index element={<AdminDashboard />} />
           <Route path="users" element={<Users />} />
           <Route path="departments" element={<Departments />} />
+          <Route path="courses" element={<Courses />} />
           <Route path="events" element={<AdminEvents />} />
           <Route path="notices" element={<Notices />} />
           <Route path="programs" element={<AdminPrograms />} />
