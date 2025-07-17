@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Program } from '../../../api/types/programs';
 import Select, { StylesConfig } from 'react-select';
 import { useDepartments } from '../../../api/hooks/useDepartments';
+import ImageUpload from '../../common/ImageUpload';
 
 interface AddProgramModalProps {
   isOpen: boolean;
@@ -116,6 +117,7 @@ const AddProgramModal: React.FC<AddProgramModalProps> = ({ isOpen, onClose, onAd
     if (!form.department) newErrors.department = 'Department is required';
     if (!form.duration.trim()) newErrors.duration = 'Duration is required';
     if (!form.description.trim()) newErrors.description = 'Description is required';
+    if (!form.image || !/^https?:\/\//.test(form.image)) newErrors.image = 'Image is required and must be a valid URL';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -238,8 +240,15 @@ const AddProgramModal: React.FC<AddProgramModalProps> = ({ isOpen, onClose, onAd
             <span className="text-sm">Current: <b>{form.isPublished ? 'Published' : 'Draft'}</b></span>
           </div>
           <div>
-            <label className="block text-sm font-medium">Image URL</label>
-            <input name="image" value={form.image} onChange={handleChange} className="w-full border rounded px-3 py-2" />
+            <label className="block text-sm font-medium">Program Image</label>
+            <ImageUpload
+              onImageUpload={(url) => setForm(prev => ({ ...prev, image: url }))}
+              onImageRemove={() => setForm(prev => ({ ...prev, image: '' }))}
+              currentImage={form.image}
+              maxSize={5}
+              className="max-w-md"
+            />
+            {errors.image && <span className="text-red-500 text-xs">{errors.image}</span>}
           </div>
           <div>
             <label className="block text-sm font-medium">Brochure URL</label>
