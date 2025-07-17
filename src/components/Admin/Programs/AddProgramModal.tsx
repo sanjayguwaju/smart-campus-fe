@@ -125,10 +125,10 @@ const AddProgramModal: React.FC<AddProgramModalProps> = ({ isOpen, onClose, onAd
     setServerError(null);
     if (!validate()) return;
     try {
-      // Map department string to expected object
+      // Send department as string (ObjectId) for creation
       await onAdd({
         ...form,
-        department: { _id: form.department, name: '' },
+        department: form.department,
       });
       setForm(initialState);
     } catch (err: any) {
