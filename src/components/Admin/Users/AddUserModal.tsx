@@ -1,7 +1,6 @@
 import React from 'react';
-import { useForm } from 'react-hook-form';
-import { toast } from 'react-hot-toast';
-import { X, User, Mail, Lock, Phone, Building, UserCheck } from 'lucide-react';
+import { useForm, Controller } from 'react-hook-form';
+import Select, { StylesConfig } from 'react-select';
 import { useCreateUser } from '../../../api/hooks/useUsers';
 import { CreateUserRequest } from '../../../api/types/users';
 
@@ -10,15 +9,55 @@ interface AddUserModalProps {
   onClose: () => void;
 }
 
+interface SelectOption {
+  value: string;
+  label: string;
+}
+
 const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose }) => {
   const createUserMutation = useCreateUser();
   
+  // Custom styles for react-select
+  const selectStyles: StylesConfig<SelectOption> = {
+    control: (provided, state) => ({
+      ...provided,
+      minHeight: '48px',
+      border: state.isFocused ? '2px solid #3b82f6' : '1px solid #e5e7eb',
+      borderRadius: '8px',
+      boxShadow: state.isFocused ? '0 0 0 2px rgba(59, 130, 246, 0.1)' : 'none',
+      '&:hover': {
+        border: '1px solid #d1d5db'
+      }
+    }),
+    option: (provided, state) => ({
+      ...provided,
+      backgroundColor: state.isSelected ? '#3b82f6' : state.isFocused ? '#f3f4f6' : 'white',
+      color: state.isSelected ? 'white' : '#374151',
+      '&:hover': {
+        backgroundColor: state.isSelected ? '#3b82f6' : '#f3f4f6'
+      }
+    }),
+    menu: (provided) => ({
+      ...provided,
+      borderRadius: '8px',
+      boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'
+    }),
+    placeholder: (provided) => ({
+      ...provided,
+      color: '#9ca3af'
+    }),
+    singleValue: (provided) => ({
+      ...provided,
+      color: '#374151'
+    })
+  };
+
   const {
-    register,
+    control,
     handleSubmit,
-    formState: { errors, isSubmitting },
     reset,
-    watch
+    watch,
+    formState: { errors, isSubmitting }
   } = useForm<CreateUserRequest>({
     defaultValues: {
       firstName: '',
@@ -38,274 +77,292 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose }) => {
       await createUserMutation.mutateAsync(data);
       reset();
       onClose();
-      toast.success('User created successfully');
     } catch (error) {
       console.error('Failed to create user:', error);
-      toast.error('Failed to create user. Please try again.');
     }
-  };
-
-  const handleClose = () => {
-    reset();
-    onClose();
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[95vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+        <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50">
           <div className="flex items-center space-x-3">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <User className="h-5 w-5 text-blue-600" />
+            <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+              <svg className="h-5 w-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+              </svg>
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-gray-900">Add New User</h2>
-              <p className="text-sm text-gray-500">Create a new user account</p>
+              <h2 className="text-2xl font-bold text-gray-900">Add New User</h2>
+              <p className="text-sm text-gray-600">Create a new user account with all necessary details</p>
             </div>
           </div>
           <button
-            onClick={handleClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            onClick={onClose}
+            className="h-8 w-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors duration-200"
           >
-            <X className="h-6 w-6" />
+            <svg className="h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
           </button>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit(onSubmit)} className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Left Column */}
-            <div className="space-y-4">
-              {/* First Name */}
-              <div>
-                <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1">
-                  First Name *
-                </label>
-                <div className="relative">
-                  <input
-                    {...register('firstName', {
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto p-6">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+            {/* Personal Information Section */}
+            <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
+              <div className="flex items-center mb-6">
+                <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center mr-3">
+                  <svg className="h-4 w-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900">Personal Information</h3>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    First Name *
+                  </label>
+                  <Controller
+                    name="firstName"
+                    control={control}
+                    rules={{ 
                       required: 'First name is required',
                       minLength: { value: 2, message: 'First name must be at least 2 characters' }
-                    })}
-                    type="text"
-                    id="firstName"
-                    className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      errors.firstName ? 'border-red-300' : 'border-gray-300'
-                    }`}
-                    placeholder="Enter first name"
+                    }}
+                    render={({ field }) => (
+                      <input
+                        {...field}
+                        type="text"
+                        className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 ${
+                          errors.firstName ? 'border-red-300' : 'border-gray-200'
+                        }`}
+                        placeholder="Enter first name"
+                      />
+                    )}
                   />
-                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  {errors.firstName && (
+                    <p className="mt-1 text-sm text-red-600">{errors.firstName.message}</p>
+                  )}
                 </div>
-                {errors.firstName && (
-                  <p className="mt-1 text-sm text-red-600">{errors.firstName.message}</p>
-                )}
-              </div>
 
-              {/* Email */}
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                  Email Address *
-                </label>
-                <div className="relative">
-                  <input
-                    {...register('email', {
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Last Name *
+                  </label>
+                  <Controller
+                    name="lastName"
+                    control={control}
+                    rules={{ 
+                      required: 'Last name is required',
+                      minLength: { value: 2, message: 'Last name must be at least 2 characters' }
+                    }}
+                    render={({ field }) => (
+                      <input
+                        {...field}
+                        type="text"
+                        className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 ${
+                          errors.lastName ? 'border-red-300' : 'border-gray-200'
+                        }`}
+                        placeholder="Enter last name"
+                      />
+                    )}
+                  />
+                  {errors.lastName && (
+                    <p className="mt-1 text-sm text-red-600">{errors.lastName.message}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Email Address *
+                  </label>
+                  <Controller
+                    name="email"
+                    control={control}
+                    rules={{ 
                       required: 'Email is required',
                       pattern: {
                         value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
                         message: 'Invalid email address'
                       }
-                    })}
-                    type="email"
-                    id="email"
-                    className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      errors.email ? 'border-red-300' : 'border-gray-300'
-                    }`}
-                    placeholder="Enter email address"
+                    }}
+                    render={({ field }) => (
+                      <input
+                        {...field}
+                        type="email"
+                        className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 ${
+                          errors.email ? 'border-red-300' : 'border-gray-200'
+                        }`}
+                        placeholder="Enter email address"
+                      />
+                    )}
                   />
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  {errors.email && (
+                    <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
+                  )}
                 </div>
-                {errors.email && (
-                  <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
-                )}
-              </div>
 
-              {/* Role */}
-              <div>
-                <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">
-                  Role *
-                </label>
-                <div className="relative">
-                  <select
-                    {...register('role', { required: 'Role is required' })}
-                    id="role"
-                    className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      errors.role ? 'border-red-300' : 'border-gray-300'
-                    }`}
-                  >
-                    <option value="student">Student</option>
-                    <option value="faculty">Faculty</option>
-                    <option value="admin">Admin</option>
-                  </select>
-                  <UserCheck className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                </div>
-                {errors.role && (
-                  <p className="mt-1 text-sm text-red-600">{errors.role.message}</p>
-                )}
-              </div>
-
-              {/* Phone */}
-              <div>
-                <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
-                  Phone Number
-                </label>
-                <div className="relative">
-                  <input
-                    {...register('phone', {
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Phone Number
+                  </label>
+                  <Controller
+                    name="phone"
+                    control={control}
+                    rules={{
                       pattern: {
                         value: /^[+]?[1-9][\d]{0,15}$/,
                         message: 'Invalid phone number'
                       }
-                    })}
-                    type="tel"
-                    id="phone"
-                    className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      errors.phone ? 'border-red-300' : 'border-gray-300'
-                    }`}
-                    placeholder="Enter phone number"
+                    }}
+                    render={({ field }) => (
+                      <input
+                        {...field}
+                        type="tel"
+                        className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 ${
+                          errors.phone ? 'border-red-300' : 'border-gray-200'
+                        }`}
+                        placeholder="Enter phone number"
+                      />
+                    )}
                   />
-                  <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  {errors.phone && (
+                    <p className="mt-1 text-sm text-red-600">{errors.phone.message}</p>
+                  )}
                 </div>
-                {errors.phone && (
-                  <p className="mt-1 text-sm text-red-600">{errors.phone.message}</p>
-                )}
               </div>
             </div>
 
-            {/* Right Column */}
-            <div className="space-y-4">
-              {/* Last Name */}
-              <div>
-                <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-1">
-                  Last Name *
-                </label>
-                <div className="relative">
-                  <input
-                    {...register('lastName', {
-                      required: 'Last name is required',
-                      minLength: { value: 2, message: 'Last name must be at least 2 characters' }
-                    })}
-                    type="text"
-                    id="lastName"
-                    className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      errors.lastName ? 'border-red-300' : 'border-gray-300'
-                    }`}
-                    placeholder="Enter last name"
-                  />
-                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            {/* Account Settings Section */}
+            <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
+              <div className="flex items-center mb-6">
+                <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center mr-3">
+                  <svg className="h-4 w-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
                 </div>
-                {errors.lastName && (
-                  <p className="mt-1 text-sm text-red-600">{errors.lastName.message}</p>
-                )}
+                <h3 className="text-lg font-semibold text-gray-900">Account Settings</h3>
               </div>
-
-              {/* Password */}
-              <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                  Password *
-                </label>
-                <div className="relative">
-                  <input
-                    {...register('password', {
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Password *
+                  </label>
+                  <Controller
+                    name="password"
+                    control={control}
+                    rules={{ 
                       required: 'Password is required',
                       minLength: { value: 6, message: 'Password must be at least 6 characters' }
-                    })}
-                    type="password"
-                    id="password"
-                    className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      errors.password ? 'border-red-300' : 'border-gray-300'
-                    }`}
-                    placeholder="Enter password"
+                    }}
+                    render={({ field }) => (
+                      <input
+                        {...field}
+                        type="password"
+                        className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 ${
+                          errors.password ? 'border-red-300' : 'border-gray-200'
+                        }`}
+                        placeholder="Enter password"
+                      />
+                    )}
                   />
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  {errors.password && (
+                    <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
+                  )}
                 </div>
-                {errors.password && (
-                  <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Role *
+                  </label>
+                  <Controller
+                    name="role"
+                    control={control}
+                    rules={{ required: 'Role is required' }}
+                    render={({ field }) => (
+                      <Select<SelectOption>
+                        options={[
+                          { value: 'student', label: 'Student' },
+                          { value: 'faculty', label: 'Faculty' },
+                          { value: 'admin', label: 'Admin' },
+                        ]}
+                        onChange={(selectedOption: SelectOption | null) => field.onChange(selectedOption?.value)}
+                        onBlur={field.onBlur}
+                        value={
+                          field.value
+                            ? { value: field.value, label: field.value.charAt(0).toUpperCase() + field.value.slice(1) }
+                            : null
+                        }
+                        placeholder="Select role"
+                        styles={selectStyles}
+                        className="w-full"
+                      />
+                    )}
+                  />
+                  {errors.role && (
+                    <p className="mt-1 text-sm text-red-600">{errors.role.message}</p>
+                  )}
+                </div>
+
+                {(watchedRole === 'student' || watchedRole === 'faculty') && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Department
+                    </label>
+                    <Controller
+                      name="department"
+                      control={control}
+                      render={({ field }) => (
+                        <input
+                          {...field}
+                          type="text"
+                          className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+                          placeholder="Enter department"
+                        />
+                      )}
+                    />
+                  </div>
                 )}
               </div>
-
-              {/* Department */}
-              <div>
-                <label htmlFor="department" className="block text-sm font-medium text-gray-700 mb-1">
-                  Department
-                </label>
-                <div className="relative">
-                  <input
-                    {...register('department')}
-                    type="text"
-                    id="department"
-                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Enter department"
-                  />
-                  <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                </div>
-              </div>
             </div>
-          </div>
 
-          {/* Department suggestions based on role */}
-          {watchedRole === 'student' && (
-            <div className="mt-6 p-3 bg-blue-50 rounded-lg">
-              <p className="text-sm text-blue-700">
-                <strong>Popular student departments:</strong> Computer Science, Engineering, Business, Arts, Medicine, Law
-              </p>
+            {/* Form Actions */}
+            <div className="flex justify-end space-x-4 pt-8 border-t border-gray-100">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-6 py-3 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors duration-200 font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium shadow-lg hover:shadow-xl"
+              >
+                {isSubmitting ? (
+                  <div className="flex items-center">
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Creating...
+                  </div>
+                ) : (
+                  'Create User'
+                )}
+              </button>
             </div>
-          )}
-
-          {watchedRole === 'faculty' && (
-            <div className="mt-6 p-3 bg-green-50 rounded-lg">
-              <p className="text-sm text-green-700">
-                <strong>Popular faculty departments:</strong> Computer Science, Engineering, Business, Arts, Medicine, Law, Education
-              </p>
-            </div>
-          )}
-
-          {/* Error message from API */}
-          {createUserMutation.error && (
-            <div className="mt-6 p-3 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-sm text-red-600">
-                Failed to create user. Please try again.
-              </p>
-            </div>
-          )}
-
-          {/* Form Actions */}
-          <div className="flex space-x-3 pt-6 mt-6 border-t border-gray-200">
-            <button
-              type="button"
-              onClick={handleClose}
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting || createUserMutation.isPending}
-              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              {isSubmitting || createUserMutation.isPending ? (
-                <div className="flex items-center justify-center">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Creating...
-                </div>
-              ) : (
-                'Create User'
-              )}
-            </button>
-          </div>
-        </form>
+          </form>
+        </div>
       </div>
     </div>
   );
