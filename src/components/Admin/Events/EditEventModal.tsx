@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
+import Select, { StylesConfig } from 'react-select';
 import { useUpdateEvent } from '../../../api/hooks/useEvents';
 import { Event, CreateEventRequest } from '../../../api/types/events';
 import ImageUpload from '../../common/ImageUpload';
@@ -9,6 +10,11 @@ interface EditEventModalProps {
   isOpen: boolean;
   onClose: () => void;
   event: Event | null;
+}
+
+interface SelectOption {
+  value: string;
+  label: string;
 }
 
 interface FormData {
@@ -53,6 +59,41 @@ interface FormData {
 
 const EditEventModal: React.FC<EditEventModalProps> = ({ isOpen, onClose, event }) => {
   const updateEventMutation = useUpdateEvent();
+  
+  // Custom styles for react-select
+  const selectStyles: StylesConfig<SelectOption> = {
+    control: (provided, state) => ({
+      ...provided,
+      minHeight: '48px',
+      border: state.isFocused ? '2px solid #3b82f6' : '1px solid #e5e7eb',
+      borderRadius: '8px',
+      boxShadow: state.isFocused ? '0 0 0 2px rgba(59, 130, 246, 0.1)' : 'none',
+      '&:hover': {
+        border: '1px solid #d1d5db'
+      }
+    }),
+    option: (provided, state) => ({
+      ...provided,
+      backgroundColor: state.isSelected ? '#3b82f6' : state.isFocused ? '#f3f4f6' : 'white',
+      color: state.isSelected ? 'white' : '#374151',
+      '&:hover': {
+        backgroundColor: state.isSelected ? '#3b82f6' : '#f3f4f6'
+      }
+    }),
+    menu: (provided) => ({
+      ...provided,
+      borderRadius: '8px',
+      boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'
+    }),
+    placeholder: (provided) => ({
+      ...provided,
+      color: '#9ca3af'
+    }),
+    singleValue: (provided) => ({
+      ...provided,
+      color: '#374151'
+    })
+  };
   
   const {
     control,
@@ -237,22 +278,29 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ isOpen, onClose, event 
                     control={control}
                     rules={{ required: 'Event type is required' }}
                     render={({ field }) => (
-                      <select
-                        {...field}
-                        className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 ${
-                          errors.eventType ? 'border-red-300' : 'border-gray-200'
-                        }`}
-                      >
-                        <option value="academic">Academic</option>
-                        <option value="cultural">Cultural</option>
-                        <option value="sports">Sports</option>
-                        <option value="technical">Technical</option>
-                        <option value="social">Social</option>
-                        <option value="workshop">Workshop</option>
-                        <option value="seminar">Seminar</option>
-                        <option value="conference">Conference</option>
-                        <option value="other">Other</option>
-                      </select>
+                                             <Select<SelectOption>
+                         options={[
+                           { value: 'academic', label: 'Academic' },
+                           { value: 'cultural', label: 'Cultural' },
+                           { value: 'sports', label: 'Sports' },
+                           { value: 'technical', label: 'Technical' },
+                           { value: 'social', label: 'Social' },
+                           { value: 'workshop', label: 'Workshop' },
+                           { value: 'seminar', label: 'Seminar' },
+                           { value: 'conference', label: 'Conference' },
+                           { value: 'other', label: 'Other' },
+                         ]}
+                         onChange={(selectedOption: SelectOption | null) => field.onChange(selectedOption?.value)}
+                         onBlur={field.onBlur}
+                         value={
+                           field.value
+                             ? { value: field.value, label: field.value.charAt(0).toUpperCase() + field.value.slice(1) }
+                             : null
+                         }
+                         placeholder="Select event type"
+                         styles={selectStyles}
+                         className="w-full"
+                       />
                     )}
                   />
                   {errors.eventType && (
@@ -269,18 +317,25 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ isOpen, onClose, event 
                     control={control}
                     rules={{ required: 'Category is required' }}
                     render={({ field }) => (
-                      <select
-                        {...field}
-                        className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 ${
-                          errors.category ? 'border-red-300' : 'border-gray-200'
-                        }`}
-                      >
-                        <option value="public">Public</option>
-                        <option value="student">Student</option>
-                        <option value="faculty">Faculty</option>
-                        <option value="admin">Admin</option>
-                        <option value="invitation-only">Invitation Only</option>
-                      </select>
+                                             <Select<SelectOption>
+                         options={[
+                           { value: 'public', label: 'Public' },
+                           { value: 'student', label: 'Student' },
+                           { value: 'faculty', label: 'Faculty' },
+                           { value: 'admin', label: 'Admin' },
+                           { value: 'invitation-only', label: 'Invitation Only' },
+                         ]}
+                         onChange={(selectedOption: SelectOption | null) => field.onChange(selectedOption?.value)}
+                         onBlur={field.onBlur}
+                         value={
+                           field.value
+                             ? { value: field.value, label: field.value.charAt(0).toUpperCase() + field.value.slice(1) }
+                             : null
+                         }
+                         placeholder="Select category"
+                         styles={selectStyles}
+                         className="w-full"
+                       />
                     )}
                   />
                   {errors.category && (
@@ -297,18 +352,25 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ isOpen, onClose, event 
                     control={control}
                     rules={{ required: 'Status is required' }}
                     render={({ field }) => (
-                      <select
-                        {...field}
-                        className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 ${
-                          errors.status ? 'border-red-300' : 'border-gray-200'
-                        }`}
-                      >
-                        <option value="draft">Draft</option>
-                        <option value="published">Published</option>
-                        <option value="cancelled">Cancelled</option>
-                        <option value="completed">Completed</option>
-                        <option value="postponed">Postponed</option>
-                      </select>
+                                             <Select<SelectOption>
+                         options={[
+                           { value: 'draft', label: 'Draft' },
+                           { value: 'published', label: 'Published' },
+                           { value: 'cancelled', label: 'Cancelled' },
+                           { value: 'completed', label: 'Completed' },
+                           { value: 'postponed', label: 'Postponed' },
+                         ]}
+                         onChange={(selectedOption: SelectOption | null) => field.onChange(selectedOption?.value)}
+                         onBlur={field.onBlur}
+                         value={
+                           field.value
+                             ? { value: field.value, label: field.value.charAt(0).toUpperCase() + field.value.slice(1) }
+                             : null
+                         }
+                         placeholder="Select status"
+                         styles={selectStyles}
+                         className="w-full"
+                       />
                     )}
                   />
                   {errors.status && (
@@ -794,14 +856,23 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ isOpen, onClose, event 
                     name="visibility"
                     control={control}
                     render={({ field }) => (
-                      <select
-                        {...field}
-                        className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
-                      >
-                        <option value="public">Public</option>
-                        <option value="private">Private</option>
-                        <option value="restricted">Restricted</option>
-                      </select>
+                                             <Select<SelectOption>
+                         options={[
+                           { value: 'public', label: 'Public' },
+                           { value: 'private', label: 'Private' },
+                           { value: 'restricted', label: 'Restricted' },
+                         ]}
+                         onChange={(selectedOption: SelectOption | null) => field.onChange(selectedOption?.value)}
+                         onBlur={field.onBlur}
+                         value={
+                           field.value
+                             ? { value: field.value, label: field.value.charAt(0).toUpperCase() + field.value.slice(1) }
+                             : null
+                         }
+                         placeholder="Select visibility"
+                         styles={selectStyles}
+                         className="w-full"
+                       />
                     )}
                   />
                 </div>
@@ -814,15 +885,24 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ isOpen, onClose, event 
                     name="priority"
                     control={control}
                     render={({ field }) => (
-                      <select
-                        {...field}
-                        className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
-                      >
-                        <option value="low">Low</option>
-                        <option value="medium">Medium</option>
-                        <option value="high">High</option>
-                        <option value="urgent">Urgent</option>
-                      </select>
+                                             <Select<SelectOption>
+                         options={[
+                           { value: 'low', label: 'Low' },
+                           { value: 'medium', label: 'Medium' },
+                           { value: 'high', label: 'High' },
+                           { value: 'urgent', label: 'Urgent' },
+                         ]}
+                         onChange={(selectedOption: SelectOption | null) => field.onChange(selectedOption?.value)}
+                         onBlur={field.onBlur}
+                         value={
+                           field.value
+                             ? { value: field.value, label: field.value.charAt(0).toUpperCase() + field.value.slice(1) }
+                             : null
+                         }
+                         placeholder="Select priority"
+                         styles={selectStyles}
+                         className="w-full"
+                       />
                     )}
                   />
                 </div>

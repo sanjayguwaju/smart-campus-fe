@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { Eye, EyeOff, UserPlus } from 'lucide-react';
-import { useAuthStore } from '../store/authStore';
+import Select, { StylesConfig } from 'react-select';
+
 
 interface RegisterForm {
   name: string;
@@ -17,44 +18,28 @@ interface RegisterForm {
   agreeTerms: boolean;
 }
 
+// Select option interface
+interface SelectOption {
+  value: string;
+  label: string;
+}
+
 const Register: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [registerError, setRegisterError] = useState('');
-  const { register: registerUser } = useAuthStore();
   const navigate = useNavigate();
   
   const {
     register,
     handleSubmit,
     watch,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<RegisterForm>();
 
   const watchRole = watch('role');
   const watchPassword = watch('password');
-
-  const onSubmit = async (data: RegisterForm) => {
-    setRegisterError('');
-    try {
-      const success = await registerUser({
-        name: data.name,
-        email: data.email,
-        role: data.role,
-        department: data.department,
-        studentId: data.role === 'student' ? data.studentId : undefined,
-        employeeId: data.role === 'faculty' ? data.employeeId : undefined,
-      });
-      
-      if (success) {
-        navigate('/');
-      } else {
-        setRegisterError('Registration failed. Please try again.');
-      }
-    } catch (error) {
-      setRegisterError('An error occurred during registration');
-    }
-  };
 
   const departments = [
     'Computer Science',
@@ -66,6 +51,63 @@ const Register: React.FC = () => {
     'Education',
     'Architecture',
   ];
+
+  // Select options
+  const roleOptions: SelectOption[] = [
+    { value: 'student', label: 'Student' },
+    { value: 'faculty', label: 'Faculty' }
+  ];
+
+  const departmentOptions: SelectOption[] = departments.map(dept => ({
+    value: dept,
+    label: dept
+  }));
+
+  // Custom styles for React Select
+  const selectStyles: StylesConfig<SelectOption, false> = {
+    control: (provided) => ({
+      ...provided,
+      border: '1px solid #d1d5db',
+      borderRadius: '0.375rem',
+      minHeight: '40px',
+      boxShadow: 'none',
+      '&:hover': {
+        border: '1px solid #d1d5db'
+      },
+      '&:focus-within': {
+        border: '2px solid #3b82f6',
+        boxShadow: '0 0 0 3px rgba(59, 130, 246, 0.1)'
+      }
+    }),
+    option: (provided, state) => ({
+      ...provided,
+      backgroundColor: state.isSelected ? '#3b82f6' : state.isFocused ? '#f3f4f6' : 'white',
+      color: state.isSelected ? 'white' : '#374151',
+      '&:hover': {
+        backgroundColor: state.isSelected ? '#3b82f6' : '#f3f4f6'
+      }
+    }),
+    menu: (provided) => ({
+      ...provided,
+      zIndex: 9999
+    }),
+    placeholder: (provided) => ({
+      ...provided,
+      color: '#9ca3af'
+    })
+  };
+
+  const onSubmit = async (data: RegisterForm) => {
+    setRegisterError('');
+    try {
+      // TODO: Implement registration logic with data
+      console.log('Registration data:', data);
+      // For now, just navigate to login
+      navigate('/login');
+    } catch {
+      setRegisterError('An error occurred during registration');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
@@ -144,14 +186,22 @@ const Register: React.FC = () => {
                 <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">
                   Role
                 </label>
-                <select
-                  {...register('role', { required: 'Role is required' })}
-                  className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="">Select your role</option>
-                  <option value="student">Student</option>
-                  <option value="faculty">Faculty</option>
-                </select>
+                <Controller
+                  name="role"
+                  control={control}
+                  rules={{ required: 'Role is required' }}
+                  render={({ field }) => (
+                    <Select
+                      {...field}
+                      options={roleOptions}
+                      styles={selectStyles}
+                      placeholder="Select your role"
+                      isClearable={false}
+                      onChange={(option) => field.onChange(option?.value)}
+                      value={roleOptions.find(option => option.value === field.value)}
+                    />
+                  )}
+                />
                 {errors.role && (
                   <p className="mt-1 text-sm text-red-600">{errors.role.message}</p>
                 )}
@@ -161,17 +211,22 @@ const Register: React.FC = () => {
                 <label htmlFor="department" className="block text-sm font-medium text-gray-700 mb-1">
                   Department
                 </label>
-                <select
-                  {...register('department', { required: 'Department is required' })}
-                  className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="">Select department</option>
-                  {departments.map((dept) => (
-                    <option key={dept} value={dept}>
-                      {dept}
-                    </option>
-                  ))}
-                </select>
+                <Controller
+                  name="department"
+                  control={control}
+                  rules={{ required: 'Department is required' }}
+                  render={({ field }) => (
+                    <Select
+                      {...field}
+                      options={departmentOptions}
+                      styles={selectStyles}
+                      placeholder="Select department"
+                      isClearable={false}
+                      onChange={(option) => field.onChange(option?.value)}
+                      value={departmentOptions.find(option => option.value === field.value)}
+                    />
+                  )}
+                />
                 {errors.department && (
                   <p className="mt-1 text-sm text-red-600">{errors.department.message}</p>
                 )}

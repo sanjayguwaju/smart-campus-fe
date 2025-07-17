@@ -1,11 +1,18 @@
 import React, { useState } from 'react';
 import { useCreateNotice } from '../../../api/hooks/useNotices';
 import { Notice } from '../../../api/types/notices';
+import Select, { StylesConfig } from 'react-select';
 
 interface AddNoticeModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
+}
+
+// Select option interface
+interface SelectOption {
+  value: string;
+  label: string;
 }
 
 const initialForm: Partial<Notice> = {
@@ -35,18 +42,76 @@ const AddNoticeModal: React.FC<AddNoticeModalProps> = ({ isOpen, onClose, onSucc
   const [form, setForm] = useState<Partial<Notice>>(initialForm);
   const [error, setError] = useState<string | null>(null);
   const [validationErrors, setValidationErrors] = useState<{ [key: string]: string }>(initialValidationErrors);
-  const [serverError, setServerError] = useState<string | null>(null);
   const createNotice = useCreateNotice();
 
-  const validateField = (name: string, value: any) => {
+  // Select options
+  const typeOptions: SelectOption[] = [
+    { value: 'announcement', label: 'Announcement' },
+    { value: 'academic', label: 'Academic' },
+    { value: 'administrative', label: 'Administrative' },
+    { value: 'event', label: 'Event' },
+    { value: 'emergency', label: 'Emergency' },
+    { value: 'maintenance', label: 'Maintenance' },
+    { value: 'other', label: 'Other' }
+  ];
+
+  const categoryOptions: SelectOption[] = [
+    { value: 'undergraduate', label: 'Undergraduate' },
+    { value: 'graduate', label: 'Graduate' },
+    { value: 'faculty', label: 'Faculty' },
+    { value: 'staff', label: 'Staff' },
+    { value: 'all', label: 'All' }
+  ];
+
+  const priorityOptions: SelectOption[] = [
+    { value: 'high', label: 'High' },
+    { value: 'medium', label: 'Medium' },
+    { value: 'low', label: 'Low' }
+  ];
+
+  // Custom styles for React Select
+  const selectStyles: StylesConfig<SelectOption, false> = {
+    control: (provided) => ({
+      ...provided,
+      border: '1px solid #d1d5db',
+      borderRadius: '0.375rem',
+      minHeight: '40px',
+      boxShadow: 'none',
+      '&:hover': {
+        border: '1px solid #d1d5db'
+      },
+      '&:focus-within': {
+        border: '2px solid #3b82f6',
+        boxShadow: '0 0 0 3px rgba(59, 130, 246, 0.1)'
+      }
+    }),
+    option: (provided, state) => ({
+      ...provided,
+      backgroundColor: state.isSelected ? '#3b82f6' : state.isFocused ? '#f3f4f6' : 'white',
+      color: state.isSelected ? 'white' : '#374151',
+      '&:hover': {
+        backgroundColor: state.isSelected ? '#3b82f6' : '#f3f4f6'
+      }
+    }),
+    menu: (provided) => ({
+      ...provided,
+      zIndex: 9999
+    }),
+    placeholder: (provided) => ({
+      ...provided,
+      color: '#9ca3af'
+    })
+  };
+
+  const validateField = (name: string, value: unknown) => {
     let message = '';
     switch (name) {
       case 'title':
-        if (!value) message = 'Title is required.';
+        if (!value || typeof value !== 'string') message = 'Title is required.';
         else if (value.length > 200) message = 'Title cannot exceed 200 characters.';
         break;
       case 'content':
-        if (!value) message = 'Content is required.';
+        if (!value || typeof value !== 'string') message = 'Content is required.';
         else if (value.length < 10) message = 'Content must be at least 10 characters.';
         break;
       case 'type':
@@ -65,7 +130,7 @@ const AddNoticeModal: React.FC<AddNoticeModalProps> = ({ isOpen, onClose, onSucc
         if (!value) message = 'Author is required.';
         break;
       case 'expiryDate':
-        if (!value) {
+        if (!value || typeof value !== 'string') {
           message = 'Expiry date is required.';
         } else {
           const publish = form.publishDate ? new Date(form.publishDate as string) : null;
@@ -82,15 +147,21 @@ const AddNoticeModal: React.FC<AddNoticeModalProps> = ({ isOpen, onClose, onSucc
   };
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value, type } = e.target;
-    let newValue: any = value;
+    let newValue: string | boolean = value;
     if (type === 'checkbox' && e.target instanceof HTMLInputElement) {
       newValue = (e.target as HTMLInputElement).checked;
     }
     setForm((prev) => ({ ...prev, [name]: newValue }));
     validateField(name, newValue);
+  };
+
+  const handleSelectChange = (name: string, option: SelectOption | null) => {
+    const value = option?.value || '';
+    setForm((prev) => ({ ...prev, [name]: value }));
+    validateField(name, value);
   };
 
   const validateForm = () => {
@@ -116,7 +187,6 @@ const AddNoticeModal: React.FC<AddNoticeModalProps> = ({ isOpen, onClose, onSucc
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    setServerError(null);
     if (!validateForm()) {
       setError('Please fix the errors above.');
       return;
@@ -132,8 +202,8 @@ const AddNoticeModal: React.FC<AddNoticeModalProps> = ({ isOpen, onClose, onSucc
       setValidationErrors(initialValidationErrors);
       onClose();
       if (onSuccess) onSuccess();
-    } catch (err: any) {
-      setServerError(err.response?.data?.message || 'Failed to create notice');
+    } catch {
+      setError('Failed to create notice');
     }
   };
 
@@ -177,55 +247,43 @@ const AddNoticeModal: React.FC<AddNoticeModalProps> = ({ isOpen, onClose, onSucc
           <div className="flex gap-2">
             <div className="flex-1">
               <label className="block text-sm font-medium text-gray-700">Type *</label>
-              <select
-                name="type"
-                value={form.type}
-                onChange={handleChange}
-                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+              <Select
+                options={typeOptions}
+                value={typeOptions.find(option => option.value === form.type)}
+                onChange={(option) => handleSelectChange('type', option)}
+                styles={selectStyles}
+                placeholder="Select type"
+                isClearable
                 required
-              >
-                <option value="announcement">Announcement</option>
-                <option value="academic">Academic</option>
-                <option value="administrative">Administrative</option>
-                <option value="event">Event</option>
-                <option value="emergency">Emergency</option>
-                <option value="maintenance">Maintenance</option>
-                <option value="other">Other</option>
-              </select>
+              />
               {validationErrors.type && <div className="text-red-600 text-xs mt-1">{validationErrors.type}</div>}
             </div>
             <div className="flex-1">
               <label className="block text-sm font-medium text-gray-700">Category *</label>
-              <select
-                name="category"
-                value={form.category}
-                onChange={handleChange}
-                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+              <Select
+                options={categoryOptions}
+                value={categoryOptions.find(option => option.value === form.category)}
+                onChange={(option) => handleSelectChange('category', option)}
+                styles={selectStyles}
+                placeholder="Select category"
+                isClearable
                 required
-              >
-                <option value="undergraduate">Undergraduate</option>
-                <option value="graduate">Graduate</option>
-                <option value="faculty">Faculty</option>
-                <option value="staff">Staff</option>
-                <option value="all">All</option>
-              </select>
+              />
               {validationErrors.category && <div className="text-red-600 text-xs mt-1">{validationErrors.category}</div>}
             </div>
           </div>
           <div className="flex gap-2">
             <div className="flex-1">
               <label className="block text-sm font-medium text-gray-700">Priority *</label>
-              <select
-                name="priority"
-                value={form.priority}
-                onChange={handleChange}
-                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+              <Select
+                options={priorityOptions}
+                value={priorityOptions.find(option => option.value === form.priority)}
+                onChange={(option) => handleSelectChange('priority', option)}
+                styles={selectStyles}
+                placeholder="Select priority"
+                isClearable
                 required
-              >
-                <option value="high">High</option>
-                <option value="medium">Medium</option>
-                <option value="low">Low</option>
-              </select>
+              />
               {validationErrors.priority && <div className="text-red-600 text-xs mt-1">{validationErrors.priority}</div>}
             </div>
             <div className="flex-1">

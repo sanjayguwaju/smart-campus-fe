@@ -1,5 +1,11 @@
 import React, { useState } from 'react';
+import Select, { StylesConfig } from 'react-select';
 import { X, Filter, Calendar, MapPin, Star } from 'lucide-react';
+
+interface SelectOption {
+  value: string;
+  label: string;
+}
 
 interface EventsFilterDrawerProps {
   isOpen: boolean;
@@ -34,6 +40,41 @@ const EventsFilterDrawer: React.FC<EventsFilterDrawerProps> = ({
 }) => {
   const [localFilters, setLocalFilters] = useState(filters);
 
+  // Custom styles for react-select
+  const selectStyles: StylesConfig<SelectOption> = {
+    control: (provided, state) => ({
+      ...provided,
+      minHeight: '40px',
+      border: state.isFocused ? '2px solid #3b82f6' : '1px solid #e5e7eb',
+      borderRadius: '8px',
+      boxShadow: state.isFocused ? '0 0 0 2px rgba(59, 130, 246, 0.1)' : 'none',
+      '&:hover': {
+        border: '1px solid #d1d5db'
+      }
+    }),
+    option: (provided, state) => ({
+      ...provided,
+      backgroundColor: state.isSelected ? '#3b82f6' : state.isFocused ? '#f3f4f6' : 'white',
+      color: state.isSelected ? 'white' : '#374151',
+      '&:hover': {
+        backgroundColor: state.isSelected ? '#3b82f6' : '#f3f4f6'
+      }
+    }),
+    menu: (provided) => ({
+      ...provided,
+      borderRadius: '8px',
+      boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'
+    }),
+    placeholder: (provided) => ({
+      ...provided,
+      color: '#9ca3af'
+    }),
+    singleValue: (provided) => ({
+      ...provided,
+      color: '#374151'
+    })
+  };
+
   const handleFilterChange = (key: string, value: string) => {
     setLocalFilters(prev => ({
       ...prev,
@@ -59,7 +100,7 @@ const EventsFilterDrawer: React.FC<EventsFilterDrawerProps> = ({
     onClearFilters();
   };
 
-  const eventTypeOptions = [
+  const eventTypeOptions: SelectOption[] = [
     { value: '', label: 'All Types' },
     { value: 'academic', label: 'Academic' },
     { value: 'cultural', label: 'Cultural' },
@@ -72,7 +113,7 @@ const EventsFilterDrawer: React.FC<EventsFilterDrawerProps> = ({
     { value: 'other', label: 'Other' },
   ];
 
-  const statusOptions = [
+  const statusOptions: SelectOption[] = [
     { value: '', label: 'All Status' },
     { value: 'draft', label: 'Draft' },
     { value: 'published', label: 'Published' },
@@ -81,7 +122,7 @@ const EventsFilterDrawer: React.FC<EventsFilterDrawerProps> = ({
     { value: 'postponed', label: 'Postponed' },
   ];
 
-  const categoryOptions = [
+  const categoryOptions: SelectOption[] = [
     { value: '', label: 'All Categories' },
     { value: 'student', label: 'Student' },
     { value: 'faculty', label: 'Faculty' },
@@ -90,7 +131,7 @@ const EventsFilterDrawer: React.FC<EventsFilterDrawerProps> = ({
     { value: 'invitation-only', label: 'Invitation Only' },
   ];
 
-  const dateRangeOptions = [
+  const dateRangeOptions: SelectOption[] = [
     { value: '', label: 'All Time' },
     { value: 'today', label: 'Today' },
     { value: 'week', label: 'This Week' },
@@ -99,13 +140,13 @@ const EventsFilterDrawer: React.FC<EventsFilterDrawerProps> = ({
     { value: 'year', label: 'This Year' },
   ];
 
-  const featuredOptions = [
+  const featuredOptions: SelectOption[] = [
     { value: '', label: 'All Events' },
     { value: 'featured', label: 'Featured Only' },
     { value: 'not-featured', label: 'Not Featured' },
   ];
 
-  const locationOptions = [
+  const locationOptions: SelectOption[] = [
     { value: '', label: 'All Locations' },
     { value: 'central-campus', label: 'Central Campus' },
     { value: 'north-campus', label: 'North Campus' },
@@ -151,17 +192,21 @@ const EventsFilterDrawer: React.FC<EventsFilterDrawerProps> = ({
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Event Type
               </label>
-              <select
-                value={localFilters.eventType}
-                onChange={(e) => handleFilterChange('eventType', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                {eventTypeOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
+              <Select<SelectOption>
+                options={eventTypeOptions}
+                onChange={(selectedOption: SelectOption | null) => 
+                  handleFilterChange('eventType', selectedOption?.value || '')
+                }
+                value={
+                  localFilters.eventType
+                    ? eventTypeOptions.find(option => option.value === localFilters.eventType)
+                    : null
+                }
+                placeholder="Select event type"
+                styles={selectStyles}
+                className="w-full"
+                isClearable={false}
+              />
             </div>
 
             {/* Status */}
@@ -169,17 +214,21 @@ const EventsFilterDrawer: React.FC<EventsFilterDrawerProps> = ({
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Status
               </label>
-              <select
-                value={localFilters.status}
-                onChange={(e) => handleFilterChange('status', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                {statusOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
+              <Select<SelectOption>
+                options={statusOptions}
+                onChange={(selectedOption: SelectOption | null) => 
+                  handleFilterChange('status', selectedOption?.value || '')
+                }
+                value={
+                  localFilters.status
+                    ? statusOptions.find(option => option.value === localFilters.status)
+                    : null
+                }
+                placeholder="Select status"
+                styles={selectStyles}
+                className="w-full"
+                isClearable={false}
+              />
             </div>
 
             {/* Category */}
@@ -187,17 +236,21 @@ const EventsFilterDrawer: React.FC<EventsFilterDrawerProps> = ({
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Category
               </label>
-              <select
-                value={localFilters.category}
-                onChange={(e) => handleFilterChange('category', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                {categoryOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
+              <Select<SelectOption>
+                options={categoryOptions}
+                onChange={(selectedOption: SelectOption | null) => 
+                  handleFilterChange('category', selectedOption?.value || '')
+                }
+                value={
+                  localFilters.category
+                    ? categoryOptions.find(option => option.value === localFilters.category)
+                    : null
+                }
+                placeholder="Select category"
+                styles={selectStyles}
+                className="w-full"
+                isClearable={false}
+              />
             </div>
 
             {/* Date Range */}
@@ -206,17 +259,21 @@ const EventsFilterDrawer: React.FC<EventsFilterDrawerProps> = ({
                 <Calendar className="h-4 w-4 inline mr-1" />
                 Date Range
               </label>
-              <select
-                value={localFilters.dateRange}
-                onChange={(e) => handleFilterChange('dateRange', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                {dateRangeOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
+              <Select<SelectOption>
+                options={dateRangeOptions}
+                onChange={(selectedOption: SelectOption | null) => 
+                  handleFilterChange('dateRange', selectedOption?.value || '')
+                }
+                value={
+                  localFilters.dateRange
+                    ? dateRangeOptions.find(option => option.value === localFilters.dateRange)
+                    : null
+                }
+                placeholder="Select date range"
+                styles={selectStyles}
+                className="w-full"
+                isClearable={false}
+              />
             </div>
 
             {/* Featured */}
@@ -225,17 +282,21 @@ const EventsFilterDrawer: React.FC<EventsFilterDrawerProps> = ({
                 <Star className="h-4 w-4 inline mr-1" />
                 Featured Events
               </label>
-              <select
-                value={localFilters.featured}
-                onChange={(e) => handleFilterChange('featured', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                {featuredOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
+              <Select<SelectOption>
+                options={featuredOptions}
+                onChange={(selectedOption: SelectOption | null) => 
+                  handleFilterChange('featured', selectedOption?.value || '')
+                }
+                value={
+                  localFilters.featured
+                    ? featuredOptions.find(option => option.value === localFilters.featured)
+                    : null
+                }
+                placeholder="Select featured filter"
+                styles={selectStyles}
+                className="w-full"
+                isClearable={false}
+              />
             </div>
 
             {/* Location */}
@@ -244,17 +305,21 @@ const EventsFilterDrawer: React.FC<EventsFilterDrawerProps> = ({
                 <MapPin className="h-4 w-4 inline mr-1" />
                 Location
               </label>
-              <select
-                value={localFilters.location}
-                onChange={(e) => handleFilterChange('location', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                {locationOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
+              <Select<SelectOption>
+                options={locationOptions}
+                onChange={(selectedOption: SelectOption | null) => 
+                  handleFilterChange('location', selectedOption?.value || '')
+                }
+                value={
+                  localFilters.location
+                    ? locationOptions.find(option => option.value === localFilters.location)
+                    : null
+                }
+                placeholder="Select location"
+                styles={selectStyles}
+                className="w-full"
+                isClearable={false}
+              />
             </div>
           </div>
 

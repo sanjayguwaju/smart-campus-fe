@@ -1,9 +1,15 @@
 import React, { useState } from 'react';
+import Select, { StylesConfig } from 'react-select';
 import { useCreateEvent } from '../../../api/hooks/useEvents';
 import { CreateEventRequest } from '../../../api/types/events';
 import { useAuthStore } from '../../../store/authStore';
 import ImageUpload from '../../common/ImageUpload';
 import { dateInputToIso } from '../../../utils/dateUtils';
+
+interface SelectOption {
+  value: string;
+  label: string;
+}
 
 interface AddEventModalProps {
   isOpen: boolean;
@@ -13,6 +19,41 @@ interface AddEventModalProps {
 const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose }) => {
   const createEventMutation = useCreateEvent();
   const currentUser = useAuthStore((state) => state.user);
+  
+  // Custom styles for react-select
+  const selectStyles: StylesConfig<SelectOption> = {
+    control: (provided, state) => ({
+      ...provided,
+      minHeight: '48px',
+      border: state.isFocused ? '2px solid #3b82f6' : '1px solid #e5e7eb',
+      borderRadius: '8px',
+      boxShadow: state.isFocused ? '0 0 0 2px rgba(59, 130, 246, 0.1)' : 'none',
+      '&:hover': {
+        border: '1px solid #d1d5db'
+      }
+    }),
+    option: (provided, state) => ({
+      ...provided,
+      backgroundColor: state.isSelected ? '#3b82f6' : state.isFocused ? '#f3f4f6' : 'white',
+      color: state.isSelected ? 'white' : '#374151',
+      '&:hover': {
+        backgroundColor: state.isSelected ? '#3b82f6' : '#f3f4f6'
+      }
+    }),
+    menu: (provided) => ({
+      ...provided,
+      borderRadius: '8px',
+      boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'
+    }),
+    placeholder: (provided) => ({
+      ...provided,
+      color: '#9ca3af'
+    }),
+    singleValue: (provided) => ({
+      ...provided,
+      color: '#374151'
+    })
+  };
   const [formData, setFormData] = useState<Partial<CreateEventRequest>>({
     title: '',
     description: '',
@@ -177,61 +218,91 @@ const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose }) => {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Event Type *
               </label>
-              <select
-                name="eventType"
-                value={formData.eventType}
-                onChange={handleInputChange}
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="academic">Academic</option>
-                <option value="cultural">Cultural</option>
-                <option value="sports">Sports</option>
-                <option value="technical">Technical</option>
-                <option value="social">Social</option>
-                <option value="workshop">Workshop</option>
-                <option value="seminar">Seminar</option>
-                <option value="conference">Conference</option>
-                <option value="other">Other</option>
-              </select>
+              <Select<SelectOption>
+                options={[
+                  { value: 'academic', label: 'Academic' },
+                  { value: 'cultural', label: 'Cultural' },
+                  { value: 'sports', label: 'Sports' },
+                  { value: 'technical', label: 'Technical' },
+                  { value: 'social', label: 'Social' },
+                  { value: 'workshop', label: 'Workshop' },
+                  { value: 'seminar', label: 'Seminar' },
+                  { value: 'conference', label: 'Conference' },
+                  { value: 'other', label: 'Other' },
+                ]}
+                onChange={(selectedOption: SelectOption | null) => {
+                  setFormData(prev => ({
+                    ...prev,
+                    eventType: selectedOption?.value as 'academic' | 'cultural' | 'sports' | 'technical' | 'social' | 'workshop' | 'seminar' | 'conference' | 'other'
+                  }));
+                }}
+                value={
+                  formData.eventType
+                    ? { value: formData.eventType, label: formData.eventType.charAt(0).toUpperCase() + formData.eventType.slice(1) }
+                    : null
+                }
+                placeholder="Select event type"
+                styles={selectStyles}
+                className="w-full"
+              />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Category *
               </label>
-              <select
-                name="category"
-                value={formData.category}
-                onChange={handleInputChange}
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="public">Public</option>
-                <option value="student">Student</option>
-                <option value="faculty">Faculty</option>
-                <option value="admin">Admin</option>
-                <option value="invitation-only">Invitation Only</option>
-              </select>
+              <Select<SelectOption>
+                options={[
+                  { value: 'public', label: 'Public' },
+                  { value: 'student', label: 'Student' },
+                  { value: 'faculty', label: 'Faculty' },
+                  { value: 'admin', label: 'Admin' },
+                  { value: 'invitation-only', label: 'Invitation Only' },
+                ]}
+                onChange={(selectedOption: SelectOption | null) => {
+                  setFormData(prev => ({
+                    ...prev,
+                    category: selectedOption?.value as 'student' | 'faculty' | 'admin' | 'public' | 'invitation-only'
+                  }));
+                }}
+                value={
+                  formData.category
+                    ? { value: formData.category, label: formData.category.charAt(0).toUpperCase() + formData.category.slice(1) }
+                    : null
+                }
+                placeholder="Select category"
+                styles={selectStyles}
+                className="w-full"
+              />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Status *
               </label>
-              <select
-                name="status"
-                value={formData.status}
-                onChange={handleInputChange}
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="draft">Draft</option>
-                <option value="published">Published</option>
-                <option value="cancelled">Cancelled</option>
-                <option value="completed">Completed</option>
-                <option value="postponed">Postponed</option>
-              </select>
+              <Select<SelectOption>
+                options={[
+                  { value: 'draft', label: 'Draft' },
+                  { value: 'published', label: 'Published' },
+                  { value: 'cancelled', label: 'Cancelled' },
+                  { value: 'completed', label: 'Completed' },
+                  { value: 'postponed', label: 'Postponed' },
+                ]}
+                onChange={(selectedOption: SelectOption | null) => {
+                  setFormData(prev => ({
+                    ...prev,
+                    status: selectedOption?.value as 'draft' | 'published' | 'cancelled' | 'completed' | 'postponed'
+                  }));
+                }}
+                value={
+                  formData.status
+                    ? { value: formData.status, label: formData.status.charAt(0).toUpperCase() + formData.status.slice(1) }
+                    : null
+                }
+                placeholder="Select status"
+                styles={selectStyles}
+                className="w-full"
+              />
             </div>
           </div>
 
@@ -507,33 +578,55 @@ const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose }) => {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Visibility
               </label>
-              <select
-                name="visibility"
-                value={formData.visibility}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="public">Public</option>
-                <option value="private">Private</option>
-                <option value="restricted">Restricted</option>
-              </select>
+              <Select<SelectOption>
+                options={[
+                  { value: 'public', label: 'Public' },
+                  { value: 'private', label: 'Private' },
+                  { value: 'restricted', label: 'Restricted' },
+                ]}
+                onChange={(selectedOption: SelectOption | null) => {
+                  setFormData(prev => ({
+                    ...prev,
+                    visibility: selectedOption?.value as 'public' | 'private' | 'restricted'
+                  }));
+                }}
+                value={
+                  formData.visibility
+                    ? { value: formData.visibility, label: formData.visibility.charAt(0).toUpperCase() + formData.visibility.slice(1) }
+                    : null
+                }
+                placeholder="Select visibility"
+                styles={selectStyles}
+                className="w-full"
+              />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Priority
               </label>
-              <select
-                name="priority"
-                value={formData.priority}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
-                <option value="urgent">Urgent</option>
-              </select>
+              <Select<SelectOption>
+                options={[
+                  { value: 'low', label: 'Low' },
+                  { value: 'medium', label: 'Medium' },
+                  { value: 'high', label: 'High' },
+                  { value: 'urgent', label: 'Urgent' },
+                ]}
+                onChange={(selectedOption: SelectOption | null) => {
+                  setFormData(prev => ({
+                    ...prev,
+                    priority: selectedOption?.value as 'low' | 'medium' | 'high' | 'urgent'
+                  }));
+                }}
+                value={
+                  formData.priority
+                    ? { value: formData.priority, label: formData.priority.charAt(0).toUpperCase() + formData.priority.slice(1) }
+                    : null
+                }
+                placeholder="Select priority"
+                styles={selectStyles}
+                className="w-full"
+              />
             </div>
           </div>
 
