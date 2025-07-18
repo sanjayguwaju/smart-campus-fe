@@ -1,16 +1,35 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GraduationCap, Clock, BookOpen, Users, Download, Search, Filter, ChevronDown, Star, Award, Calendar, MapPin } from 'lucide-react';
-import { useAppStore } from '../store/appStore';
-import { Program } from '../types';
+import { usePrograms } from '../api/hooks/usePrograms';
+import { Program } from '../api/types/programs';
 
 const Programs: React.FC = () => {
-  const { programs } = useAppStore();
+  // Remove Zustand store usage
+  // const { programs } = useAppStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedLevel, setSelectedLevel] = useState<string>('all');
   const [selectedDepartment, setSelectedDepartment] = useState<string>('all');
   const [showFilters, setShowFilters] = useState(false);
   const [selectedProgram, setSelectedProgram] = useState<Program | null>(null);
+
+  // Fetch programs from API, like Events
+  const { data: programsData, isLoading, error } = usePrograms(
+    1, // page
+    100, // limit (adjust as needed)
+    searchTerm || undefined,
+    selectedDepartment !== 'all' ? selectedDepartment : undefined,
+    selectedLevel !== 'all' ? selectedLevel : undefined,
+    {
+      refetchInterval: 3000, // auto-refresh every 3 seconds
+      refetchOnWindowFocus: true, // also refresh when tab is focused
+    }
+  );
+
+  // Only show published programs
+  const programs = (programsData?.programs || []).filter(
+    (program: Program) => program.isPublished === true && program.status === 'published'
+  );
 
   const levels = [
     { value: 'all', label: 'All Levels' },
@@ -31,12 +50,12 @@ const Programs: React.FC = () => {
     { value: 'Architecture', label: 'Architecture' },
   ];
 
-  const filteredPrograms = programs.filter(program => {
+  const filteredPrograms = programs.filter((program: Program) => {
     const matchesSearch = program.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          program.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         program.department.toLowerCase().includes(searchTerm.toLowerCase());
+                         program.department.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesLevel = selectedLevel === 'all' || program.level === selectedLevel;
-    const matchesDepartment = selectedDepartment === 'all' || program.department === selectedDepartment;
+    const matchesDepartment = selectedDepartment === 'all' || program.department.name === selectedDepartment;
     return matchesSearch && matchesLevel && matchesDepartment;
   });
 
@@ -194,12 +213,12 @@ const Programs: React.FC = () => {
         {/* Programs Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           <AnimatePresence>
-            {filteredPrograms.map((program, index) => {
+            {filteredPrograms.map((program: Program, index: number) => {
               const LevelIcon = getLevelIcon(program.level);
               
               return (
                 <motion.div
-                  key={program.id}
+                  key={program._id}
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -30 }}
@@ -224,7 +243,7 @@ const Programs: React.FC = () => {
                     <div className="absolute bottom-4 left-4 text-white">
                       <div className="flex items-center space-x-2">
                         <LevelIcon className="h-5 w-5" />
-                        <span className="text-sm font-medium">{program.department}</span>
+                        <span className="text-sm font-medium">{program.department.name}</span>
                       </div>
                     </div>
                   </div>
@@ -246,7 +265,7 @@ const Programs: React.FC = () => {
                       </div>
                       <div className="flex items-center text-sm text-gray-500">
                         <BookOpen className="h-4 w-4 mr-2 text-blue-600" />
-                        Department: {program.department}
+                        Department: {program.department.name}
                       </div>
                       <div className="flex items-center text-sm text-gray-500">
                         <Users className="h-4 w-4 mr-2 text-blue-600" />
@@ -258,7 +277,7 @@ const Programs: React.FC = () => {
                     <div className="mb-4">
                       <h4 className="text-sm font-semibold text-gray-700 mb-2">Prerequisites:</h4>
                       <div className="flex flex-wrap gap-2">
-                        {program.prerequisites.slice(0, 2).map((prereq, idx) => (
+                        {program.prerequisites.slice(0, 2).map((prereq: string, idx: number) => (
                           <span
                             key={idx}
                             className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full"
@@ -322,19 +341,19 @@ const Programs: React.FC = () => {
           </div>
           <div className="bg-white rounded-xl p-6 text-center shadow-lg">
             <div className="text-3xl font-bold text-green-600 mb-2">
-              {programs.filter(p => p.level === 'undergraduate').length}
+              {programs.filter((p: Program) => p.level === 'undergraduate').length}
             </div>
             <div className="text-gray-600">Undergraduate</div>
           </div>
           <div className="bg-white rounded-xl p-6 text-center shadow-lg">
             <div className="text-3xl font-bold text-purple-600 mb-2">
-              {programs.filter(p => p.level === 'postgraduate').length}
+              {programs.filter((p: Program) => p.level === 'postgraduate').length}
             </div>
             <div className="text-gray-600">Postgraduate</div>
           </div>
           <div className="bg-white rounded-xl p-6 text-center shadow-lg">
             <div className="text-3xl font-bold text-orange-600 mb-2">
-              {new Set(programs.map(p => p.department)).size}
+              {new Set(programs.map((p: Program) => p.department.name)).size}
             </div>
             <div className="text-gray-600">Departments</div>
           </div>
@@ -408,7 +427,7 @@ const Programs: React.FC = () => {
                       <span className={`px-3 py-1 rounded-full text-sm font-semibold border ${getLevelColor(selectedProgram.level)}`}>
                         {selectedProgram.level.charAt(0).toUpperCase() + selectedProgram.level.slice(1)}
                       </span>
-                      <span className="text-gray-600">{selectedProgram.department}</span>
+                      <span className="text-gray-600">{selectedProgram.department.name}</span>
                     </div>
                   </div>
                 </div>
@@ -427,7 +446,7 @@ const Programs: React.FC = () => {
                       </div>
                       <div className="flex items-center">
                         <MapPin className="h-5 w-5 text-blue-600 mr-3" />
-                        <span className="text-gray-700">Department: {selectedProgram.department}</span>
+                        <span className="text-gray-700">Department: {selectedProgram.department.name}</span>
                       </div>
                       <div className="flex items-center">
                         <Calendar className="h-5 w-5 text-blue-600 mr-3" />
@@ -439,7 +458,7 @@ const Programs: React.FC = () => {
                   <div>
                     <h3 className="text-xl font-semibold text-gray-900 mb-4">Prerequisites</h3>
                     <div className="space-y-2 mb-6">
-                      {selectedProgram.prerequisites.map((prereq, idx) => (
+                      {selectedProgram.prerequisites.map((prereq: string, idx: number) => (
                         <div key={idx} className="flex items-center">
                           <div className="w-2 h-2 bg-blue-600 rounded-full mr-3"></div>
                           <span className="text-gray-700">{prereq}</span>
