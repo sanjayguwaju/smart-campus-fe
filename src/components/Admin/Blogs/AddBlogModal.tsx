@@ -35,6 +35,8 @@ const AddBlogModal: React.FC<AddBlogModalProps> = ({ isOpen, onClose }) => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
+    // Prevent accidental string assignment to tags
+    if (name === 'tags') return;
     setFormData(prev => ({
       ...prev,
       [name]: value
@@ -53,7 +55,7 @@ const AddBlogModal: React.FC<AddBlogModalProps> = ({ isOpen, onClose }) => {
     if (tagInput.trim() && !formData.tags?.includes(tagInput.trim())) {
       setFormData(prev => ({
         ...prev,
-        tags: [...(prev.tags || []), tagInput.trim()]
+        tags: Array.isArray(prev.tags) ? [...prev.tags, tagInput.trim()] : [tagInput.trim()]
       }));
       setTagInput('');
     }
@@ -83,7 +85,9 @@ const AddBlogModal: React.FC<AddBlogModalProps> = ({ isOpen, onClose }) => {
       formDataToSend.append('content', formData.content || '');
       formDataToSend.append('summary', formData.summary || '');
       formDataToSend.append('isPublished', formData.isPublished?.toString() || 'false');
-      (formData.tags || []).forEach(tag => {
+      // Defensive: always treat tags as array
+      const tagsArray = Array.isArray(formData.tags) ? formData.tags : formData.tags ? [formData.tags] : [];
+      tagsArray.forEach(tag => {
         formDataToSend.append('tags', tag);
       });
       
