@@ -54,9 +54,6 @@ const Programs: React.FC = () => {
   const programs = data?.programs || [];
   const pagination = data?.pagination;
 
-  // Get unique departments from programs
-  const departments: string[] = Array.from(new Set(programs.map((p: Program) => p.department.name)));
-
   const handleEdit = (program: Program) => {
     setEditingProgram(program);
   };

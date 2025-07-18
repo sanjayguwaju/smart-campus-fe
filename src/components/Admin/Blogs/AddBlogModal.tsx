@@ -30,6 +30,8 @@ const AddBlogModal: React.FC<AddBlogModalProps> = ({ isOpen, onClose }) => {
   });
 
   const [tagInput, setTagInput] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<{ [key: string]: string }>({});
+  const [serverError, setServerError] = useState<string | null>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -110,8 +112,20 @@ const AddBlogModal: React.FC<AddBlogModalProps> = ({ isOpen, onClose }) => {
         attachments: []
       });
       setTagInput('');
-    } catch (error) {
-      console.error('Error creating blog:', error);
+      setFieldErrors({});
+      setServerError(null);
+    } catch (error: any) {
+      if (error?.response?.data?.error) {
+        const errors = error.response.data.error;
+        const errorMap: { [key: string]: string } = {};
+        errors.forEach((err: any) => {
+          errorMap[err.field] = err.message;
+        });
+        setFieldErrors(errorMap);
+        setServerError(error.response.data.message || 'Validation failed');
+      } else {
+        setServerError('An unexpected error occurred');
+      }
     }
   };
 
@@ -145,6 +159,7 @@ const AddBlogModal: React.FC<AddBlogModalProps> = ({ isOpen, onClose }) => {
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6">
+          {serverError && <div className="text-red-600 text-sm mb-2">{serverError}</div>}
           <div className="space-y-8">
             {/* Basic Information Section */}
             <div className="bg-gray-50 rounded-lg p-6">
@@ -164,6 +179,7 @@ const AddBlogModal: React.FC<AddBlogModalProps> = ({ isOpen, onClose }) => {
                     placeholder="Enter blog post title"
                     required
                   />
+                  {fieldErrors.title && <div className="text-red-500 text-xs">{fieldErrors.title}</div>}
                 </div>
 
                 {/* Author */}
@@ -196,6 +212,7 @@ const AddBlogModal: React.FC<AddBlogModalProps> = ({ isOpen, onClose }) => {
                     placeholder="blog-post-url-slug"
                     required
                   />
+                  {fieldErrors.slug && <div className="text-red-500 text-xs">{fieldErrors.slug}</div>}
                 </div>
               </div>
               <div className="mt-4">
@@ -215,6 +232,7 @@ const AddBlogModal: React.FC<AddBlogModalProps> = ({ isOpen, onClose }) => {
                   <option value="draft">Draft</option>
                   <option value="published">Published</option>
                 </select>
+                {fieldErrors.status && <div className="text-red-500 text-xs">{fieldErrors.status}</div>}
               </div>
             </div>
 
@@ -236,6 +254,7 @@ const AddBlogModal: React.FC<AddBlogModalProps> = ({ isOpen, onClose }) => {
                     placeholder="Brief summary of the blog post"
                     required
                   />
+                  {fieldErrors.summary && <div className="text-red-500 text-xs">{fieldErrors.summary}</div>}
                 </div>
 
                 {/* Cover Image */}
@@ -278,6 +297,7 @@ const AddBlogModal: React.FC<AddBlogModalProps> = ({ isOpen, onClose }) => {
                       Add
                     </button>
                   </div>
+                  {fieldErrors.tags && <div className="text-red-500 text-xs">{fieldErrors.tags}</div>}
                   <div className="flex flex-wrap gap-2">
                     {formData.tags?.map((tag, index) => (
                       <span
@@ -353,6 +373,7 @@ const AddBlogModal: React.FC<AddBlogModalProps> = ({ isOpen, onClose }) => {
                 className="mb-4"
                 style={{ height: '400px' }}
               />
+              {fieldErrors.content && <div className="text-red-500 text-xs">{fieldErrors.content}</div>}
             </div>
           </div>
         </form>
