@@ -5,6 +5,7 @@ import { useDepartments } from '../../api/hooks/useDepartments';
 import { Program, ProgramPayload } from '../../api/types/programs';
 import { AddProgramModal, EditProgramModal, DeleteProgramModal, ProgramsFilterDrawer } from '../../components/Admin/Programs';
 import LoadingSpinner from '../../components/Layout/LoadingSpinner';
+import { toast } from 'react-hot-toast';
 
 const Programs: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -85,6 +86,10 @@ const Programs: React.FC = () => {
       deleteProgramMutation.mutate(deletingProgram.id, {
         onSuccess: () => {
           setDeletingProgram(null);
+        },
+        onError: (error: any) => {
+          const message = error?.response?.data?.message || error?.message || 'Failed to delete program';
+          toast.error(message);
         }
       });
     }
@@ -276,6 +281,9 @@ const Programs: React.FC = () => {
                         <Trash2 className="h-4 w-4" />
                       </button>
                     </div>
+                  </div>
+                  <div className="text-xs text-gray-500 mt-4">
+                    Created by {program.createdBy ? `${program.createdBy.firstName} ${program.createdBy.lastName}` : 'Unknown'}
                   </div>
                 </div>
               </div>

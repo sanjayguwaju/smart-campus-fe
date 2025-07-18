@@ -16,6 +16,12 @@ export interface Program {
   status: string;
   createdAt?: string;
   updatedAt?: string;
+  createdBy?: {
+    _id: string;
+    firstName: string;
+    lastName: string;
+    email?: string;
+  };
 }
 
 export interface ProgramPayload {
