@@ -1,5 +1,6 @@
 import React from 'react';
 import { useBlogs } from '../../../api/hooks/useBlogs';
+import { toast } from 'react-hot-toast';
 
 interface DeleteBlogModalProps {
   isOpen: boolean;
@@ -20,8 +21,12 @@ const DeleteBlogModal: React.FC<DeleteBlogModalProps> = ({
     try {
       await deleteBlog.mutateAsync(blogId);
       onClose();
-    } catch {
-      // Error is handled by the mutation
+    } catch (error: any) {
+      const message =
+        error?.response?.data?.message ||
+        error?.message ||
+        'Failed to delete blog';
+      toast.error(message);
     }
   };
 

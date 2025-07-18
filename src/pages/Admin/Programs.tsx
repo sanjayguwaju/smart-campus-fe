@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Search, Edit, Trash2, Filter, GraduationCap, Clock, BookOpen } from 'lucide-react';
-import { usePrograms, useCreateProgram, useUpdateProgram, useDeleteProgram, usePublishProgram, useUnpublishProgram } from '../../api/hooks/usePrograms';
+import { usePrograms, useCreateProgram, useUpdateProgram, usePublishProgram, useUnpublishProgram } from '../../api/hooks/usePrograms';
 import { useDepartments } from '../../api/hooks/useDepartments';
 import { Program, ProgramPayload } from '../../api/types/programs';
 import { AddProgramModal, EditProgramModal, DeleteProgramModal, ProgramsFilterDrawer } from '../../components/Admin/Programs';
 import LoadingSpinner from '../../components/Layout/LoadingSpinner';
-import { toast } from 'react-hot-toast';
 
 const Programs: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -40,7 +39,6 @@ const Programs: React.FC = () => {
   );
   const createProgramMutation = useCreateProgram();
   const updateProgramMutation = useUpdateProgram();
-  const deleteProgramMutation = useDeleteProgram();
   const publishProgramMutation = usePublishProgram();
   const unpublishProgramMutation = useUnpublishProgram();
 
@@ -76,20 +74,6 @@ const Programs: React.FC = () => {
         setEditingProgram(null);
       }
     });
-  };
-
-  const handleDeleteConfirm = () => {
-    if (deletingProgram) {
-      deleteProgramMutation.mutate(deletingProgram.id, {
-        onSuccess: () => {
-          setDeletingProgram(null);
-        },
-        onError: (error: any) => {
-          const message = error?.response?.data?.message || error?.message || 'Failed to delete program';
-          toast.error(message);
-        }
-      });
-    }
   };
 
   const handlePublish = async (program: Program) => {
@@ -306,7 +290,7 @@ const Programs: React.FC = () => {
       <DeleteProgramModal
         isOpen={!!deletingProgram}
         onClose={() => setDeletingProgram(null)}
-        onDelete={handleDeleteConfirm}
+        programId={deletingProgram?.id || ''}
         programName={deletingProgram?.name || ''}
       />
 

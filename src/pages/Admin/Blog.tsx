@@ -349,12 +349,9 @@ const AdminBlog: React.FC = () => {
       
       <DeleteBlogModal 
         isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
         blogId={blogToDelete?.id || ''}
         blogTitle={blogToDelete?.title || ''}
-        onClose={() => {
-          setIsDeleteModalOpen(false);
-          setBlogToDelete(null);
-        }}
       />
       
       <ViewBlogModal 
