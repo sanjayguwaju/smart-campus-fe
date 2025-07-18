@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { Program } from '../../../api/types/programs';
 import Select, { StylesConfig } from 'react-select';
 import { useDepartments } from '../../../api/hooks/useDepartments';
-import ImageUpload from '../../common/ImageUpload';
+import MultipleImageUpload from '../../common/MultipleImageUpload';
+import { GraduationCap } from 'lucide-react';
 
 interface AddProgramModalProps {
   isOpen: boolean;
@@ -83,6 +84,7 @@ const AddProgramModal: React.FC<AddProgramModalProps> = ({ isOpen, onClose, onAd
   const [form, setForm] = useState<ProgramForm>(initialState);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [serverError, setServerError] = useState<string | null>(null);
+  const [images, setImages] = useState<any[]>(form.image ? [{ url: form.image, isPrimary: true }] : []);
 
   const { data: departmentData } = useDepartments(1, 100);
   const departments = departmentData?.departments || [];
@@ -117,7 +119,7 @@ const AddProgramModal: React.FC<AddProgramModalProps> = ({ isOpen, onClose, onAd
     if (!form.department) newErrors.department = 'Department is required';
     if (!form.duration.trim()) newErrors.duration = 'Duration is required';
     if (!form.description.trim()) newErrors.description = 'Description is required';
-    if (!form.image || !/^https?:\/\//.test(form.image)) newErrors.image = 'Image is required and must be a valid URL';
+    if (!images.length) newErrors.image = 'At least one program image is required';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -126,13 +128,19 @@ const AddProgramModal: React.FC<AddProgramModalProps> = ({ isOpen, onClose, onAd
     e.preventDefault();
     setServerError(null);
     if (!validate()) return;
+    const selectedDepartment = departments.find(dep => dep._id === form.department);
+    if (!selectedDepartment) {
+      setErrors(prev => ({ ...prev, department: 'Please select a valid department.' }));
+      return;
+    }
     try {
-      // Send department as string (ObjectId) for creation
       await onAdd({
         ...form,
-        department: form.department,
+        department: selectedDepartment,
+        image: images[0]?.url || '',
       });
       setForm(initialState);
+      setImages([]);
     } catch (err: any) {
       setServerError(err?.response?.data?.message || 'Failed to add program');
     }
@@ -141,124 +149,183 @@ const AddProgramModal: React.FC<AddProgramModalProps> = ({ isOpen, onClose, onAd
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
-      <div className="bg-white rounded-lg shadow-lg w-full max-w-lg p-6 relative max-h-[90vh] overflow-y-auto">
-        <button className="absolute top-3 right-3 text-gray-400 hover:text-gray-600" onClick={onClose}>&times;</button>
-        <h2 className="text-xl font-bold mb-4">Add Program</h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {serverError && <div className="text-red-600 text-sm mb-2">{serverError}</div>}
-          <div>
-            <label className="block text-sm font-medium">Name</label>
-            <input name="name" value={form.name} onChange={handleChange} className="w-full border rounded px-3 py-2" />
-            {errors.name && <span className="text-red-500 text-xs">{errors.name}</span>}
+    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-6xl max-h-[95vh] overflow-hidden flex flex-col">
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50">
+          <div className="flex items-center space-x-3">
+            <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+              <GraduationCap className="h-5 w-5 text-blue-600" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">Add New Program</h2>
+              <p className="text-sm text-gray-600">Create a new academic program with all details</p>
+            </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium">Department</label>
-            <select
-              name="department"
-              value={form.department}
-              onChange={handleChange}
-              className="w-full border rounded px-3 py-2"
-              required
-            >
-              <option value="">Select Department</option>
-              {departments.map((dep: any) => (
-                <option key={dep._id} value={dep._id}>{dep.name}</option>
-              ))}
-            </select>
-            {errors.department && <span className="text-red-500 text-xs">{errors.department}</span>}
-          </div>
-          <div>
-            <label className="block text-sm font-medium">Level</label>
-            <select name="level" value={form.level} onChange={handleChange} className="w-full border rounded px-3 py-2" required>
-              <option value="Undergraduate">Undergraduate</option>
-              <option value="Postgraduate">Postgraduate</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium">Semesters</label>
-            <input
-              type="number"
-              name="semesters"
-              min={1}
-              max={20}
-              value={form.semesters || ''}
-              onChange={handleChange}
-              className="w-full border rounded px-3 py-2"
-              required
-            />
-            {errors.semesters && <span className="text-red-500 text-xs">{errors.semesters}</span>}
-          </div>
-          <div>
-            <label className="block text-sm font-medium">Duration</label>
-            <input name="duration" value={form.duration} onChange={handleChange} className="w-full border rounded px-3 py-2" />
-            {errors.duration && <span className="text-red-500 text-xs">{errors.duration}</span>}
-          </div>
-          <div>
-            <label className="block text-sm font-medium">Description</label>
-            <textarea name="description" value={form.description} onChange={handleChange} className="w-full border rounded px-3 py-2" rows={3} />
-            {errors.description && <span className="text-red-500 text-xs">{errors.description}</span>}
-          </div>
-          <div>
-            <label className="block text-sm font-medium">Prerequisites</label>
-            {form.prerequisites.map((p, idx) => (
-              <div key={idx} className="flex items-center gap-2 mb-1">
-                <input value={p} onChange={e => handlePrerequisiteChange(idx, e.target.value)} className="flex-1 border rounded px-3 py-2" />
-                {form.prerequisites.length > 1 && (
-                  <button type="button" onClick={() => removePrerequisite(idx)} className="text-red-500">&times;</button>
-                )}
+          <button
+            onClick={onClose}
+            className="h-8 w-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors duration-200"
+          >
+            <svg className="h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto p-6">
+          <form onSubmit={handleSubmit} className="space-y-8">
+            {serverError && <div className="text-red-600 text-sm mb-2">{serverError}</div>}
+            {/* Basic Information Section */}
+            <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
+              <div className="flex items-center mb-6">
+                <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center mr-3">
+                  <GraduationCap className="h-4 w-4 text-blue-600" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900">Basic Information</h3>
               </div>
-            ))}
-            <button type="button" onClick={addPrerequisite} className="text-blue-600 text-xs mt-1">+ Add Prerequisite</button>
-          </div>
-          <div>
-            <label className="block text-sm font-medium">Status</label>
-            <Select
-              options={statusOptions}
-              value={statusOptions.find(opt => opt.value === form.status)}
-              onChange={option => {
-                const selected = option as { value: string; label: string } | null;
-                setForm(f => ({
-                  ...f,
-                  status: selected?.value || 'draft',
-                  isPublished: selected?.value === 'published'
-                }));
-              }}
-              styles={selectStyles}
-              className="w-full"
-              placeholder="Select status"
-            />
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              className={`px-3 py-1 rounded ${form.isPublished ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-700'}`}
-              onClick={() => setForm(f => ({ ...f, isPublished: !f.isPublished, status: f.isPublished ? 'draft' : 'published' }))}
-            >
-              {form.isPublished ? 'Unpublish' : 'Publish'}
-            </button>
-            <span className="text-sm">Current: <b>{form.isPublished ? 'Published' : 'Draft'}</b></span>
-          </div>
-          <div>
-            <label className="block text-sm font-medium">Program Image</label>
-            <ImageUpload
-              onImageUpload={(url) => setForm(prev => ({ ...prev, image: url }))}
-              onImageRemove={() => setForm(prev => ({ ...prev, image: '' }))}
-              currentImage={form.image}
-              maxSize={5}
-              className="max-w-md"
-            />
-            {errors.image && <span className="text-red-500 text-xs">{errors.image}</span>}
-          </div>
-          <div>
-            <label className="block text-sm font-medium">Brochure URL</label>
-            <input name="brochureUrl" value={form.brochureUrl} onChange={handleChange} className="w-full border rounded px-3 py-2" />
-          </div>
-          <div className="flex justify-end gap-2">
-            <button type="button" onClick={onClose} className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300">Cancel</button>
-            <button type="submit" className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700">Add</button>
-          </div>
-        </form>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                  <label className="block text-sm font-medium">Name</label>
+                  <input name="name" value={form.name} onChange={handleChange} className="w-full border rounded px-3 py-2" />
+                  {errors.name && <span className="text-red-500 text-xs">{errors.name}</span>}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium">Department</label>
+                  <select
+                    name="department"
+                    value={form.department}
+                    onChange={handleChange}
+                    className="w-full border rounded px-3 py-2"
+                    required
+                  >
+                    <option value="">Select Department</option>
+                    {departments.map((dep: any) => (
+                      <option key={dep._id} value={dep._id}>{dep.name}</option>
+                    ))}
+                  </select>
+                  {errors.department && <span className="text-red-500 text-xs">{errors.department}</span>}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium">Level</label>
+                  <select name="level" value={form.level} onChange={handleChange} className="w-full border rounded px-3 py-2" required>
+                    <option value="Undergraduate">Undergraduate</option>
+                    <option value="Postgraduate">Postgraduate</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium">Semesters</label>
+                  <input
+                    type="number"
+                    name="semesters"
+                    min={1}
+                    max={20}
+                    value={form.semesters || ''}
+                    onChange={handleChange}
+                    className="w-full border rounded px-3 py-2"
+                    required
+                  />
+                  {errors.semesters && <span className="text-red-500 text-xs">{errors.semesters}</span>}
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium">Duration</label>
+                  <input name="duration" value={form.duration} onChange={handleChange} className="w-full border rounded px-3 py-2" />
+                  {errors.duration && <span className="text-red-500 text-xs">{errors.duration}</span>}
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium">Description</label>
+                  <textarea name="description" value={form.description} onChange={handleChange} className="w-full border rounded px-3 py-2" rows={3} />
+                  {errors.description && <span className="text-red-500 text-xs">{errors.description}</span>}
+                </div>
+              </div>
+            </div>
+            {/* Program Images Section */}
+            <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
+              <div className="flex items-center mb-6">
+                <div className="h-8 w-8 rounded-full bg-purple-100 flex items-center justify-center mr-3">
+                  <GraduationCap className="h-4 w-4 text-purple-600" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900">Program Images</h3>
+              </div>
+              <MultipleImageUpload
+                onImagesChange={setImages}
+                currentImages={images}
+                maxSize={5}
+                maxImages={3}
+                className="max-w-md"
+              />
+              {errors.image && <span className="text-red-500 text-xs">{errors.image}</span>}
+            </div>
+            {/* Prerequisites Section */}
+            <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
+              <div className="flex items-center mb-6">
+                <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center mr-3">
+                  <GraduationCap className="h-4 w-4 text-green-600" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900">Prerequisites</h3>
+              </div>
+              {form.prerequisites.map((p, idx) => (
+                <div key={idx} className="flex items-center gap-2 mb-1">
+                  <input value={p} onChange={e => handlePrerequisiteChange(idx, e.target.value)} className="flex-1 border rounded px-3 py-2" />
+                  {form.prerequisites.length > 1 && (
+                    <button type="button" onClick={() => removePrerequisite(idx)} className="text-red-500">&times;</button>
+                  )}
+                </div>
+              ))}
+              <button type="button" onClick={addPrerequisite} className="text-blue-600 text-xs mt-1">+ Add Prerequisite</button>
+            </div>
+            {/* Status Section */}
+            <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
+              <div className="flex items-center mb-6">
+                <div className="h-8 w-8 rounded-full bg-yellow-100 flex items-center justify-center mr-3">
+                  <GraduationCap className="h-4 w-4 text-yellow-600" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900">Status</h3>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Select
+                  options={statusOptions}
+                  value={statusOptions.find(opt => opt.value === form.status)}
+                  onChange={option => {
+                    const selected = option as { value: string; label: string } | null;
+                    setForm(f => ({
+                      ...f,
+                      status: selected?.value || 'draft',
+                      isPublished: selected?.value === 'published'
+                    }));
+                  }}
+                  styles={selectStyles}
+                  className="w-full"
+                  placeholder="Select status"
+                />
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    className={`px-3 py-1 rounded ${form.isPublished ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-700'}`}
+                    onClick={() => setForm(f => ({ ...f, isPublished: !f.isPublished, status: f.isPublished ? 'draft' : 'published' }))}
+                  >
+                    {form.isPublished ? 'Unpublish' : 'Publish'}
+                  </button>
+                  <span className="text-sm">Current: <b>{form.isPublished ? 'Published' : 'Draft'}</b></span>
+                </div>
+              </div>
+            </div>
+            {/* Brochure URL Section */}
+            <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
+              <div className="flex items-center mb-6">
+                <div className="h-8 w-8 rounded-full bg-pink-100 flex items-center justify-center mr-3">
+                  <GraduationCap className="h-4 w-4 text-pink-600" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900">Brochure</h3>
+              </div>
+              <input name="brochureUrl" value={form.brochureUrl} onChange={handleChange} className="w-full border rounded px-3 py-2" />
+            </div>
+            {/* Buttons */}
+            <div className="flex justify-end gap-2">
+              <button type="button" onClick={onClose} className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300">Cancel</button>
+              <button type="submit" className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700">Add</button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );
