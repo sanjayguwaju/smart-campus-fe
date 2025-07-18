@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { GraduationCap, Clock, BookOpen, Users, Download, Search, Filter, ChevronDown, Star, Award, Calendar, MapPin } from 'lucide-react';
 import { usePrograms } from '../api/hooks/usePrograms';
 import { Program } from '../api/types/programs';
+import { useAuthStore } from '../store/authStore';
 
 const Programs: React.FC = () => {
   // Remove Zustand store usage
@@ -12,6 +13,7 @@ const Programs: React.FC = () => {
   const [selectedDepartment, setSelectedDepartment] = useState<string>('all');
   const [showFilters, setShowFilters] = useState(false);
   const [selectedProgram, setSelectedProgram] = useState<Program | null>(null);
+  const { user, isAuthenticated } = useAuthStore();
 
   // Fetch programs from API, like Events
   const { data: programsData, isLoading, error } = usePrograms(
@@ -295,9 +297,11 @@ const Programs: React.FC = () => {
 
                     {/* Action Buttons */}
                     <div className="flex space-x-2">
-                      <button className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors duration-200">
-                        Apply Now
-                      </button>
+                      {isAuthenticated && user?.role === 'student' && (
+                        <button className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors duration-200">
+                          Apply Now
+                        </button>
+                      )}
                       {program.brochureUrl && (
                         <button className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200">
                           <Download className="h-4 w-4" />
