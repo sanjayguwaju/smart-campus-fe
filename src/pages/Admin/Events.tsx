@@ -3,12 +3,12 @@ import { Search, Plus, Edit, Trash2, ChevronLeft, ChevronRight, Calendar, MapPin
 import { toast } from 'react-hot-toast';
 import { useEvents, usePublishEvent, useUnpublishEvent } from '../../api/hooks/useEvents';
 import { Event } from '../../api/types/events';
-import { 
-  AddEventModal, 
-  EditEventModal, 
-  DeleteEventModal, 
-  ViewEventModal, 
-  EventsFilterDrawer 
+import {
+  AddEventModal,
+  EditEventModal,
+  DeleteEventModal,
+  ViewEventModal,
+  EventsFilterDrawer
 } from '../../components/Admin/Events';
 import LoadingSpinner from '../../components/Layout/LoadingSpinner';
 
@@ -143,7 +143,7 @@ const Events: React.FC = () => {
           <h1 className="text-2xl font-bold text-gray-900">Events</h1>
           <p className="text-gray-600">Manage all events in the system</p>
         </div>
-        <button 
+        <button
           onClick={() => setIsAddModalOpen(true)}
           className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center"
         >
@@ -334,11 +334,10 @@ const Events: React.FC = () => {
                   <button
                     key={page}
                     onClick={() => setCurrentPage(page)}
-                    className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                      page === currentPage
-                        ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
-                        : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
-                    }`}
+                    className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${page === currentPage
+                      ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
+                      : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                      }`}
                   >
                     {page}
                   </button>

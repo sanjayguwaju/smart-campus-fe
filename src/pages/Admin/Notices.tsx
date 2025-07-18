@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { Plus, Search, Edit, Trash2, Eye, Filter, Pin } from "lucide-react";
-import { useNotices, useDeleteNotice } from "../../api/hooks/useNotices";
+import { useNotices, useDeleteNotice, usePublishNotice, useUnpublishNotice } from "../../api/hooks/useNotices";
 import { Notice } from "../../api/types/notices";
 import { AddNoticeModal, ViewNoticeModal, EditNoticeModal, NoticeFilterDrawer } from "../../components/Admin/Notices";
+import toast from "react-hot-toast";
 
 const Notices: React.FC = () => {
   const [selectedNotices, setSelectedNotices] = useState<string[]>([]);
@@ -11,6 +12,7 @@ const Notices: React.FC = () => {
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
+  const [processingNotices, setProcessingNotices] = useState<Set<string>>(new Set());
   const [filters, setFilters] = useState({
     status: '',
     searchTerm: "",
@@ -18,34 +20,44 @@ const Notices: React.FC = () => {
     priority: '',
     dateRange: '',
   });
-    
+
   // Fetch notices from backend
   const { data, isLoading, error, refetch } = useNotices();
   const deleteNotice = useDeleteNotice();
 
-  const notices: Notice[] = (data?.data?.notices || []).map((n) => ({
-    ...n,
-    id: n.id || n._id,
-  }));
+  const notices: Notice[] = (data?.data?.notices || []).map((n) => {
+    // Debug: Log the notice data to see what properties are available
+    console.log('Notice data:', n);
+    console.log('noticeType:', n.noticeType);
+    console.log('status:', n.status);
+    console.log('isPublished:', n.isPublished);
+    console.log('All properties:', Object.keys(n));
+    return {
+      ...n,
+      id: n.id || n._id || '',
+      _id: n._id || n.id, // Ensure both id formats are available
+      isPublished: n.status === 'published' || n.isPublished, // Check both status field and isPublished
+    };
+  });
 
   const filteredNotices = notices.filter((notice) => {
-    const matchesSearch = !filters.searchTerm || 
+    const matchesSearch = !filters.searchTerm ||
       notice.title.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
       notice.content.toLowerCase().includes(filters.searchTerm.toLowerCase());
-    
-    const matchesCategory = !filters.category || 
-      filters.category === 'all' || 
+
+    const matchesCategory = !filters.category ||
+      filters.category === 'all' ||
       notice.category === filters.category;
-    
-    const matchesPriority = !filters.priority || 
-      filters.priority === 'all' || 
+
+    const matchesPriority = !filters.priority ||
+      filters.priority === 'all' ||
       notice.priority === filters.priority;
 
-    const matchesStatus = !filters.status || 
-      filters.status === 'all' || 
+    const matchesStatus = !filters.status ||
+      filters.status === 'all' ||
       (filters.status === 'published' && notice.isPublished) ||
       (filters.status === 'draft' && !notice.isPublished);
-    
+
     return matchesSearch && matchesCategory && matchesPriority && matchesStatus;
   });
 
@@ -67,6 +79,92 @@ const Notices: React.FC = () => {
   const handleDelete = (noticeId: string) => {
     deleteNotice.mutate(noticeId);
   };
+
+  const publishNoticeMutation = usePublishNotice();
+  const unpublishNoticeMutation = useUnpublishNotice();
+
+  const handlePublish = async (notice: Notice) => {
+    try {
+      // Use either _id or id, whichever is available
+      const noticeId = notice._id || notice.id;
+      console.log('=== PUBLISH DEBUG ===');
+      console.log('Notice ID:', noticeId);
+      console.log('Full notice object:', notice);
+      console.log('API Base URL:', import.meta.env.VITE_BACKEND_API_BASE_URL);
+
+      if (!noticeId) {
+        throw new Error('Notice ID is missing');
+      }
+
+      // Add to processing set
+      setProcessingNotices(prev => new Set(prev).add(noticeId));
+
+      await publishNoticeMutation.mutateAsync(noticeId);
+      toast.success('Notice published successfully');
+    } catch (error: any) {
+      console.error('=== PUBLISH ERROR ===');
+      console.error('Error object:', error);
+      console.error('Error message:', error?.message);
+      console.error('Response data:', error?.response?.data);
+      console.error('Response status:', error?.response?.status);
+      console.error('Request config:', error?.config);
+
+      let errorMessage = 'Failed to publish notice. Please try again.';
+
+      if (error?.response?.status === 404) {
+        errorMessage = 'API endpoint not found. Check if backend is running on correct port.';
+      } else if (error?.response?.status === 401) {
+        errorMessage = 'Authentication failed. Please log in again.';
+      } else if (error?.response?.status === 500) {
+        errorMessage = 'Server error. Please check backend logs.';
+      } else if (error?.code === 'NETWORK_ERROR') {
+        errorMessage = 'Cannot connect to backend. Check if server is running.';
+      } else if (error?.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+
+      toast.error(errorMessage);
+    } finally {
+      // Remove from processing set
+      setProcessingNotices(prev => {
+        const next = new Set(prev);
+        next.delete(notice._id || notice.id);
+        return next;
+      });
+    }
+  }; const handleUnpublish = async (notice: Notice) => {
+    try {
+      // Use either _id or id, whichever is available
+      const noticeId = notice._id || notice.id;
+
+      // Add to processing set
+      setProcessingNotices(prev => new Set(prev).add(noticeId));
+
+      await unpublishNoticeMutation.mutateAsync(noticeId);
+      toast.success('Notice unpublished successfully');
+    } catch (error) {
+      console.error('Failed to unpublish notice:', error);
+      toast.error('Failed to unpublish notice. Please try again.');
+    } finally {
+      // Remove from processing set
+      setProcessingNotices(prev => {
+        const next = new Set(prev);
+        next.delete(notice._id || notice.id);
+        return next;
+      });
+    }
+  };
+
+  const noticeTypeColors: Record<string, string> = {
+    announcement: 'bg-yellow-50 text-yellow-700',
+    academic: 'bg-blue-50 text-blue-700',
+    administrative: 'bg-green-50 text-green-700',
+    event: 'bg-indigo-50 text-indigo-700',
+    emergency: 'bg-red-50 text-red-700',
+    maintenance: 'bg-teal-50 text-teal-700',
+    other: 'bg-gray-50 text-gray-700',
+  };
+
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -226,6 +324,32 @@ const Notices: React.FC = () => {
                           >
                             {notice.priority}
                           </span>
+                          {(() => {
+                            // Try different possible property names for notice type
+                            const noticeType = notice.noticeType ||
+                              (notice as any).type ||
+                              (notice as any).notice_type ||
+                              (notice as any).eventType ||
+                              (notice as any).typeOfNotice;
+
+                            console.log('Looking for notice type in:', notice.title);
+                            console.log('Found noticeType:', noticeType);
+
+                            if (noticeType) {
+                              const colorClass = noticeTypeColors[noticeType.toLowerCase()] || 'bg-gray-50 text-gray-700';
+                              return (
+                                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${colorClass} border border-gray-200`}>
+                                  {noticeType}
+                                </span>
+                              );
+                            } else {
+                              return (
+                                <span className="px-3 py-1 rounded-full text-xs font-semibold bg-red-50 text-red-700 border border-red-200">
+                                  No Type
+                                </span>
+                              );
+                            }
+                          })()}
                         </div>
                         <h2 className="text-lg font-bold text-gray-900 mb-1 break-all">
                           {notice.title}
@@ -236,18 +360,44 @@ const Notices: React.FC = () => {
                         <div className="text-sm text-gray-500">
                           By{" "}
                           {typeof notice.author === "object" &&
-                          notice.author !== null
+                            notice.author !== null
                             ? notice.author.name ||
-                              notice.author.email ||
-                              "Unknown"
+                            notice.author.email ||
+                            "Unknown"
                             : notice.author || "Unknown"}{" "}
                           &nbsp; Published:{" "}
                           {new Date(notice.publishDate).toLocaleDateString()}{" "}
                           &nbsp; Expires:{" "}
                           {new Date(notice.expiryDate).toLocaleDateString()}
                         </div>
+
                       </div>
                       <div className="flex flex-col items-end space-y-2 ml-4">
+
+
+                        {!notice.isPublished ? (
+                          <button
+                            onClick={() => {
+                              console.log('Publishing notice:', notice.id, 'isPublished:', notice.isPublished);
+                              handlePublish(notice);
+                            }}
+                            disabled={processingNotices.has(notice._id || notice.id)}
+                            className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed px-3 py-1 rounded-md transition-colors text-xs font-medium text-white"
+                          >
+                            {processingNotices.has(notice._id || notice.id) ? 'Publishing...' : 'Publish'}
+                          </button>
+                        ) : notice.isPublished ? (
+                          <button
+                            onClick={() => {
+                              console.log('Unpublishing notice:', notice.id, 'isPublished:', notice.isPublished);
+                              handleUnpublish(notice);
+                            }}
+                            disabled={processingNotices.has(notice._id || notice.id)}
+                            className="bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed px-3 py-1 rounded-md transition-colors text-xs font-medium text-white"
+                          >
+                            {processingNotices.has(notice._id || notice.id) ? 'Unpublishing...' : 'Unpublish'}
+                          </button>
+                        ) : null}
                         <button
                           className="text-blue-600 hover:text-blue-900"
                           title="View"

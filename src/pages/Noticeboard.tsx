@@ -1,11 +1,16 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, Search, Filter, Calendar, User, Pin, AlertTriangle, BookOpen, GraduationCap, ChevronDown, Eye } from 'lucide-react';
-import { useAppStore } from '../store/appStore';
-import { Notice } from '../types';
+import { useNotices } from '../api/hooks/useNotices';
+import { Notice } from '../api/types/notices';
 
 const Noticeboard: React.FC = () => {
-  const { notices } = useAppStore();
+  // Fetch notices from backend API
+  const { data, isLoading, error } = useNotices();
+  const notices: Notice[] = data?.data?.notices?.filter((notice: Notice) =>
+    notice.isPublished || notice.status === 'published'
+  ) || [];
+
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedPriority, setSelectedPriority] = useState<string>('all');
@@ -14,10 +19,13 @@ const Noticeboard: React.FC = () => {
 
   const categories = [
     { value: 'all', label: 'All Categories' },
-    { value: 'exam', label: 'Examinations' },
-    { value: 'alert', label: 'Alerts' },
+    { value: 'announcement', label: 'Announcement' },
     { value: 'academic', label: 'Academic' },
-    { value: 'general', label: 'General' },
+    { value: 'administrative', label: 'Administrative' },
+    { value: 'event', label: 'event' },
+    { value: 'emergency', label: 'emergency' },
+    { value: 'maintenance', label: 'Maintenance' },
+    { value: 'other', label: 'Other' },
   ];
 
   const priorities = [
@@ -28,23 +36,27 @@ const Noticeboard: React.FC = () => {
   ];
 
   const filteredNotices = notices
-    .filter(notice => {
+    .filter((notice: Notice) => {
       const matchesSearch = notice.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           notice.content.toLowerCase().includes(searchTerm.toLowerCase());
+        notice.content.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesCategory = selectedCategory === 'all' || notice.category === selectedCategory;
       const matchesPriority = selectedPriority === 'all' || notice.priority === selectedPriority;
       return matchesSearch && matchesCategory && matchesPriority;
     })
-    .sort((a, b) => {
+    .sort((a: Notice, b: Notice) => {
       // Sort by pinned first, then by priority, then by date
-      if (a.pinned && !b.pinned) return -1;
-      if (!a.pinned && b.pinned) return 1;
-      
-      const priorityOrder = { high: 3, medium: 2, low: 1 };
-      const priorityDiff = priorityOrder[b.priority] - priorityOrder[a.priority];
+      const aPinned = a.settings?.pinToTop || a.pinned;
+      const bPinned = b.settings?.pinToTop || b.pinned;
+      if (aPinned && !bPinned) return -1;
+      if (!aPinned && bPinned) return 1;
+
+      const priorityOrder: Record<string, number> = { high: 3, medium: 2, low: 1 };
+      const priorityDiff = (priorityOrder[b.priority] || 0) - (priorityOrder[a.priority] || 0);
       if (priorityDiff !== 0) return priorityDiff;
-      
-      return new Date(b.publishDate).getTime() - new Date(a.publishDate).getTime();
+
+      const aDate = new Date(a.publishDate);
+      const bDate = new Date(b.publishDate);
+      return bDate.getTime() - aDate.getTime();
     });
 
   const formatDate = (date: Date) => {
@@ -90,6 +102,38 @@ const Noticeboard: React.FC = () => {
     setExpandedNotice(expandedNotice === noticeId ? null : noticeId);
   };
 
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex justify-center items-center min-h-[400px]">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center py-8">
+            <p className="text-red-600 mb-4">Failed to load notices. Please try again later.</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -107,7 +151,7 @@ const Noticeboard: React.FC = () => {
             </h1>
           </div>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-            Stay updated with the latest announcements, alerts, and important information 
+            Stay updated with the latest announcements, alerts, and important information
             from the campus administration and academic departments.
           </p>
         </motion.div>
@@ -214,7 +258,7 @@ const Noticeboard: React.FC = () => {
             {filteredNotices.map((notice, index) => {
               const CategoryIcon = getCategoryIcon(notice.category);
               const isExpanded = expandedNotice === notice.id;
-              
+
               return (
                 <motion.div
                   key={notice.id}
@@ -222,9 +266,8 @@ const Noticeboard: React.FC = () => {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -30 }}
                   transition={{ duration: 0.6, delay: index * 0.1 }}
-                  className={`bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 ${
-                    notice.pinned ? 'ring-2 ring-blue-200 bg-blue-50' : ''
-                  }`}
+                  className={`bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 ${notice.pinned ? 'ring-2 ring-blue-200 bg-blue-50' : ''
+                    }`}
                 >
                   <div className="p-6">
                     {/* Notice Header */}
@@ -243,11 +286,10 @@ const Noticeboard: React.FC = () => {
                             <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${getCategoryColor(notice.category)}`}>
                               {notice.category.charAt(0).toUpperCase() + notice.category.slice(1)}
                             </span>
-                            <span className={`px-2 py-1 rounded text-xs font-medium ${
-                              notice.priority === 'high' ? 'bg-red-100 text-red-800' :
+                            <span className={`px-2 py-1 rounded text-xs font-medium ${notice.priority === 'high' ? 'bg-red-100 text-red-800' :
                               notice.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
-                              'bg-green-100 text-green-800'
-                            }`}>
+                                'bg-green-100 text-green-800'
+                              }`}>
                               {notice.priority.toUpperCase()}
                             </span>
                           </div>
@@ -259,11 +301,15 @@ const Noticeboard: React.FC = () => {
                           <div className="flex items-center space-x-4 text-sm text-gray-500 mb-3">
                             <div className="flex items-center space-x-1">
                               <User className="h-4 w-4" />
-                              <span>{notice.author}</span>
+                              <span>
+                                {typeof notice.author === "object" && notice.author !== null
+                                  ? notice.author.name || notice.author.email || "Unknown"
+                                  : notice.author || "Unknown"}
+                              </span>
                             </div>
                             <div className="flex items-center space-x-1">
                               <Calendar className="h-4 w-4" />
-                              <span>{formatDate(notice.publishDate)}</span>
+                              <span>{formatDate(new Date(notice.publishDate))}</span>
                             </div>
                           </div>
 
@@ -296,7 +342,7 @@ const Noticeboard: React.FC = () => {
                     {notice.expiryDate && (
                       <div className="mt-4 pt-4 border-t border-gray-200">
                         <p className="text-sm text-gray-500">
-                          <strong>Expires:</strong> {formatDate(notice.expiryDate)}
+                          <strong>Expires:</strong> {formatDate(new Date(notice.expiryDate))}
                         </p>
                       </div>
                     )}
@@ -337,19 +383,19 @@ const Noticeboard: React.FC = () => {
           </div>
           <div className="bg-white rounded-xl p-6 text-center shadow-lg">
             <div className="text-2xl font-bold text-red-600 mb-2">
-              {notices.filter(n => n.priority === 'high').length}
+              {notices.filter((n: Notice) => n.priority === 'high').length}
             </div>
             <div className="text-gray-600">High Priority</div>
           </div>
           <div className="bg-white rounded-xl p-6 text-center shadow-lg">
             <div className="text-2xl font-bold text-green-600 mb-2">
-              {notices.filter(n => n.pinned).length}
+              {notices.filter((n: Notice) => n.settings?.pinToTop || n.pinned).length}
             </div>
             <div className="text-gray-600">Pinned</div>
           </div>
           <div className="bg-white rounded-xl p-6 text-center shadow-lg">
             <div className="text-2xl font-bold text-purple-600 mb-2">
-              {notices.filter(n => n.category === 'exam').length}
+              {notices.filter((n: Notice) => n.category === 'exam').length}
             </div>
             <div className="text-gray-600">Exam Related</div>
           </div>
