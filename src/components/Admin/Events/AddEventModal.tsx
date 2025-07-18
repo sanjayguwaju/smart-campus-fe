@@ -3,7 +3,7 @@ import Select, { StylesConfig } from 'react-select';
 import { useCreateEvent } from '../../../api/hooks/useEvents';
 import { CreateEventRequest } from '../../../api/types/events';
 import { useAuthStore } from '../../../store/authStore';
-import ImageUpload from '../../common/ImageUpload';
+import MultipleImageUpload from '../../common/MultipleImageUpload';
 import { dateInputToIso } from '../../../utils/dateUtils';
 
 interface SelectOption {
@@ -89,7 +89,8 @@ const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose }) => {
     requirements: [],
     benefits: [],
     externalLinks: [],
-    imageUrl: ''
+    imageUrl: '',
+    images: []
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -132,8 +133,13 @@ const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose }) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      // Set the primary image URL to imageUrl field for backward compatibility
+      const primaryImage = formData.images?.find(img => img.isPrimary);
+      const imageUrl = primaryImage ? primaryImage.url : '';
+      
       const payload = {
         ...formData,
+        imageUrl,
         startDate: dateInputToIso(formData.startDate || ''),
         endDate: dateInputToIso(formData.endDate || ''),
         organizer: currentUser?._id,
@@ -175,7 +181,8 @@ const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose }) => {
         requirements: [],
         benefits: [],
         externalLinks: [],
-        imageUrl: ''
+        imageUrl: '',
+        images: []
       });
     } catch (error) {
       // Error is handled by the mutation
@@ -371,13 +378,12 @@ const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose }) => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900">Event Image</h3>
+                <h3 className="text-lg font-semibold text-gray-900">Event Images</h3>
               </div>
               
-              <ImageUpload
-                onImageUpload={(url) => setFormData(prev => ({ ...prev, imageUrl: url }))}
-                onImageRemove={() => setFormData(prev => ({ ...prev, imageUrl: '' }))}
-                currentImage={formData.imageUrl}
+              <MultipleImageUpload
+                onImagesChange={(images) => setFormData(prev => ({ ...prev, images }))}
+                currentImages={formData.images || []}
                 maxSize={5}
                 className="max-w-md"
               />

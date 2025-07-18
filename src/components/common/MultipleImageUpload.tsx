@@ -1,9 +1,10 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Upload, X, Image as ImageIcon } from 'lucide-react';
 import { uploadToCloudinary } from '../../api/config/cloudinary';
 import { toast } from 'react-hot-toast';
 
 interface ImageItem {
+  _id?: string;
   url: string;
   caption?: string;
   isPrimary: boolean;
@@ -30,7 +31,13 @@ const MultipleImageUpload: React.FC<MultipleImageUploadProps> = ({
 }) => {
   const [isUploading, setIsUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
+  const [images, setImages] = useState<ImageItem[]>(currentImages);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Update local state when currentImages prop changes
+  useEffect(() => {
+    setImages(currentImages);
+  }, [currentImages]);
 
   const handleFile = async (file: File) => {
     // Validate file type
@@ -46,7 +53,7 @@ const MultipleImageUpload: React.FC<MultipleImageUploadProps> = ({
     }
 
     // Check if we've reached the maximum number of images
-    if (currentImages.length >= maxImages) {
+    if (images.length >= maxImages) {
       toast.error(`Maximum ${maxImages} images allowed.`);
       return;
     }
@@ -57,14 +64,15 @@ const MultipleImageUpload: React.FC<MultipleImageUploadProps> = ({
       // Upload to Cloudinary
       const imageUrl = await uploadToCloudinary(file);
       
-      // Add new image to the list
+      // Add new image to the list (new images won't have _id until saved)
       const newImage: ImageItem = {
         url: imageUrl,
         caption: '',
-        isPrimary: currentImages.length === 0 // First image is primary by default
+        isPrimary: images.length === 0 // First image is primary by default
       };
       
-      const updatedImages = [...currentImages, newImage];
+      const updatedImages = [...images, newImage];
+      setImages(updatedImages);
       onImagesChange(updatedImages);
       toast.success('Image uploaded successfully!');
     } catch (error) {
@@ -103,28 +111,31 @@ const MultipleImageUpload: React.FC<MultipleImageUploadProps> = ({
   };
 
   const handleRemove = (index: number) => {
-    const updatedImages = currentImages.filter((_, i) => i !== index);
+    const updatedImages = images.filter((_, i) => i !== index);
     
     // If we removed the primary image and there are other images, make the first one primary
-    if (currentImages[index].isPrimary && updatedImages.length > 0) {
+    if (images[index].isPrimary && updatedImages.length > 0) {
       updatedImages[0].isPrimary = true;
     }
     
+    setImages(updatedImages);
     onImagesChange(updatedImages);
   };
 
   const handleSetPrimary = (index: number) => {
-    const updatedImages = currentImages.map((image, i) => ({
+    const updatedImages = images.map((image, i) => ({
       ...image,
       isPrimary: i === index
     }));
+    setImages(updatedImages);
     onImagesChange(updatedImages);
   };
 
   const handleCaptionChange = (index: number, caption: string) => {
-    const updatedImages = currentImages.map((image, i) => 
+    const updatedImages = images.map((image, i) => 
       i === index ? { ...image, caption } : image
     );
+    setImages(updatedImages);
     onImagesChange(updatedImages);
   };
 
@@ -144,7 +155,7 @@ const MultipleImageUpload: React.FC<MultipleImageUploadProps> = ({
       />
 
       {/* Upload Area */}
-      {currentImages.length < maxImages && (
+      {images.length < maxImages && (
         <div
           className={`relative border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-all duration-200 mb-4 ${
             dragActive
@@ -173,7 +184,7 @@ const MultipleImageUpload: React.FC<MultipleImageUploadProps> = ({
                   PNG, JPG, GIF, WEBP up to {maxSize}MB
                 </p>
                 <p className="text-xs mt-1">
-                  {currentImages.length} of {maxImages} images uploaded
+                  {images.length} of {maxImages} images uploaded
                 </p>
               </div>
               <Upload className="mx-auto h-6 w-6 text-gray-400 mt-2" />
@@ -183,12 +194,12 @@ const MultipleImageUpload: React.FC<MultipleImageUploadProps> = ({
       )}
 
       {/* Image Gallery */}
-      {currentImages.length > 0 && (
+      {images.length > 0 && (
         <div className="space-y-4">
-          <h4 className="text-sm font-medium text-gray-700">Event Images ({currentImages.length})</h4>
+          <h4 className="text-sm font-medium text-gray-700">Event Images ({images.length})</h4>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {currentImages.map((image, index) => (
-              <div key={index} className="relative group border border-gray-200 rounded-lg overflow-hidden">
+            {images.map((image, index) => (
+              <div key={image._id || index} className="relative group border border-gray-200 rounded-lg overflow-hidden">
                 <img
                   src={image.url}
                   alt={`Event image ${index + 1}`}
@@ -204,11 +215,21 @@ const MultipleImageUpload: React.FC<MultipleImageUploadProps> = ({
                   </div>
                 )}
 
+                {/* Existing Image Indicator */}
+                {image._id && (
+                  <div className="absolute top-2 right-8">
+                    <span className="px-2 py-1 bg-green-500 text-white text-xs font-semibold rounded-full">
+                      Existing
+                    </span>
+                  </div>
+                )}
+
                 {/* Remove Button */}
                 <button
                   onClick={() => handleRemove(index)}
                   className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 transition-all duration-200"
                   disabled={disabled}
+                  title="Remove image"
                 >
                   <X className="h-3 w-3" />
                 </button>
@@ -219,6 +240,7 @@ const MultipleImageUpload: React.FC<MultipleImageUploadProps> = ({
                     onClick={() => handleSetPrimary(index)}
                     className="absolute bottom-2 left-2 opacity-0 group-hover:opacity-100 bg-blue-500 text-white px-2 py-1 rounded text-xs hover:bg-blue-600 transition-all duration-200"
                     disabled={disabled}
+                    title="Set as primary image"
                   >
                     Set Primary
                   </button>

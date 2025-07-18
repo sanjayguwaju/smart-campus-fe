@@ -3,7 +3,7 @@ import { useForm, Controller } from 'react-hook-form';
 import Select, { StylesConfig } from 'react-select';
 import { useUpdateEvent } from '../../../api/hooks/useEvents';
 import { Event, CreateEventRequest } from '../../../api/types/events';
-import ImageUpload from '../../common/ImageUpload';
+import MultipleImageUpload from '../../common/MultipleImageUpload';
 import { isoToDateInput, dateInputToIso } from '../../../utils/dateUtils';
 
 interface EditEventModalProps {
@@ -15,6 +15,13 @@ interface EditEventModalProps {
 interface SelectOption {
   value: string;
   label: string;
+}
+
+interface ImageItem {
+  _id?: string;
+  url: string;
+  caption?: string;
+  isPrimary: boolean;
 }
 
 interface FormData {
@@ -55,6 +62,7 @@ interface FormData {
     url: string;
   }>;
   imageUrl: string;
+  images: ImageItem[];
 }
 
 const EditEventModal: React.FC<EditEventModalProps> = ({ isOpen, onClose, event }) => {
@@ -135,7 +143,8 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ isOpen, onClose, event 
       requirements: [],
       benefits: [],
       externalLinks: [],
-      imageUrl: ''
+      imageUrl: '',
+      images: []
     }
   });
 
@@ -143,6 +152,23 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ isOpen, onClose, event 
 
   useEffect(() => {
     if (event) {
+      // Process images to ensure proper structure
+      let processedImages = event.images || [];
+      
+      // If there's an imageUrl but no images array, create one
+      if (event.imageUrl && (!event.images || event.images.length === 0)) {
+        processedImages = [{
+          url: event.imageUrl,
+          caption: '',
+          isPrimary: true
+        }];
+      }
+      
+      // Ensure at least one image is marked as primary
+      if (processedImages.length > 0 && !processedImages.some(img => img.isPrimary)) {
+        processedImages[0].isPrimary = true;
+      }
+      
       reset({
         title: event.title,
         description: event.description,
@@ -177,7 +203,8 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ isOpen, onClose, event 
         requirements: event.requirements,
         benefits: event.benefits,
         externalLinks: event.externalLinks,
-        imageUrl: event.imageUrl || ''
+        imageUrl: event.imageUrl || '',
+        images: processedImages
       });
     }
   }, [event, reset]);
@@ -186,8 +213,13 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ isOpen, onClose, event 
     if (!event) return;
     
     try {
+      // Set the primary image URL to imageUrl field for backward compatibility
+      const primaryImage = data.images.find(img => img.isPrimary);
+      const imageUrl = primaryImage ? primaryImage.url : '';
+      
       const payload = { 
         ...data,
+        imageUrl,
         startDate: dateInputToIso(data.startDate),
         endDate: dateInputToIso(data.endDate)
       };
@@ -436,7 +468,7 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ isOpen, onClose, event 
               </div>
             </div>
 
-            {/* Event Image Section */}
+            {/* Event Images Section */}
             <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
               <div className="flex items-center mb-6">
                 <div className="h-8 w-8 rounded-full bg-purple-100 flex items-center justify-center mr-3">
@@ -444,17 +476,16 @@ const EditEventModal: React.FC<EditEventModalProps> = ({ isOpen, onClose, event 
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900">Event Image</h3>
+                <h3 className="text-lg font-semibold text-gray-900">Event Images</h3>
               </div>
               
               <Controller
-                name="imageUrl"
+                name="images"
                 control={control}
                 render={({ field }) => (
-                  <ImageUpload
-                    onImageUpload={(url) => field.onChange(url)}
-                    onImageRemove={() => field.onChange('')}
-                    currentImage={field.value}
+                  <MultipleImageUpload
+                    onImagesChange={(images) => field.onChange(images)}
+                    currentImages={field.value}
                     maxSize={5}
                     className="max-w-md"
                   />

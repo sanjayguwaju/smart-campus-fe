@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Upload, X, Image as ImageIcon } from 'lucide-react';
 import { uploadToCloudinary } from '../../api/config/cloudinary';
 import { toast } from 'react-hot-toast';
@@ -26,6 +26,11 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
   const [dragActive, setDragActive] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(currentImage || null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Update preview when currentImage changes
+  useEffect(() => {
+    setPreviewUrl(currentImage || null);
+  }, [currentImage]);
 
   const handleFile = async (file: File) => {
     // Validate file type
@@ -57,7 +62,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
     } catch (error) {
       console.error('Upload error:', error);
       toast.error('Failed to upload image. Please try again.');
-      setPreviewUrl(null);
+      setPreviewUrl(currentImage || null); // Revert to current image on error
     } finally {
       setIsUploading(false);
     }
@@ -96,6 +101,8 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
       fileInputRef.current.value = '';
     }
     onImageRemove?.();
+    // Clear the current image by calling onImageUpload with empty string
+    onImageUpload('');
   };
 
   const openFileDialog = () => {
@@ -118,16 +125,35 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
           <img
             src={previewUrl}
             alt="Preview"
-            className="w-full h-48 object-cover rounded-lg border-2 border-gray-200"
+            className="w-full h-48 object-cover rounded-lg border-2 border-gray-200 cursor-pointer"
+            onClick={openFileDialog}
+            title="Click to change image"
           />
           <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200 rounded-lg flex items-center justify-center">
-            <button
-              onClick={handleRemove}
-              className="opacity-0 group-hover:opacity-100 bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-all duration-200"
-              disabled={disabled || isUploading}
-            >
-              <X className="h-4 w-4" />
-            </button>
+            <div className="opacity-0 group-hover:opacity-100 transition-all duration-200 flex items-center space-x-2">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  openFileDialog();
+                }}
+                className="bg-blue-500 text-white p-2 rounded-full hover:bg-blue-600 transition-all duration-200"
+                disabled={disabled || isUploading}
+                title="Change image"
+              >
+                <Upload className="h-4 w-4" />
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleRemove();
+                }}
+                className="bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-all duration-200"
+                disabled={disabled || isUploading}
+                title="Remove image"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
           </div>
           {isUploading && (
             <div className="absolute inset-0 bg-black bg-opacity-50 rounded-lg flex items-center justify-center">
@@ -135,6 +161,12 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-2"></div>
                 <p className="text-sm">Uploading...</p>
               </div>
+            </div>
+          )}
+          {/* Show indicator for existing image */}
+          {currentImage && previewUrl === currentImage && (
+            <div className="absolute top-2 left-2 bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
+              Current Image
             </div>
           )}
         </div>
