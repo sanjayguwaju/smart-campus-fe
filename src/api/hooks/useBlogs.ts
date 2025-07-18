@@ -1,10 +1,22 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import * as blogService from '../services/blogService';
 
-export const useBlogs = () => {
+export const useBlogs = (params?: {
+  page?: number;
+  limit?: number;
+  search?: string;
+  status?: string;
+  author?: string;
+  tags?: string;
+}) => {
   const queryClient = useQueryClient();
 
-  const blogsQuery = useQuery({ queryKey: ['blogs'], queryFn: blogService.getBlogs });
+  const blogsQuery = useQuery({
+    queryKey: ['blogs', params],
+    queryFn: () => blogService.getBlogs(params),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchInterval: 2000, // Poll every 2 seconds for live updates
+  });
 
   const createBlog = useMutation({
     mutationFn: blogService.createBlog,

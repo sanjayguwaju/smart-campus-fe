@@ -17,7 +17,25 @@ export interface BlogPost {
   updatedAt?: string;
 }
 
-export const getBlogs = () => apiClient.get('/blogs');
+export const getBlogs = (params?: {
+  page?: number;
+  limit?: number;
+  search?: string;
+  status?: string;
+  author?: string;
+  tags?: string;
+}) => {
+  let url = '/blogs';
+  const query: string[] = [];
+  if (params?.page) query.push(`page=${params.page}`);
+  if (params?.limit) query.push(`limit=${params.limit}`);
+  if (params?.search) query.push(`search=${encodeURIComponent(params.search)}`);
+  if (params?.status) query.push(`status=${encodeURIComponent(params.status)}`);
+  if (params?.author) query.push(`author=${encodeURIComponent(params.author)}`);
+  if (params?.tags) query.push(`tags=${encodeURIComponent(params.tags)}`);
+  if (query.length) url += `?${query.join('&')}`;
+  return apiClient.get(url);
+};
 export const getBlogById = (id: string) => apiClient.get(`/blogs/${id}`);
 export const createBlog = (data: FormData) => apiClient.post('/blogs', data, { headers: { 'Content-Type': 'multipart/form-data' } });
 export const updateBlog = (id: string, data: FormData) => apiClient.put(`/blogs/${id}`, data, { headers: { 'Content-Type': 'multipart/form-data' } });

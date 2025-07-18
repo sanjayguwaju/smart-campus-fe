@@ -12,9 +12,11 @@ import {
   BlogsFilterDrawer 
 } from '../../components/Admin/Blogs';
 import { updateBlog } from '../../api/services/blogService';
+import { useQueryClient } from '@tanstack/react-query';
 
 const AdminBlog: React.FC = () => {
   const { blogsQuery } = useBlogs();
+  const queryClient = useQueryClient();
   
   // Modal states
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -77,7 +79,7 @@ const AdminBlog: React.FC = () => {
       formData.append('status', 'published');
       await updateBlog(post._id!, formData);
       toast.success('Blog published');
-      blogsQuery.refetch();
+      queryClient.invalidateQueries({ queryKey: ['blogs'] });
     } catch (error) {
       toast.error('Failed to publish blog');
     }
@@ -89,7 +91,7 @@ const AdminBlog: React.FC = () => {
       formData.append('status', 'draft');
       await updateBlog(post._id!, formData);
       toast.success('Blog unpublished');
-      blogsQuery.refetch();
+      queryClient.invalidateQueries({ queryKey: ['blogs'] });
     } catch (error) {
       toast.error('Failed to unpublish blog');
     }
