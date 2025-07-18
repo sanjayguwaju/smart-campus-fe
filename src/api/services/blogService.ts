@@ -9,7 +9,8 @@ export interface BlogPost {
   content: string;
   summary: string;
   tags: string[];
-  published: boolean;
+  isPublished: boolean;
+  status?: 'draft' | 'published' | 'archived';
   credits?: string;
   attachments?: string[];
   createdAt?: string;

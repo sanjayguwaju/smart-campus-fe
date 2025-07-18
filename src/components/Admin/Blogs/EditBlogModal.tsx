@@ -22,7 +22,8 @@ const EditBlogModal: React.FC<EditBlogModalProps> = ({ isOpen, onClose, blog }) 
     content: '',
     summary: '',
     tags: [],
-    published: false,
+    isPublished: false,
+    status: 'draft',
     credits: '',
     attachments: []
   });
@@ -40,7 +41,7 @@ const EditBlogModal: React.FC<EditBlogModalProps> = ({ isOpen, onClose, blog }) 
         content: blog.content || '',
         summary: blog.summary || '',
         tags: blog.tags || [],
-        published: blog.published || false,
+        isPublished: blog.isPublished || false,
         credits: blog.credits || '',
         attachments: blog.attachments || []
       });
@@ -98,7 +99,7 @@ const EditBlogModal: React.FC<EditBlogModalProps> = ({ isOpen, onClose, blog }) 
       formDataToSend.append('author', formData.author || '');
       formDataToSend.append('content', formData.content || '');
       formDataToSend.append('summary', formData.summary || '');
-      formDataToSend.append('published', formData.published?.toString() || 'false');
+      formDataToSend.append('isPublished', formData.isPublished?.toString() || 'false');
       formDataToSend.append('tags', JSON.stringify(formData.tags || []));
       
       if (formData.coverImage) {
@@ -199,6 +200,24 @@ const EditBlogModal: React.FC<EditBlogModalProps> = ({ isOpen, onClose, blog }) 
                   />
                 </div>
               </div>
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                <select
+                  value={formData.status || 'draft'}
+                  onChange={e => {
+                    const value = e.target.value;
+                    setFormData(prev => ({
+                      ...prev,
+                      status: value as 'published' | 'draft' | 'archived',
+                      isPublished: value === 'published'
+                    }));
+                  }}
+                  className="w-full border rounded px-3 py-2"
+                >
+                  <option value="draft">Draft</option>
+                  <option value="published">Published</option>
+                </select>
+              </div>
             </div>
 
             {/* Summary and Cover Image Section */}
@@ -287,7 +306,7 @@ const EditBlogModal: React.FC<EditBlogModalProps> = ({ isOpen, onClose, blog }) 
                     <input
                       type="checkbox"
                       name="published"
-                      checked={formData.published}
+                      checked={formData.isPublished}
                       onChange={handleCheckboxChange}
                       className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                     />
