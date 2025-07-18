@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Program } from '../../../api/types/programs';
+import React, { useState, useEffect, useRef } from 'react';
+import { Program, ProgramPayload } from '../../../api/types/programs';
 import Select, { StylesConfig } from 'react-select';
 import { useDepartments } from '../../../api/hooks/useDepartments';
 import MultipleImageUpload from '../../common/MultipleImageUpload';
@@ -9,7 +9,7 @@ interface EditProgramModalProps {
   isOpen: boolean;
   onClose: () => void;
   program: Program | null;
-  onEdit: (id: string, data: Partial<Program>) => void;
+  onEdit: (id: string, data: ProgramPayload) => void;
 }
 
 const statusOptions = [
@@ -52,18 +52,41 @@ const selectStyles: StylesConfig<{ value: string; label: string }> = {
 };
 
 const EditProgramModal: React.FC<EditProgramModalProps> = ({ isOpen, onClose, program, onEdit }) => {
-  const [form, setForm] = useState<Partial<Program>>({});
+  const [form, setForm] = useState<ProgramPayload>({
+    name: '',
+    department: '',
+    level: 'Undergraduate',
+    semesters: 1,
+    duration: '',
+    description: '',
+    prerequisites: [''],
+    image: '',
+    brochureUrl: '',
+    status: 'draft',
+    isPublished: false,
+  });
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [serverError, setServerError] = useState<string | null>(null);
-  const [images, setImages] = useState<any[]>(form.image ? [{ url: form.image, isPrimary: true }] : []);
+  const [images, setImages] = useState<any[]>([]);
+  const lastProgramId = useRef<string | null>(null);
 
   useEffect(() => {
-    if (program) {
+    if (program && program._id !== lastProgramId.current) {
       setForm({
-        ...program,
-        level: program.level === 'undergraduate' ? 'Undergraduate' : program.level === 'postgraduate' ? 'Postgraduate' : program.level
+        name: program.name,
+        department: typeof program.department === 'object' && program.department !== null ? program.department._id : (program.department || ''),
+        level: program.level === 'undergraduate' ? 'Undergraduate' : program.level === 'postgraduate' ? 'Postgraduate' : program.level,
+        semesters: program.semesters,
+        duration: program.duration,
+        description: program.description,
+        prerequisites: program.prerequisites || [''],
+        image: program.image || '',
+        brochureUrl: program.brochureUrl || '',
+        status: program.status,
+        isPublished: program.isPublished,
       });
       setImages(program.image ? [{ url: program.image, isPrimary: true }] : []);
+      lastProgramId.current = program._id;
     }
   }, [program]);
 
@@ -106,8 +129,13 @@ const EditProgramModal: React.FC<EditProgramModalProps> = ({ isOpen, onClose, pr
     e.preventDefault();
     setServerError(null);
     if (!validate() || !program) return;
+    const selectedDepartment = departments.find(dep => dep._id === form.department);
+    if (!selectedDepartment) {
+      setErrors(prev => ({ ...prev, department: 'Please select a valid department.' }));
+      return;
+    }
     try {
-      await onEdit(program._id, { ...form, image: images[0]?.url || '', prerequisites: (form.prerequisites || []).filter((p) => p.trim()) });
+      await onEdit(program._id, { ...form, department: selectedDepartment._id, image: images[0]?.url || '', prerequisites: (form.prerequisites || []).filter((p) => p.trim()) });
     } catch (err: any) {
       setServerError(err?.response?.data?.message || 'Failed to edit program');
     }
@@ -144,6 +172,7 @@ const EditProgramModal: React.FC<EditProgramModalProps> = ({ isOpen, onClose, pr
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6">
           <form onSubmit={handleSubmit} className="space-y-8">
+            {serverError && <div className="text-red-600 text-sm mb-2">{serverError}</div>}
             {/* Basic Information Section */}
             <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
               <div className="flex items-center mb-6">
@@ -162,7 +191,7 @@ const EditProgramModal: React.FC<EditProgramModalProps> = ({ isOpen, onClose, pr
                   <label className="block text-sm font-medium">Department</label>
                   <select
                     name="department"
-                    value={form.department}
+                    value={form.department || ''}
                     onChange={handleChange}
                     className="w-full border rounded px-3 py-2"
                     required

@@ -5,7 +5,7 @@ import {
   UseQueryOptions,
 } from "@tanstack/react-query";
 import { programService, ProgramsResponse } from "../services/programService";
-import { Program } from "../types/programs";
+import { Program, ProgramPayload } from "../types/programs";
 
 export const usePrograms = (
   page = 1,
@@ -60,7 +60,7 @@ export const useCreateProgram = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (programData: Partial<Program>) =>
+    mutationFn: (programData: ProgramPayload) =>
       programService.createProgram(programData),
     onSuccess: () => {
       // Invalidate and refetch programs list
@@ -78,7 +78,7 @@ export const useUpdateProgram = () => {
       programData,
     }: {
       id: string;
-      programData: Partial<Program>;
+      programData: ProgramPayload;
     }) => programService.updateProgram(id, programData),
     onSuccess: (data, variables) => {
       // Update specific program in cache

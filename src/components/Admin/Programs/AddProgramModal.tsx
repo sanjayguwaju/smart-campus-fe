@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Program } from '../../../api/types/programs';
+import { ProgramPayload } from '../../../api/types/programs';
 import Select, { StylesConfig } from 'react-select';
 import { useDepartments } from '../../../api/hooks/useDepartments';
 import MultipleImageUpload from '../../common/MultipleImageUpload';
@@ -8,7 +8,7 @@ import { GraduationCap } from 'lucide-react';
 interface AddProgramModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAdd: (data: Omit<Program, '_id' | 'createdAt' | 'updatedAt'>) => void;
+  onAdd: (data: ProgramPayload) => void;
 }
 
 const statusOptions = [
@@ -50,23 +50,7 @@ const selectStyles: StylesConfig<{ value: string; label: string }> = {
   })
 };
 
-// Add this type for the form
-interface ProgramForm {
-  name: string;
-  department: string;
-  level: 'Undergraduate' | 'Postgraduate';
-  semesters: number;
-  duration: string;
-  description: string;
-  prerequisites: string[];
-  image?: string;
-  brochureUrl?: string;
-  isPublished: boolean;
-  status: string;
-}
-
-// Use ProgramForm for form state
-const initialState: ProgramForm = {
+const initialState: ProgramPayload = {
   name: '',
   department: '',
   level: 'Undergraduate',
@@ -81,7 +65,7 @@ const initialState: ProgramForm = {
 };
 
 const AddProgramModal: React.FC<AddProgramModalProps> = ({ isOpen, onClose, onAdd }) => {
-  const [form, setForm] = useState<ProgramForm>(initialState);
+  const [form, setForm] = useState<ProgramPayload>(initialState);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [serverError, setServerError] = useState<string | null>(null);
   const [images, setImages] = useState<any[]>(form.image ? [{ url: form.image, isPrimary: true }] : []);
@@ -136,7 +120,7 @@ const AddProgramModal: React.FC<AddProgramModalProps> = ({ isOpen, onClose, onAd
     try {
       await onAdd({
         ...form,
-        department: selectedDepartment,
+        department: selectedDepartment._id,
         image: images[0]?.url || '',
       });
       setForm(initialState);
