@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useBlogs } from '../../api/hooks/useBlogs';
 import { BlogPost } from '../../api/services/blogService';
 import { Eye, Pencil, Trash2, Filter, Search, Plus } from 'lucide-react';
+import Select, { StylesConfig } from 'react-select';
 import { 
   ViewBlogModal, 
   AddBlogModal, 
@@ -30,6 +31,7 @@ const AdminBlog: React.FC = () => {
     author: '',
     status: '',
     tags: '',
+    searchTerm: '',
     dateRange: '',
     featured: '',
   });
@@ -58,11 +60,53 @@ const AdminBlog: React.FC = () => {
       author: '',
       status: '',
       tags: '',
+      searchTerm: '',
       dateRange: '',
       featured: '',
     });
     setSearchTerm('');
   };
+
+  // Custom styles for react-select
+  const selectStyles: StylesConfig<{ value: string; label: string }> = {
+    control: (provided, state) => ({
+      ...provided,
+      minHeight: '40px',
+      border: state.isFocused ? '2px solid #3b82f6' : '1px solid #e5e7eb',
+      borderRadius: '8px',
+      boxShadow: state.isFocused ? '0 0 0 2px rgba(59, 130, 246, 0.1)' : 'none',
+      '&:hover': {
+        border: '1px solid #d1d5db'
+      }
+    }),
+    option: (provided, state) => ({
+      ...provided,
+      backgroundColor: state.isSelected ? '#3b82f6' : state.isFocused ? '#f3f4f6' : 'white',
+      color: state.isSelected ? 'white' : '#374151',
+      '&:hover': {
+        backgroundColor: state.isSelected ? '#3b82f6' : '#f3f4f6'
+      }
+    }),
+    menu: (provided) => ({
+      ...provided,
+      borderRadius: '8px',
+      boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'
+    }),
+    placeholder: (provided) => ({
+      ...provided,
+      color: '#9ca3af'
+    }),
+    singleValue: (provided) => ({
+      ...provided,
+      color: '#374151'
+    })
+  };
+
+  const statusOptions = [
+    { value: '', label: 'All Statuses' },
+    { value: 'published', label: 'Published' },
+    { value: 'draft', label: 'Draft' },
+  ];
 
   const posts = Array.isArray(blogsQuery.data?.data?.data) ? blogsQuery.data.data.data : [];
   const isLoading = blogsQuery.isLoading;
@@ -112,15 +156,17 @@ const AdminBlog: React.FC = () => {
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
-          <select
-            value={filters.status}
-            onChange={e => setFilters(prev => ({ ...prev, status: e.target.value }))}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            <option value="">All Statuses</option>
-            <option value="published">Published</option>
-            <option value="draft">Draft</option>
-          </select>
+          <Select<{ value: string; label: string }>
+            options={statusOptions}
+            value={statusOptions.find(option => option.value === filters.status) || null}
+            onChange={(selectedOption) => 
+              setFilters(prev => ({ ...prev, status: selectedOption?.value || '' }))
+            }
+            styles={selectStyles}
+            placeholder="All Statuses"
+            isClearable
+            className="min-w-[150px]"
+          />
           <button 
             onClick={() => setIsFilterDrawerOpen(true)}
             className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center"
