@@ -22,10 +22,11 @@ const AdminLayout: React.FC = () => {
     { name: 'Dashboard', href: '/admin', icon: Home },
     { name: 'Users', href: '/admin/users', icon: Users },
     { name: 'Departments', href: '/admin/departments', icon: Building },
-    { name: 'Courses', href: '/admin/courses', icon: BookOpen },
+    { name: 'Programs', href: '/admin/programs', icon: GraduationCap },
+    // Courses is now a child of Programs
+    { name: 'Courses', href: '/admin/courses', icon: BookOpen, child: true },
     { name: 'Events', href: '/admin/events', icon: Calendar },
     { name: 'Notices', href: '/admin/notices', icon: FileText },
-    { name: 'Programs', href: '/admin/programs', icon: GraduationCap },
     { name: 'Blog', href: '/admin/blog', icon: FileText },
     { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
     { name: 'Settings', href: '/admin/settings', icon: Settings },
@@ -47,7 +48,7 @@ const AdminLayout: React.FC = () => {
               <li key={item.name}>
                 <Link
                   to={item.href}
-                  className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors ${isActive(item.href)
+                  className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors ${item.child ? 'pl-8' : ''} ${isActive(item.href)
                       ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
                       : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                     }`}
