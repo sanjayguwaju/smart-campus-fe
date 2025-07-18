@@ -277,6 +277,9 @@ const Programs: React.FC = () => {
                       </button>
                     </div>
                   </div>
+                  <div className="text-xs text-gray-500 mt-4">
+                    Created by {program.createdBy ? `${program.createdBy.firstName} ${program.createdBy.lastName}` : 'Unknown'}
+                  </div>
                 </div>
               </div>
             ))}
