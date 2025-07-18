@@ -16,4 +16,18 @@ export interface Program {
   status: string;
   createdAt?: string;
   updatedAt?: string;
+}
+
+export interface ProgramPayload {
+  name: string;
+  department: string; // Only the _id
+  level: string;
+  duration: string;
+  semesters: number;
+  description: string;
+  prerequisites: string[];
+  image?: string;
+  brochureUrl?: string;
+  isPublished: boolean;
+  status: string;
 } 

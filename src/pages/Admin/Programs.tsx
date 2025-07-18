@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Search, Edit, Trash2, Filter, GraduationCap, Clock, BookOpen } from 'lucide-react';
 import { usePrograms, useCreateProgram, useUpdateProgram, useDeleteProgram, usePublishProgram, useUnpublishProgram } from '../../api/hooks/usePrograms';
 import { useDepartments } from '../../api/hooks/useDepartments';
-import { Program } from '../../api/types/programs';
+import { Program, ProgramPayload } from '../../api/types/programs';
 import { AddProgramModal, EditProgramModal, DeleteProgramModal, ProgramsFilterDrawer } from '../../components/Admin/Programs';
 import LoadingSpinner from '../../components/Layout/LoadingSpinner';
 
@@ -64,7 +64,7 @@ const Programs: React.FC = () => {
     setDeletingProgram({ id: program._id, name: program.name });
   };
 
-  const handleAdd = (data: Omit<Program, '_id' | 'createdAt' | 'updatedAt'>) => {
+  const handleAdd = (data: ProgramPayload) => {
     createProgramMutation.mutate(data, {
       onSuccess: () => {
         setIsAddModalOpen(false);
@@ -72,7 +72,7 @@ const Programs: React.FC = () => {
     });
   };
 
-  const handleEditSubmit = (id: string, data: Partial<Program>) => {
+  const handleEditSubmit = (id: string, data: ProgramPayload) => {
     updateProgramMutation.mutate({ id, programData: data }, {
       onSuccess: () => {
         setEditingProgram(null);

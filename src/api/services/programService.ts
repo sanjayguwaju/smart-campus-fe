@@ -1,5 +1,5 @@
 import { apiClient } from "../config/axios";
-import { Program } from "../types/programs";
+import { Program, ProgramPayload } from "../types/programs";
 
 export interface ProgramsResponse {
   success: boolean;
@@ -56,7 +56,7 @@ export const programService = {
     const response = await apiClient.get<ProgramResponse>(`/programs/${id}`);
     return response.data;
   },
-  async createProgram(data: Partial<Program>): Promise<CreateProgramResponse> {
+  async createProgram(data: ProgramPayload): Promise<CreateProgramResponse> {
     const response = await apiClient.post<CreateProgramResponse>(
       "/programs",
       data
@@ -65,7 +65,7 @@ export const programService = {
   },
   async updateProgram(
     id: string,
-    data: Partial<Program>
+    data: ProgramPayload
   ): Promise<ProgramResponse> {
     const response = await apiClient.put<ProgramResponse>(
       `/programs/${id}`,
