@@ -56,11 +56,16 @@ export const departmentService = {
   },
 
   async deleteDepartment(id: string): Promise<{ success: boolean; message: string }> {
-    const response = await apiClient.delete<{
-      success: boolean;
-      message: string;
-    }>(`/departments/${id}`);
-    return response.data;
+    try {
+      const response = await apiClient.delete<{
+        success: boolean;
+        message: string;
+      }>(`/departments/${id}`);
+      return response.data;
+    } catch (error: any) {
+      // Pass the backend error message up to the UI
+      throw error.response?.data?.message || 'Failed to delete department';
+    }
   },
 
   async activateDepartment(
