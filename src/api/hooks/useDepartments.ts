@@ -8,7 +8,7 @@ export const useDepartments = (
   search?: string,
   filters?: {
     status?: string;
-    headOfDepartment?: string;
+    name?: string;
     dateRange?: string;
   }
 ) => {

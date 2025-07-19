@@ -19,9 +19,9 @@ const AddDepartmentModal: React.FC<AddDepartmentModalProps> = ({ isOpen, onClose
   } = useForm<CreateDepartmentRequest>({
     defaultValues: {
       name: '',
-      code: '',
+ 
       description: '',
-      headOfDepartment: ''
+      
     }
   });
 
@@ -77,7 +77,7 @@ const AddDepartmentModal: React.FC<AddDepartmentModalProps> = ({ isOpen, onClose
                 <h3 className="text-lg font-semibold text-gray-900">Basic Information</h3>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Department Name *
@@ -102,29 +102,7 @@ const AddDepartmentModal: React.FC<AddDepartmentModalProps> = ({ isOpen, onClose
                   )}
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Department Code *
-                  </label>
-                  <Controller
-                    name="code"
-                    control={control}
-                    rules={{ required: 'Department code is required' }}
-                    render={({ field }) => (
-                      <input
-                        {...field}
-                        type="text"
-                        className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 ${
-                          errors.code ? 'border-red-300' : 'border-gray-200'
-                        }`}
-                        placeholder="e.g., CS"
-                      />
-                    )}
-                  />
-                  {errors.code && (
-                    <p className="mt-1 text-sm text-red-600">{errors.code.message}</p>
-                  )}
-                </div>
+                
               </div>
             </div>
 
@@ -153,35 +131,7 @@ const AddDepartmentModal: React.FC<AddDepartmentModalProps> = ({ isOpen, onClose
               />
             </div>
 
-            {/* Leadership Section */}
-            <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
-              <div className="flex items-center mb-6">
-                <div className="h-8 w-8 rounded-full bg-purple-100 flex items-center justify-center mr-3">
-                  <svg className="h-4 w-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                </div>
-                <h3 className="text-lg font-semibold text-gray-900">Leadership</h3>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Head of Department
-                </label>
-                <Controller
-                  name="headOfDepartment"
-                  control={control}
-                  render={({ field }) => (
-                    <input
-                      {...field}
-                      type="text"
-                      className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
-                      placeholder="Enter head of department name"
-                    />
-                  )}
-                />
-              </div>
-            </div>
+            
 
             {/* Form Actions */}
             <div className="flex justify-end space-x-4 pt-8 border-t border-gray-100">
