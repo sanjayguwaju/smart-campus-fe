@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useBlogs } from '../../api/hooks/useBlogs';
 import { BlogPost } from '../../api/services/blogService';
 import { Eye, Pencil, Trash2, Filter, Search, Plus } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 import Select, { StylesConfig } from 'react-select';
 import { 
   ViewBlogModal, 
@@ -12,7 +13,7 @@ import {
 } from '../../components/Admin/Blogs';
 
 const AdminBlog: React.FC = () => {
-  const { blogsQuery } = useBlogs();
+  const { blogsQuery, publishBlog, unpublishBlog } = useBlogs();
   
   // Modal states
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -49,6 +50,26 @@ const AdminBlog: React.FC = () => {
   const handleDelete = (blog: BlogPost) => {
     setBlogToDelete({ id: blog._id!, title: blog.title });
     setIsDeleteModalOpen(true);
+  };
+
+  const handlePublish = async (blog: BlogPost) => {
+    try {
+      await publishBlog.mutateAsync(blog._id!);
+      toast.success('Blog published successfully');
+    } catch (error) {
+      console.error('Failed to publish blog:', error);
+      toast.error('Failed to publish blog. Please try again.');
+    }
+  };
+
+  const handleUnpublish = async (blog: BlogPost) => {
+    try {
+      await unpublishBlog.mutateAsync(blog._id!);
+      toast.success('Blog unpublished successfully');
+    } catch (error) {
+      console.error('Failed to unpublish blog:', error);
+      toast.error('Failed to unpublish blog. Please try again.');
+    }
   };
 
   const handleApplyFilters = (newFilters: typeof filters) => {
@@ -108,7 +129,7 @@ const AdminBlog: React.FC = () => {
     { value: 'draft', label: 'Draft' },
   ];
 
-  const posts = Array.isArray(blogsQuery.data?.data?.data) ? blogsQuery.data.data.data : [];
+  const posts = Array.isArray(blogsQuery.data) ? blogsQuery.data : [];
   const isLoading = blogsQuery.isLoading;
 
   const filteredPosts = posts.filter((post: BlogPost) => {
@@ -121,13 +142,15 @@ const AdminBlog: React.FC = () => {
     
     const matchesAuthor = !filters.author || post.author.toLowerCase().includes(filters.author.toLowerCase());
     const matchesStatus = !filters.status || 
-      (filters.status === 'published' && post.published) ||
-      (filters.status === 'draft' && !post.published);
+      (filters.status === 'published' && post.isPublished) ||
+      (filters.status === 'draft' && !post.isPublished);
     const matchesTags = !filters.tags || 
       (post.tags && post.tags.some(tag => tag.toLowerCase().includes(filters.tags.toLowerCase())));
     
     return matchesSearch && matchesAuthor && matchesStatus && matchesTags;
   });
+
+
 
   return (
     <div className="space-y-8">
@@ -183,6 +206,11 @@ const AdminBlog: React.FC = () => {
         </div>
       ) : blogsQuery.error ? (
         <div className="text-red-600 text-center py-12">Error loading blogs.</div>
+      ) : filteredPosts.length === 0 ? (
+        <div className="text-center py-12">
+          <h3 className="text-xl font-semibold text-gray-900 mb-2">No blog posts found</h3>
+          <p className="text-gray-600">Try adjusting your search or filter criteria, or create a new blog post.</p>
+        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredPosts.map((post: BlogPost) => (
@@ -205,17 +233,40 @@ const AdminBlog: React.FC = () => {
                 <p className="text-sm text-gray-600 mb-4 line-clamp-3">
                   {post.summary}
                 </p>
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-xs text-gray-500">{post.author}</span>
-                  {post.published ? (
-                    <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full">
-                      Published
-                    </span>
-                  ) : (
-                    <span className="bg-gray-100 text-gray-700 text-xs px-2 py-0.5 rounded-full">
-                      Draft
-                    </span>
-                  )}
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-500">{post.author}</span>
+                    {post.isPublished ? (
+                      <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full">
+                        Published
+                      </span>
+                    ) : (
+                      <span className="bg-gray-100 text-gray-700 text-xs px-2 py-0.5 rounded-full">
+                        Draft
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex gap-1">
+                    {!post.isPublished ? (
+                      <button
+                        onClick={() => handlePublish(post)}
+                        disabled={publishBlog.isPending}
+                        className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed px-2 py-1 rounded text-xs font-medium text-white transition-colors"
+                        title="Publish Blog"
+                      >
+                        Publish
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleUnpublish(post)}
+                        disabled={unpublishBlog.isPending}
+                        className="bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed px-2 py-1 rounded text-xs font-medium text-white transition-colors"
+                        title="Unpublish Blog"
+                      >
+                        Unpublish
+                      </button>
+                    )}
+                  </div>
                 </div>
                 {post.tags && post.tags.length > 0 && (
                   <div className="flex flex-wrap gap-1 mb-4">

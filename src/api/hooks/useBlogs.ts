@@ -4,7 +4,13 @@ import * as blogService from '../services/blogService';
 export const useBlogs = () => {
   const queryClient = useQueryClient();
 
-  const blogsQuery = useQuery({ queryKey: ['blogs'], queryFn: blogService.getBlogs });
+  const blogsQuery = useQuery({ 
+    queryKey: ['blogs'], 
+    queryFn: async () => {
+      const response = await blogService.getBlogs();
+      return response.data.data; // Access the nested data array
+    }
+  });
 
   const createBlog = useMutation({
     mutationFn: blogService.createBlog,
@@ -21,5 +27,15 @@ export const useBlogs = () => {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['blogs'] })
   });
 
-  return { blogsQuery, createBlog, updateBlog, deleteBlog };
+  const publishBlog = useMutation({
+    mutationFn: blogService.publishBlog,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['blogs'] })
+  });
+
+  const unpublishBlog = useMutation({
+    mutationFn: blogService.unpublishBlog,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['blogs'] })
+  });
+
+  return { blogsQuery, createBlog, updateBlog, deleteBlog, publishBlog, unpublishBlog };
 }; 
