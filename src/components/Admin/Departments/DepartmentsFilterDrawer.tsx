@@ -6,8 +6,6 @@ interface DepartmentsFilterDrawerProps {
   onClose: () => void;
   filters: {
     name?: string;
-    code?: string;
-    headOfDepartment?: string;
     status?: string;
   };
   setFilters: (filters: DepartmentsFilterDrawerProps['filters']) => void;
@@ -60,38 +58,7 @@ const DepartmentsFilterDrawer: React.FC<DepartmentsFilterDrawerProps> = ({ isOpe
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                   placeholder="Search by name"
                 />
-              </div>
-              
-              <div>
-                <label htmlFor="code" className="block text-sm font-medium text-gray-700 mb-2">
-                  Department Code
-                </label>
-                <input
-                  type="text"
-                  id="code"
-                  name="code"
-                  value={filters.code || ''}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                  placeholder="Search by code"
-                />
-              </div>
-              
-              <div>
-                <label htmlFor="headOfDepartment" className="block text-sm font-medium text-gray-700 mb-2">
-                  Head of Department
-                </label>
-                <input
-                  type="text"
-                  id="headOfDepartment"
-                  name="headOfDepartment"
-                  value={filters.headOfDepartment || ''}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                  placeholder="Search by head of department"
-                />
-              </div>
-              
+              </div>  
               <div>
                 <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-2">
                   Status
@@ -119,8 +86,6 @@ const DepartmentsFilterDrawer: React.FC<DepartmentsFilterDrawerProps> = ({ isOpe
                 onClick={() => {
                   setFilters({
                     name: '',
-                    code: '',
-                    headOfDepartment: '',
                     status: ''
                   });
                 }}

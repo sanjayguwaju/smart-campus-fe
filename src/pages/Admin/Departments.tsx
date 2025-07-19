@@ -28,8 +28,6 @@ const Departments: React.FC = () => {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [filters, setFilters] = useState({ 
     name: '', 
-    code: '', 
-    headOfDepartment: '', 
     status: '' 
   });
 
@@ -132,11 +130,9 @@ const Departments: React.FC = () => {
       : 'bg-red-100 text-red-800';
   };
 
-  const handleFiltersChange = (newFilters: { name?: string; code?: string; headOfDepartment?: string; status?: string }) => {
+  const handleFiltersChange = (newFilters: { name?: string;  status?: string }) => {
     setFilters({
       name: newFilters.name || '',
-      code: newFilters.code || '',
-      headOfDepartment: newFilters.headOfDepartment || '',
       status: newFilters.status || ''
     });
   };
