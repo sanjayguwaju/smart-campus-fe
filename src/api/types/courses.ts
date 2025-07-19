@@ -7,7 +7,15 @@ export interface CourseData {
   department: string;
   program: string;
   instructor?: string;
-  semester: string;
+  instructorName?: string;
+  faculty?: {
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    department?: string;
+  };
+  semester: number;
+  semesterTerm?: string;
   academicYear: string;
   maxStudents: number;
   enrolledStudents: number;
@@ -21,6 +29,7 @@ export interface CourseData {
   createdAt: string;
   updatedAt: string;
   id: string;
+  creditHours?: number;
 }
 
 export interface CreateCourseRequest {

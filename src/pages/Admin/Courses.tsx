@@ -396,16 +396,14 @@ const Courses: React.FC = () => {
                     }
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {typeof course.instructor === 'string'
-                      ? course.instructor
-                      : (
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        (course.instructor && (course.instructor as any).name) || (course.instructor && (course.instructor as any).fullName) || '-'
-                      )
-                    }
+                    {course.faculty && (course.faculty as any).firstName
+                      ? `${(course.faculty as any).firstName} ${(course.faculty as any).lastName}`
+                      : course.instructorName
+                        ? course.instructorName
+                        : '-'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {course.credits}
+                    {course.creditHours}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeColor(course.isActive)}`}>

@@ -333,31 +333,44 @@ const AddCourseModal: React.FC<AddCourseModalProps> = ({ isOpen, onClose }) => {
                   <Controller
                     name="semester"
                     control={control}
-                    rules={{ required: 'Semester is required' }}
+                    rules={{ required: 'Semester is required', min: { value: 1, message: 'Semester must be at least 1' }, max: { value: 12, message: 'Semester cannot be more than 12' } }}
                     render={({ field }) => (
-                      <Select<SelectOption>
-                        options={[
-                          { value: 'Fall', label: 'Fall' },
-                          { value: 'Spring', label: 'Spring' },
-                          { value: 'Summer', label: 'Summer' },
-                          { value: 'Winter', label: 'Winter' },
-                        ]}
-                        onChange={(selectedOption: SelectOption | null) => field.onChange(selectedOption?.value)}
-                        onBlur={field.onBlur}
-                        value={
-                          field.value
-                            ? { value: field.value, label: field.value }
-                            : null
-                        }
-                        placeholder="Select semester"
-                        styles={selectStyles}
-                        className="w-full"
+                      <input
+                        {...field}
+                        type="number"
+                        min={1}
+                        max={12}
+                        className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 ${errors.semester ? 'border-red-300' : 'border-gray-200'}`}
+                        placeholder="Semester (1-12)"
+                        onChange={e => field.onChange(Number(e.target.value))}
                       />
                     )}
                   />
                   {errors.semester && (
                     <p className="mt-1 text-sm text-red-600">{errors.semester.message}</p>
                   )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Semester Term (optional)
+                  </label>
+                  <Controller
+                    name="semesterTerm"
+                    control={control}
+                    render={({ field }) => (
+                      <select
+                        {...field}
+                        className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 border-gray-200"
+                      >
+                        <option value="">Select term (optional)</option>
+                        <option value="Fall">Fall</option>
+                        <option value="Spring">Spring</option>
+                        <option value="Summer">Summer</option>
+                        <option value="Winter">Winter</option>
+                      </select>
+                    )}
+                  />
                 </div>
 
                 <div>
