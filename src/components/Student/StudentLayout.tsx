@@ -11,6 +11,7 @@ import {
   Users,
   GraduationCap,
   LogOut,
+  Beaker,
 } from 'lucide-react';
 
 const StudentLayout: React.FC = () => {
@@ -20,11 +21,11 @@ const StudentLayout: React.FC = () => {
   const navigation = [
     { name: 'Dashboard', href: '/student', icon: Home },
     { name: 'My Courses', href: '/student/courses', icon: BookOpen },
+    { name: 'Course Selection', href: '/student/mock-students', icon: Beaker },
     { name: 'My Grades', href: '/student/grades', icon: Award },
     { name: 'Events', href: '/student/events', icon: Calendar },
     { name: 'Notices', href: '/student/notices', icon: FileText },
-    { name: 'Academic Calendar', href: '/student/calendar', icon: Clock },
-    { name: 'Student Services', href: '/student/services', icon: Users },
+    { name: 'Assignments', href: '/student/calendar', icon: Clock },
     { name: 'Programs', href: '/student/programs', icon: GraduationCap },
   ];
 
@@ -73,12 +74,12 @@ const StudentLayout: React.FC = () => {
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-3">
                 <div className="text-right">
-                  <p className="text-sm font-medium text-gray-900">{user?.name}</p>
-                  <p className="text-xs text-gray-500">Student ID: {user?.studentId}</p>
+                  <p className="text-sm font-medium text-gray-900">{user?.displayName || user?.fullName || 'Student'}</p>
+                  <p className="text-xs text-gray-500">Student ID: {user?.id || 'N/A'}</p>
                 </div>
                 <div className="h-8 w-8 rounded-full bg-green-500 flex items-center justify-center">
                   <span className="text-sm font-medium text-white">
-                    {user?.name?.charAt(0)}
+                    {(user?.displayName || user?.fullName || 'S').charAt(0)}
                   </span>
                 </div>
                 <button
