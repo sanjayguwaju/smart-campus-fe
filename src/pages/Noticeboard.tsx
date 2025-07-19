@@ -22,8 +22,8 @@ const Noticeboard: React.FC = () => {
     { value: 'announcement', label: 'Announcement' },
     { value: 'academic', label: 'Academic' },
     { value: 'administrative', label: 'Administrative' },
-    { value: 'event', label: 'event' },
-    { value: 'emergency', label: 'emergency' },
+    { value: 'event', label: 'Event' },
+    { value: 'emergency', label: 'Emergency' },
     { value: 'maintenance', label: 'Maintenance' },
     { value: 'other', label: 'Other' },
   ];
