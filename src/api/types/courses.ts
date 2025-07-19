@@ -28,6 +28,7 @@ export interface CreateCourseRequest {
   description?: string;
   credits: number;
   department: string;
+  program: string;
   instructor?: string;
   semester: string;
   academicYear: string;
@@ -41,6 +42,7 @@ export interface UpdateCourseRequest {
   description?: string;
   credits?: number;
   department?: string;
+  program?: string;
   instructor?: string;
   semester?: string;
   academicYear?: string;

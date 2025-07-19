@@ -3,7 +3,7 @@ import { useForm, Controller } from 'react-hook-form';
 import Select, { StylesConfig } from 'react-select';
 import { useCreateCourse } from '../../../api/hooks/useCourses';
 import { CreateCourseRequest } from '../../../api/types/courses';
-import ImageUpload from '../../common/ImageUpload';
+import { usePrograms } from '../../../api/hooks/usePrograms';
 
 interface AddCourseModalProps {
   isOpen: boolean;
@@ -69,9 +69,11 @@ const AddCourseModal: React.FC<AddCourseModalProps> = ({ isOpen, onClose }) => {
       semester: '',
       academicYear: '',
       maxStudents: 30,
-      imageUrl: ''
     }
   });
+
+  const { data: programsData, isLoading: programsLoading } = usePrograms(1, 100);
+  const programOptions = programsData?.programs?.map((p) => ({ value: p._id, label: p.name })) || [];
 
   const onSubmit = async (data: CreateCourseRequest) => {
     try {
@@ -253,32 +255,6 @@ const AddCourseModal: React.FC<AddCourseModalProps> = ({ isOpen, onClose }) => {
               />
             </div>
 
-            {/* Course Image Section */}
-            <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
-              <div className="flex items-center mb-6">
-                <div className="h-8 w-8 rounded-full bg-purple-100 flex items-center justify-center mr-3">
-                  <svg className="h-4 w-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                </div>
-                <h3 className="text-lg font-semibold text-gray-900">Course Image</h3>
-              </div>
-              
-              <Controller
-                name="imageUrl"
-                control={control}
-                render={({ field }) => (
-                  <ImageUpload
-                    onImageUpload={(url) => field.onChange(url)}
-                    onImageRemove={() => field.onChange('')}
-                    currentImage={field.value}
-                    maxSize={5}
-                    className="max-w-md"
-                  />
-                )}
-              />
-            </div>
-
             {/* Academic Details Section */}
             <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
               <div className="flex items-center mb-6">
@@ -364,6 +340,32 @@ const AddCourseModal: React.FC<AddCourseModalProps> = ({ isOpen, onClose }) => {
                   />
                   {errors.semester && (
                     <p className="mt-1 text-sm text-red-600">{errors.semester.message}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Program *
+                  </label>
+                  <Controller
+                    name="program"
+                    control={control}
+                    rules={{ required: 'Program is required' }}
+                    render={({ field }) => (
+                      <Select
+                        options={programOptions}
+                        isLoading={programsLoading}
+                        onChange={(selectedOption) => field.onChange(selectedOption?.value)}
+                        onBlur={field.onBlur}
+                        value={programOptions.find((opt) => opt.value === field.value) || null}
+                        placeholder="Select program"
+                        styles={selectStyles}
+                        className="w-full"
+                      />
+                    )}
+                  />
+                  {errors.program && (
+                    <p className="mt-1 text-sm text-red-600">{errors.program.message}</p>
                   )}
                 </div>
 
