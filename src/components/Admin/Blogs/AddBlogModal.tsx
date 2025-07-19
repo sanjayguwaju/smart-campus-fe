@@ -81,7 +81,9 @@ const AddBlogModal: React.FC<AddBlogModalProps> = ({ isOpen, onClose }) => {
       formDataToSend.append('content', formData.content || '');
       formDataToSend.append('summary', formData.summary || '');
       formDataToSend.append('isPublished', formData.isPublished?.toString() || 'false');
-      formDataToSend.append('tags', JSON.stringify(formData.tags || []));
+      (formData.tags || []).forEach(tag => {
+        formDataToSend.append('tags', tag);
+      });
       
       if (formData.coverImage) {
         formDataToSend.append('coverImage', formData.coverImage);
