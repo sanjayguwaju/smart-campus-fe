@@ -168,51 +168,65 @@ export const studentNotices = [
   }
 ];
 
-export const studentCalendar = [
+export const studentAssignments = [
+  // CS101 assignments for Ali Raza
   {
-    id: "cal-001",
-    title: "CS101 Assignment Due",
-    date: "2024-07-22",
-    time: "23:59",
-    type: "Assignment",
-    course: "CS101",
-    description: "Programming assignment submission deadline"
+    courseId: 'CS101',
+    courseTitle: 'Introduction to Programming',
+    semester: 'Fall 2024',
+    instructor: 'Dr. Ayesha Khan',
+    assignmentId: 'A1',
+    title: 'Programming Basics',
+    description: 'Write a simple calculator program.',
+    dueDate: '2024-08-15',
+    totalPoints: 100,
+    status: 'Submitted',
+    grade: 90,
+    feedback: 'Good job!'
   },
   {
-    id: "cal-002",
-    title: "CS201 Midterm Exam",
-    date: "2024-07-25",
-    time: "10:00",
-    type: "Exam",
-    course: "CS201",
-    description: "Data Structures midterm examination"
+    courseId: 'CS101',
+    courseTitle: 'Introduction to Programming',
+    semester: 'Fall 2024',
+    instructor: 'Dr. Ayesha Khan',
+    assignmentId: 'A2',
+    title: 'Loops and Conditions',
+    description: 'Implement a number guessing game.',
+    dueDate: '2024-09-01',
+    totalPoints: 100,
+    status: 'Submitted',
+    grade: 95,
+    feedback: 'Excellent!'
   },
+  // EE201 assignments for Ali Raza
   {
-    id: "cal-003",
-    title: "MATH101 Quiz",
-    date: "2024-07-26",
-    time: "14:00",
-    type: "Quiz",
-    course: "MATH101",
-    description: "Calculus quiz on derivatives"
+    courseId: 'EE201',
+    courseTitle: 'Circuit Analysis',
+    semester: 'Spring 2024',
+    instructor: 'Dr. Imran Malik',
+    assignmentId: 'A1',
+    title: "Ohm's Law Lab",
+    description: "Lab report on Ohm's Law experiment.",
+    dueDate: '2024-03-10',
+    totalPoints: 50,
+    status: 'Submitted',
+    grade: 45,
+    feedback: 'Good analysis.'
   },
+  // CE301 assignments for Ali Raza
   {
-    id: "cal-004",
-    title: "Career Fair",
-    date: "2024-07-25",
-    time: "10:00",
-    type: "Event",
-    course: null,
-    description: "Annual campus career fair"
-  },
-  {
-    id: "cal-005",
-    title: "Student Council Meeting",
-    date: "2024-08-05",
-    time: "16:00",
-    type: "Meeting",
-    course: null,
-    description: "Monthly student council meeting"
+    courseId: 'CE301',
+    courseTitle: 'Structural Engineering',
+    semester: 'Fall 2024',
+    instructor: 'Dr. Usman Tariq',
+    assignmentId: 'A1',
+    title: 'Bridge Design Project',
+    description: 'Design a model bridge and submit a report.',
+    dueDate: '2024-10-01',
+    totalPoints: 150,
+    status: 'Not Submitted',
+    grade: null,
+    feedback: null
   }
 ];
 

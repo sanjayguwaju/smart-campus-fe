@@ -1,61 +1,175 @@
 // Dummy data for Faculty Portal
 
 export const facultyCourses = [
-    {
-      courseId: "CS101",
-      title: "Introduction to Programming",
-      semester: "Fall 2024",
-      enrolledStudents: 120,
-      schedule: "Mon & Wed 10:00-11:30",
-      status: "Ongoing",
-      department: "Computer Engineering"
-    },
-    {
-      courseId: "EE201",
-      title: "Circuit Analysis",
-      semester: "Spring 2024",
-      enrolledStudents: 90,
-      schedule: "Tue & Thu 09:00-10:30",
-      status: "Completed",
-      department: "Electrical"
-    },
-    {
-      courseId: "CE301",
-      title: "Structural Engineering",
-      semester: "Fall 2024",
-      enrolledStudents: 60,
-      schedule: "Wed & Fri 13:00-14:30",
-      status: "Ongoing",
-      department: "Civil Engineering"
-    }
-  ];
-  
-  export const facultyAdvisees = [
-    {
-      studentId: "stu-101",
-      name: "Ali Raza",
-      program: "BS Computer Engineering",
-      year: "3rd",
-      email: "ali.raza@university.edu",
-      department: "Computer Engineering"
-    },
-    {
-      studentId: "stu-102",
-      name: "Fatima Noor",
-      program: "BS Electrical Engineering",
-      year: "2nd",
-      email: "fatima.noor@university.edu",
-      department: "Electrical"
-    },
-    {
-      studentId: "stu-103",
-      name: "Usman Tariq",
-      program: "BS Civil Engineering",
-      year: "4th",
-      email: "usman.tariq@university.edu",
-      department: "Civil Engineering"
-    }
-  ];
+  {
+    courseId: "CS101",
+    title: "Introduction to Programming",
+    semester: "Fall 2024",
+    enrolledStudents: 120,
+    schedule: "Mon & Wed 10:00-11:30",
+    status: "Ongoing",
+    department: "Computer Engineering",
+    assignments: [
+      {
+        assignmentId: "A1",
+        title: "Programming Basics",
+        description: "Write a simple calculator program.",
+        dueDate: "2024-08-15",
+        totalPoints: 100,
+        submissions: [
+          {
+            studentId: "stu-101",
+            status: "Submitted",
+            grade: 90,
+            feedback: "Good job!"
+          },
+          {
+            studentId: "stu-102",
+            status: "Not Submitted",
+            grade: null,
+            feedback: null
+          },
+          {
+            studentId: "stu-103",
+            status: "Submitted",
+            grade: 85,
+            feedback: "Well done."
+          }
+        ]
+      },
+      {
+        assignmentId: "A2",
+        title: "Loops and Conditions",
+        description: "Implement a number guessing game.",
+        dueDate: "2024-09-01",
+        totalPoints: 100,
+        submissions: [
+          {
+            studentId: "stu-101",
+            status: "Submitted",
+            grade: 95,
+            feedback: "Excellent!"
+          },
+          {
+            studentId: "stu-102",
+            status: "Submitted",
+            grade: 80,
+            feedback: "Good, but missing edge cases."
+          },
+          {
+            studentId: "stu-103",
+            status: "Not Submitted",
+            grade: null,
+            feedback: null
+          }
+        ]
+      }
+    ]
+  },
+  {
+    courseId: "EE201",
+    title: "Circuit Analysis",
+    semester: "Spring 2024",
+    enrolledStudents: 90,
+    schedule: "Tue & Thu 09:00-10:30",
+    status: "Completed",
+    department: "Electrical",
+    assignments: [
+      {
+        assignmentId: "A1",
+        title: "Ohm's Law Lab",
+        description: "Lab report on Ohm's Law experiment.",
+        dueDate: "2024-03-10",
+        totalPoints: 50,
+        submissions: [
+          {
+            studentId: "stu-101",
+            status: "Submitted",
+            grade: 45,
+            feedback: "Good analysis."
+          },
+          {
+            studentId: "stu-102",
+            status: "Submitted",
+            grade: 48,
+            feedback: "Excellent work."
+          },
+          {
+            studentId: "stu-103",
+            status: "Submitted",
+            grade: 40,
+            feedback: "Needs improvement."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    courseId: "CE301",
+    title: "Structural Engineering",
+    semester: "Fall 2024",
+    enrolledStudents: 60,
+    schedule: "Wed & Fri 13:00-14:30",
+    status: "Ongoing",
+    department: "Civil Engineering",
+    assignments: [
+      {
+        assignmentId: "A1",
+        title: "Bridge Design Project",
+        description: "Design a model bridge and submit a report.",
+        dueDate: "2024-10-01",
+        totalPoints: 150,
+        submissions: [
+          {
+            studentId: "stu-101",
+            status: "Not Submitted",
+            grade: null,
+            feedback: null
+          },
+          {
+            studentId: "stu-102",
+            status: "Submitted",
+            grade: 140,
+            feedback: "Great design!"
+          },
+          {
+            studentId: "stu-103",
+            status: "Submitted",
+            grade: 135,
+            feedback: "Solid work."
+          }
+        ]
+      }
+    ]
+  }
+];
+
+export const facultyAdvisees = [
+  {
+    studentId: "stu-101",
+    name: "Ali Raza",
+    program: "BS Computer Engineering",
+    year: "3rd",
+    email: "ali.raza@university.edu",
+    department: "Computer Engineering"
+  },
+  {
+    studentId: "stu-102",
+    name: "Fatima Noor",
+    program: "BS Electrical Engineering",
+    year: "2nd",
+    email: "fatima.noor@university.edu",
+    department: "Electrical"
+  },
+  {
+    studentId: "stu-103",
+    name: "Usman Tariq",
+    program: "BS Civil Engineering",
+    year: "4th",
+    email: "usman.tariq@university.edu",
+    department: "Civil Engineering"
+  }
+];
   
   export const facultyEvents = [
     {
