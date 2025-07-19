@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useBlogs } from '../../api/hooks/useBlogs';
 import { BlogPost } from '../../api/services/blogService';
-import { Eye, Pencil, Trash2, Filter, Search, Plus } from 'lucide-react';
+import { Eye, Pencil, Trash2, Filter, Search, Plus, Upload, XCircle } from 'lucide-react';
 import Select, { StylesConfig } from 'react-select';
+import { toast } from 'react-hot-toast';
 import { 
   ViewBlogModal, 
   AddBlogModal, 
@@ -10,6 +11,7 @@ import {
   DeleteBlogModal, 
   BlogsFilterDrawer 
 } from '../../components/Admin/Blogs';
+import { updateBlog } from '../../api/services/blogService';
 
 const AdminBlog: React.FC = () => {
   const { blogsQuery } = useBlogs();
@@ -67,6 +69,32 @@ const AdminBlog: React.FC = () => {
     setSearchTerm('');
   };
 
+  // Publish/Unpublish logic
+  const handlePublish = async (post: BlogPost) => {
+    try {
+      const formData = new FormData();
+      formData.append('isPublished', 'true');
+      formData.append('status', 'published');
+      await updateBlog(post._id!, formData);
+      toast.success('Blog published');
+      blogsQuery.refetch();
+    } catch (error) {
+      toast.error('Failed to publish blog');
+    }
+  };
+  const handleUnpublish = async (post: BlogPost) => {
+    try {
+      const formData = new FormData();
+      formData.append('isPublished', 'false');
+      formData.append('status', 'draft');
+      await updateBlog(post._id!, formData);
+      toast.success('Blog unpublished');
+      blogsQuery.refetch();
+    } catch (error) {
+      toast.error('Failed to unpublish blog');
+    }
+  };
+
   // Custom styles for react-select
   const selectStyles: StylesConfig<{ value: string; label: string }> = {
     control: (provided, state) => ({
@@ -121,8 +149,8 @@ const AdminBlog: React.FC = () => {
     
     const matchesAuthor = !filters.author || post.author.toLowerCase().includes(filters.author.toLowerCase());
     const matchesStatus = !filters.status || 
-      (filters.status === 'published' && post.published) ||
-      (filters.status === 'draft' && !post.published);
+      (filters.status === 'published' && post.isPublished) ||
+      (filters.status === 'draft' && !post.isPublished);
     const matchesTags = !filters.tags || 
       (post.tags && post.tags.some(tag => tag.toLowerCase().includes(filters.tags.toLowerCase())));
     
@@ -186,7 +214,25 @@ const AdminBlog: React.FC = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredPosts.map((post: BlogPost) => (
-            <div key={post._id} className="bg-white rounded-lg shadow p-6 flex flex-col">
+            <div key={post._id} className="bg-white rounded-lg shadow p-6 flex flex-col relative">
+              {/* Publish/Unpublish button top-right */}
+              {post.isPublished ? (
+                <button
+                  className="absolute top-4 right-4 rounded-full px-4 py-1 text-xs font-semibold bg-red-600 text-white shadow hover:bg-red-700 transition-colors z-10"
+                  title="Unpublish"
+                  onClick={() => handleUnpublish(post)}
+                >
+                  Unpublish
+                </button>
+              ) : (
+                <button
+                  className="absolute top-4 right-4 rounded-full px-4 py-1 text-xs font-semibold bg-blue-600 text-white shadow hover:bg-blue-700 transition-colors z-10"
+                  title="Publish"
+                  onClick={() => handlePublish(post)}
+                >
+                  Publish
+                </button>
+              )}
               <div className="flex-1">
                 <div className="mb-2 flex items-center gap-2">
                   {post.tags && post.tags.length > 0 && (
@@ -207,7 +253,7 @@ const AdminBlog: React.FC = () => {
                 </p>
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-xs text-gray-500">{post.author}</span>
-                  {post.published ? (
+                  {post.isPublished ? (
                     <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full">
                       Published
                     </span>
@@ -216,6 +262,29 @@ const AdminBlog: React.FC = () => {
                       Draft
                     </span>
                   )}
+                </div>
+                <div className="flex gap-2 mt-2 justify-end">
+                  <button
+                    title="View"
+                    className="p-2 rounded-full hover:bg-gray-100 text-blue-600 transition-colors"
+                    onClick={() => handleView(post)}
+                  >
+                    <Eye className="w-5 h-5" />
+                  </button>
+                  <button
+                    title="Edit"
+                    className="p-2 rounded-full hover:bg-yellow-100 text-yellow-600 transition-colors"
+                    onClick={() => handleEdit(post)}
+                  >
+                    <Pencil className="w-5 h-5" />
+                  </button>
+                  <button
+                    title="Delete"
+                    className="p-2 rounded-full hover:bg-red-100 text-red-600 transition-colors"
+                    onClick={() => handleDelete(post)}
+                  >
+                    <Trash2 className="w-5 h-5" />
+                  </button>
                 </div>
                 {post.tags && post.tags.length > 0 && (
                   <div className="flex flex-wrap gap-1 mb-4">
@@ -226,29 +295,6 @@ const AdminBlog: React.FC = () => {
                     ))}
                   </div>
                 )}
-              </div>
-              <div className="flex gap-2 mt-2 justify-end">
-                <button
-                  title="View"
-                  className="p-2 rounded-full hover:bg-gray-100 text-blue-600 transition-colors"
-                  onClick={() => handleView(post)}
-                >
-                  <Eye className="w-5 h-5" />
-                </button>
-                <button
-                  title="Edit"
-                  className="p-2 rounded-full hover:bg-yellow-100 text-yellow-600 transition-colors"
-                  onClick={() => handleEdit(post)}
-                >
-                  <Pencil className="w-5 h-5" />
-                </button>
-                <button
-                  title="Delete"
-                  className="p-2 rounded-full hover:bg-red-100 text-red-600 transition-colors"
-                  onClick={() => handleDelete(post)}
-                >
-                  <Trash2 className="w-5 h-5" />
-                </button>
               </div>
             </div>
           ))}
