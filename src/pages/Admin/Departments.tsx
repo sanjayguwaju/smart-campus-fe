@@ -85,9 +85,9 @@ const Departments: React.FC = () => {
       setDeleteOpen(false);
       setSelectedDepartment(null);
       toast.success('Department deleted successfully');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to delete department:', error);
-      toast.error('Failed to delete department. Please try again.');
+      toast.error(error?.toString() || 'Failed to delete department. Please try again.');
     }
   };
 

@@ -41,9 +41,30 @@ export const courseService = {
   },
 
   async createCourse(courseData: CreateCourseRequest): Promise<CreateCourseResponse> {
+    // Find instructor name from instructorOptions if available
+    let instructorName = '';
+    if (courseData.instructor && (window as any).instructorOptions) {
+      const found = (window as any).instructorOptions.find((opt: { value: string; label: string }) => opt.value === courseData.instructor);
+      if (found) instructorName = found.label;
+    }
+    const mappedData = {
+      ...courseData,
+      name: courseData.name,
+      title: courseData.name,
+      faculty: courseData.instructor,
+      instructorName,
+      creditHours: courseData.credits,
+      semester: Number(courseData.semester), // only send semester
+      year: courseData.academicYear ? parseInt(courseData.academicYear.split('-')[0], 10) : undefined,
+    };
+    // Only delete fields that are not needed by the backend
+    delete (mappedData as any).instructor;
+    delete (mappedData as any).credits;
+    delete (mappedData as any).academicYear;
+    delete (mappedData as any).semesterTerm;
     const response = await apiClient.post<CreateCourseResponse>(
       "/courses",
-      courseData
+      mappedData
     );
     return response.data;
   },
@@ -52,9 +73,30 @@ export const courseService = {
     id: string,
     courseData: UpdateCourseRequest
   ): Promise<CourseResponse> {
+    // Find instructor name from instructorOptions if available
+    let instructorName = '';
+    if (courseData.instructor && (window as any).instructorOptions) {
+      const found = (window as any).instructorOptions.find((opt: { value: string; label: string }) => opt.value === courseData.instructor);
+      if (found) instructorName = found.label;
+    }
+    const mappedData = {
+      ...courseData,
+      name: courseData.name,
+      title: courseData.name,
+      faculty: courseData.instructor,
+      instructorName,
+      creditHours: courseData.credits,
+      semester: Number(courseData.semester), // ensure number
+      semesterTerm: Number(courseData.semester), // ensure number
+      year: courseData.academicYear ? parseInt(courseData.academicYear.split('-')[0], 10) : undefined,
+    };
+    delete (mappedData as any).instructor;
+    delete (mappedData as any).credits;
+    delete (mappedData as any).semester;
+    delete (mappedData as any).academicYear;
     const response = await apiClient.put<CourseResponse>(
       `/courses/${id}`,
-      courseData
+      mappedData
     );
     return response.data;
   },

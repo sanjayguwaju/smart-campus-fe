@@ -1,6 +1,7 @@
 import React from 'react';
-import { Clock, MapPin, User, GraduationCap } from 'lucide-react';
+import { Clock, MapPin, User, GraduationCap, FileText } from 'lucide-react';
 import { studentCourses } from '../../data/studentDummyData';
+import { students } from '../../data/programMockData';
 
 const Courses: React.FC = () => {
   const getGradeColor = (grade: string) => {
@@ -22,6 +23,10 @@ const Courses: React.FC = () => {
         return 'bg-gray-100 text-gray-800';
     }
   };
+
+  // For demo, use the first student from programMockData
+  const student = students[0];
+  const courseHistory = student.courseHistory;
 
   return (
     <div className="p-6 space-y-6">
@@ -100,44 +105,26 @@ const Courses: React.FC = () => {
         ))}
       </div>
 
-      {/* Summary Stats */}
+      {/* Course History Section */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Semester Summary</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="text-center">
-            <p className="text-2xl font-bold text-blue-600">
-              {studentCourses.length}
-            </p>
-            <p className="text-sm text-gray-600">Courses</p>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+          <FileText className="h-5 w-5 text-green-500" /> Course History
+        </h3>
+        {courseHistory.length === 0 ? (
+          <div className="text-gray-400 italic">No course history yet.</div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {courseHistory.map(h => (
+              <div key={h.courseId + h.semester} className="bg-green-50 border border-green-100 rounded-lg p-4 flex items-center gap-4">
+                <div className="flex-1">
+                  <div className="font-semibold text-green-900">{h.courseId}</div>
+                  <div className="text-xs text-gray-500">Semester {h.semester} • {h.year}</div>
+                </div>
+                <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${getGradeColor(h.grade)}`}>{h.grade}</span>
+              </div>
+            ))}
           </div>
-          <div className="text-center">
-            <p className="text-2xl font-bold text-green-600">
-              {studentCourses.reduce((sum, course) => sum + course.credits, 0)}
-            </p>
-            <p className="text-sm text-gray-600">Total Credits</p>
-          </div>
-          <div className="text-center">
-            <p className="text-2xl font-bold text-purple-600">
-              {studentCourses.filter(course => course.grade).length}
-            </p>
-            <p className="text-sm text-gray-600">Graded</p>
-          </div>
-          <div className="text-center">
-            <p className="text-2xl font-bold text-orange-600">
-              {(studentCourses.reduce((sum, course) => {
-                if (course.grade) {
-                  const gradePoints = course.grade === 'A' ? 4.0 : 
-                                    course.grade === 'A-' ? 3.7 :
-                                    course.grade === 'B+' ? 3.3 :
-                                    course.grade === 'B' ? 3.0 : 2.0;
-                  return sum + (gradePoints * course.credits);
-                }
-                return sum;
-              }, 0) / studentCourses.reduce((sum, course) => sum + course.credits, 0)).toFixed(2)}
-            </p>
-            <p className="text-sm text-gray-600">GPA</p>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );
