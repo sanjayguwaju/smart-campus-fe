@@ -5,6 +5,7 @@ export interface CourseData {
   description?: string;
   credits: number;
   department: string;
+  program: string;
   instructor?: string;
   semester: string;
   academicYear: string;

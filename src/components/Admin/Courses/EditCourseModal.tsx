@@ -1,9 +1,11 @@
 import React, { useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
-import Select, { StylesConfig } from 'react-select';
+import Select, { StylesConfig, SingleValue } from 'react-select';
 import { useUpdateCourse } from '../../../api/hooks/useCourses';
 import { UpdateCourseRequest, CourseData } from '../../../api/types/courses';
 import { usePrograms } from '../../../api/hooks/usePrograms';
+import { useDepartments } from '../../../api/hooks/useDepartments';
+import { useUsers } from '../../../api/hooks/useUsers';
 
 interface EditCourseModalProps {
   isOpen: boolean;
@@ -19,7 +21,11 @@ interface SelectOption {
 const EditCourseModal: React.FC<EditCourseModalProps> = ({ isOpen, onClose, course }) => {
   const updateCourseMutation = useUpdateCourse();
   const { data: programsData, isLoading: programsLoading } = usePrograms(1, 100);
-  const programOptions = programsData?.programs?.map((p) => ({ value: p._id, label: p.name })) || [];
+  const programOptions = programsData?.programs?.map((p: { _id: string; name: string }) => ({ value: p._id, label: p.name })) || [];
+  const { data: departmentsData, isLoading: departmentsLoading } = useDepartments(1, 100);
+  const departmentOptions = departmentsData?.departments?.map((d: { _id: string; name: string }) => ({ value: d._id, label: d.name })) || [];
+  const { data: usersData, isLoading: usersLoading } = useUsers(1, 100, '', { role: 'faculty' });
+  const instructorOptions = (usersData?.users?.map((u: { _id: string; fullName: string }) => ({ value: u._id, label: u.fullName })) || []).sort((a, b) => a.label.localeCompare(b.label));
   
   // Custom styles for react-select
   const selectStyles: StylesConfig<SelectOption> = {
@@ -295,13 +301,15 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({ isOpen, onClose, cour
                     control={control}
                     rules={{ required: 'Department is required' }}
                     render={({ field }) => (
-                      <input
-                        {...field}
-                        type="text"
-                        className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 ${
-                          errors.department ? 'border-red-300' : 'border-gray-200'
-                        }`}
-                        placeholder="e.g., Computer Science"
+                      <Select
+                        options={departmentOptions}
+                        isLoading={departmentsLoading}
+                        onChange={(newValue) => field.onChange((newValue as { value: string; label: string } | null)?.value)}
+                        onBlur={field.onBlur}
+                        value={departmentOptions.find((opt: { value: string; label: string }) => opt.value === field.value) || null}
+                        placeholder="Select department"
+                        styles={selectStyles}
+                        className="w-full"
                       />
                     )}
                   />
@@ -322,9 +330,9 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({ isOpen, onClose, cour
                       <Select
                         options={programOptions}
                         isLoading={programsLoading}
-                        onChange={(selectedOption) => field.onChange(selectedOption?.value)}
+                        onChange={(newValue) => field.onChange((newValue as { value: string; label: string } | null)?.value)}
                         onBlur={field.onBlur}
-                        value={programOptions.find((opt) => opt.value === field.value) || null}
+                        value={programOptions.find((opt: { value: string; label: string }) => opt.value === field.value) || null}
                         placeholder="Select program"
                         styles={selectStyles}
                         className="w-full"
@@ -338,20 +346,29 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({ isOpen, onClose, cour
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Instructor
+                    Instructor *
                   </label>
                   <Controller
                     name="instructor"
                     control={control}
+                    rules={{ required: 'Instructor is required' }}
                     render={({ field }) => (
-                      <input
-                        {...field}
-                        type="text"
-                        className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
-                        placeholder="Instructor name"
+                      <Select
+                        options={instructorOptions}
+                        isLoading={usersLoading}
+                        isSearchable
+                        onChange={(newValue) => field.onChange((newValue as { value: string; label: string } | null)?.value)}
+                        onBlur={field.onBlur}
+                        value={instructorOptions.find((opt: { value: string; label: string }) => opt.value === field.value) || null}
+                        placeholder="Select instructor"
+                        styles={selectStyles}
+                        className="w-full"
                       />
                     )}
                   />
+                  {errors.instructor && (
+                    <p className="mt-1 text-sm text-red-600">{errors.instructor.message}</p>
+                  )}
                 </div>
 
                 <div>
