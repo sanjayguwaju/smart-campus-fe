@@ -33,15 +33,11 @@ const ViewDepartmentModal: React.FC<ViewDepartmentModalProps> = ({ isOpen, onClo
           <div>
             <span className="font-semibold text-gray-700">Name:</span> {department.name}
           </div>
-          <div>
-            <span className="font-semibold text-gray-700">Code:</span> {department.code}
-          </div>
+          
           <div>
             <span className="font-semibold text-gray-700">Description:</span> {department.description || 'N/A'}
           </div>
-          <div>
-            <span className="font-semibold text-gray-700">Head of Department:</span> {department.headOfDepartment || 'N/A'}
-          </div>
+          
           <div>
             <span className="font-semibold text-gray-700">Faculty Count:</span> {department.facultyCount}
           </div>
