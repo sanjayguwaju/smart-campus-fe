@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useBlogs } from '../../api/hooks/useBlogs';
 import { BlogPost } from '../../api/services/blogService';
-import { Eye, Pencil, Trash2, Filter, Search, Plus, Upload, XCircle } from 'lucide-react';
+import { Eye, Pencil, Trash2, Filter, Search, Plus } from 'lucide-react';
 import Select, { StylesConfig } from 'react-select';
 import { toast } from 'react-hot-toast';
 import { 

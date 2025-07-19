@@ -29,6 +29,8 @@ const EditBlogModal: React.FC<EditBlogModalProps> = ({ isOpen, onClose, blog }) 
   });
 
   const [tagInput, setTagInput] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<{ [key: string]: string }>({});
+  const [serverError, setServerError] = useState<string | null>(null);
 
   // Update form data when blog prop changes
   useEffect(() => {
@@ -114,8 +116,20 @@ const EditBlogModal: React.FC<EditBlogModalProps> = ({ isOpen, onClose, blog }) 
 
       await updateBlog.mutateAsync({ id: blog._id, data: formDataToSend });
       onClose();
-    } catch (error) {
-      console.error('Error updating blog:', error);
+      setFieldErrors({});
+      setServerError(null);
+    } catch (error: any) {
+      if (error?.response?.data?.error) {
+        const errors = error.response.data.error;
+        const errorMap: { [key: string]: string } = {};
+        errors.forEach((err: any) => {
+          errorMap[err.field] = err.message;
+        });
+        setFieldErrors(errorMap);
+        setServerError(error.response.data.message || 'Validation failed');
+      } else {
+        setServerError('An unexpected error occurred');
+      }
     }
   };
 
@@ -149,6 +163,7 @@ const EditBlogModal: React.FC<EditBlogModalProps> = ({ isOpen, onClose, blog }) 
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6">
+          {serverError && <div className="text-red-600 text-sm mb-2">{serverError}</div>}
           <div className="space-y-8">
             {/* Basic Information Section */}
             <div className="bg-gray-50 rounded-lg p-6">
@@ -168,6 +183,7 @@ const EditBlogModal: React.FC<EditBlogModalProps> = ({ isOpen, onClose, blog }) 
                     placeholder="Enter blog post title"
                     required
                   />
+                  {fieldErrors.title && <div className="text-red-500 text-xs">{fieldErrors.title}</div>}
                 </div>
 
                 {/* Author */}
@@ -200,6 +216,7 @@ const EditBlogModal: React.FC<EditBlogModalProps> = ({ isOpen, onClose, blog }) 
                     placeholder="blog-post-url-slug"
                     required
                   />
+                  {fieldErrors.slug && <div className="text-red-500 text-xs">{fieldErrors.slug}</div>}
                 </div>
               </div>
               <div className="mt-4">
@@ -219,6 +236,7 @@ const EditBlogModal: React.FC<EditBlogModalProps> = ({ isOpen, onClose, blog }) 
                   <option value="draft">Draft</option>
                   <option value="published">Published</option>
                 </select>
+                {fieldErrors.status && <div className="text-red-500 text-xs">{fieldErrors.status}</div>}
               </div>
             </div>
 
@@ -240,6 +258,7 @@ const EditBlogModal: React.FC<EditBlogModalProps> = ({ isOpen, onClose, blog }) 
                     placeholder="Brief summary of the blog post"
                     required
                   />
+                  {fieldErrors.summary && <div className="text-red-500 text-xs">{fieldErrors.summary}</div>}
                 </div>
 
                 {/* Cover Image */}
@@ -282,6 +301,7 @@ const EditBlogModal: React.FC<EditBlogModalProps> = ({ isOpen, onClose, blog }) 
                       Add
                     </button>
                   </div>
+                  {fieldErrors.tags && <div className="text-red-500 text-xs">{fieldErrors.tags}</div>}
                   <div className="flex flex-wrap gap-2">
                     {formData.tags?.map((tag, index) => (
                       <span
@@ -357,6 +377,7 @@ const EditBlogModal: React.FC<EditBlogModalProps> = ({ isOpen, onClose, blog }) 
                 className="mb-4"
                 style={{ height: '400px' }}
               />
+              {fieldErrors.content && <div className="text-red-500 text-xs">{fieldErrors.content}</div>}
             </div>
           </div>
         </form>
