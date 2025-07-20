@@ -110,12 +110,34 @@ const Blog: React.FC = () => {
           <div className="bg-white rounded-lg shadow-lg overflow-hidden">
             <div className="md:flex">
               <div className="md:w-1/2">
-                <div className="h-64 md:h-full bg-gradient-to-br from-blue-400 to-purple-600 flex items-center justify-center">
-                  <div className="text-white text-center">
-                    <Calendar className="h-16 w-16 mx-auto mb-4" />
-                    <p className="text-lg">Featured Article</p>
+                {featuredPost.coverImage ? (
+                  <div className="h-64 md:h-full relative overflow-hidden">
+                    <img
+                      src={featuredPost.coverImage}
+                      alt={featuredPost.title}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                        target.nextElementSibling?.classList.remove('hidden');
+                      }}
+                    />
+                    {/* Fallback placeholder */}
+                    <div className="hidden h-64 md:h-full bg-gradient-to-br from-blue-400 to-purple-600 flex items-center justify-center">
+                      <div className="text-white text-center">
+                        <Calendar className="h-16 w-16 mx-auto mb-4" />
+                        <p className="text-lg">Featured Article</p>
+                      </div>
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="h-64 md:h-full bg-gradient-to-br from-blue-400 to-purple-600 flex items-center justify-center">
+                    <div className="text-white text-center">
+                      <Calendar className="h-16 w-16 mx-auto mb-4" />
+                      <p className="text-lg">Featured Article</p>
+                    </div>
+                  </div>
+                )}
               </div>
               <div className="md:w-1/2 p-8">
                 <div className="flex items-center text-sm text-gray-500 mb-4">
@@ -148,9 +170,28 @@ const Blog: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {filteredPosts.map((post: BlogPost) => (
             <article key={post._id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-              <div className="h-48 bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
-                <Tag className="h-12 w-12 text-gray-400" />
-              </div>
+              {post.coverImage ? (
+                <div className="h-48 relative overflow-hidden">
+                  <img
+                    src={post.coverImage}
+                    alt={post.title}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      target.nextElementSibling?.classList.remove('hidden');
+                    }}
+                  />
+                  {/* Fallback placeholder */}
+                  <div className="hidden h-48 bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
+                    <Tag className="h-12 w-12 text-gray-400" />
+                  </div>
+                </div>
+              ) : (
+                <div className="h-48 bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
+                  <Tag className="h-12 w-12 text-gray-400" />
+                </div>
+              )}
               <div className="p-6">
                 <div className="flex items-center text-sm text-gray-500 mb-3">
                   <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs font-medium">

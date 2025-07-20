@@ -32,7 +32,6 @@ import StudentGrades from './pages/Student/Grades';
 import StudentEvents from './pages/Student/Events';
 import StudentNotices from './pages/Student/Notices';
 import StudentCalendar from './pages/Student/Calendar';
-import StudentServices from './pages/Student/Services';
 import StudentPrograms from './pages/Student/Programs';
 import Students from './pages/Faculty/Students';
 import FacultyEvents from './pages/Faculty/Events';
@@ -41,7 +40,9 @@ import Grades from './pages/Faculty/Grades';
 import OfficeHours from './pages/Faculty/OfficeHours';
 import FacultyBlog from './pages/Faculty/Blog';
 import Departments from './pages/Admin/Departments';
-import Courses from './pages/Admin/Courses';
+import AdminCourses from './pages/Admin/Courses';
+import FacultyCourses from './pages/Faculty/Courses';
+import StudentMockDemo from './pages/StudentMockDemo';
 
 
 function App() {
@@ -90,7 +91,7 @@ function App() {
           <Route index element={<AdminDashboard />} />
           <Route path="users" element={<Users />} />
           <Route path="departments" element={<Departments />} />
-          <Route path="courses" element={<Courses />} />
+          <Route path="courses" element={<AdminCourses />} />
           <Route path="events" element={<AdminEvents />} />
           <Route path="notices" element={<Notices />} />
           <Route path="programs" element={<AdminPrograms />} />
@@ -109,7 +110,7 @@ function App() {
           }
         >
           <Route index element={<Dashboard />} />
-          <Route path="courses" element={<Courses />} />
+          <Route path="courses" element={<FacultyCourses />} />
           <Route path="students" element={<Students />} />
           <Route path="events" element={<FacultyEvents />} />
           <Route path="notices" element={<FacultyNotices />} />
@@ -133,9 +134,9 @@ function App() {
           <Route path="events" element={<StudentEvents />} />
           <Route path="notices" element={<StudentNotices />} />
           <Route path="calendar" element={<StudentCalendar />} />
-          <Route path="services" element={<StudentServices />} />
           <Route path="programs" element={<StudentPrograms />} />
           <Route path="profile" element={<StudentProfile />} />
+          <Route path="mock-students" element={<StudentMockDemo />} />
         </Route>
 
         {/* Public routes */}
