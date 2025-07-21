@@ -6,8 +6,6 @@ interface DepartmentsFilterDrawerProps {
   onClose: () => void;
   filters: {
     name?: string;
-    code?: string;
-    headOfDepartment?: string;
     status?: string;
   };
   setFilters: (filters: DepartmentsFilterDrawerProps['filters']) => void;
@@ -25,16 +23,16 @@ const DepartmentsFilterDrawer: React.FC<DepartmentsFilterDrawerProps> = ({ isOpe
       {/* Backdrop */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity duration-300"
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity duration-300"    
           onClick={onClose}
         />
       )}
 
       {/* Drawer */}
-      <div className={`fixed -top-5 right-0 h-full w-96 bg-white shadow-2xl transform transition-transform duration-300 ease-in-out z-50 ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+      <div className={`fixed -top-5 right-0 h-screen w-80 bg-white shadow-xl transform transition-transform duration-300 ease-in-out z-50 ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-200">
+          <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
             <h2 className="text-lg font-semibold text-gray-900">Filter Departments</h2>
             <button 
               onClick={onClose} 
@@ -60,38 +58,7 @@ const DepartmentsFilterDrawer: React.FC<DepartmentsFilterDrawerProps> = ({ isOpe
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
                   placeholder="Search by name"
                 />
-              </div>
-              
-              <div>
-                <label htmlFor="code" className="block text-sm font-medium text-gray-700 mb-2">
-                  Department Code
-                </label>
-                <input
-                  type="text"
-                  id="code"
-                  name="code"
-                  value={filters.code || ''}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                  placeholder="Search by code"
-                />
-              </div>
-              
-              <div>
-                <label htmlFor="headOfDepartment" className="block text-sm font-medium text-gray-700 mb-2">
-                  Head of Department
-                </label>
-                <input
-                  type="text"
-                  id="headOfDepartment"
-                  name="headOfDepartment"
-                  value={filters.headOfDepartment || ''}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
-                  placeholder="Search by head of department"
-                />
-              </div>
-              
+              </div>  
               <div>
                 <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-2">
                   Status
@@ -119,8 +86,6 @@ const DepartmentsFilterDrawer: React.FC<DepartmentsFilterDrawerProps> = ({ isOpe
                 onClick={() => {
                   setFilters({
                     name: '',
-                    code: '',
-                    headOfDepartment: '',
                     status: ''
                   });
                 }}

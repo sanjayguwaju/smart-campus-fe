@@ -10,7 +10,7 @@ import {
 export const departmentService = {
   async getDepartments(page = 1, limit = 10, search?: string, filters?: {
     status?: string;
-    headOfDepartment?: string;
+    name?: string;
     dateRange?: string;
   }): Promise<DepartmentsResponse> {
     const params = new URLSearchParams();
@@ -23,7 +23,7 @@ export const departmentService = {
     
     if (filters) {
       if (filters.status) params.append('status', filters.status);
-      if (filters.headOfDepartment) params.append('headOfDepartment', filters.headOfDepartment);
+      if (filters.name) params.append('name', filters.name);
       if (filters.dateRange) params.append('dateRange', filters.dateRange);
     }
 
