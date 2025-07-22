@@ -4,6 +4,9 @@ import { GraduationCap, Clock, BookOpen, Users, Download, Search, Filter, Chevro
 import { usePrograms } from '../api/hooks/usePrograms';
 import { Program } from '../api/types/programs';
 import { useAuthStore } from '../store/authStore';
+import ApplyProgramModal from '../components/common/ApplyProgramModal';
+import { programService, ProgramApplication } from '../api/services/programService';
+import { useEffect } from 'react';
 
 const Programs: React.FC = () => {
   // Remove Zustand store usage
@@ -14,6 +17,10 @@ const Programs: React.FC = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [selectedProgram, setSelectedProgram] = useState<Program | null>(null);
   const { user, isAuthenticated } = useAuthStore();
+  const [showApplyModal, setShowApplyModal] = useState(false);
+  const [applyProgram, setApplyProgram] = useState<Program | null>(null);
+  const [applications, setApplications] = useState<ProgramApplication[]>([]);
+  const [appLoading, setAppLoading] = useState(false);
 
   // Fetch programs from API, like Events
   const { data: programsData, isLoading, error } = usePrograms(
@@ -77,6 +84,40 @@ const Programs: React.FC = () => {
       professional: Star,
     };
     return icons[level as keyof typeof icons] || GraduationCap;
+  };
+
+  // Fetch applications for the logged-in student
+  useEffect(() => {
+    if (isAuthenticated && user?.role === 'student') {
+      setAppLoading(true);
+      programService.getProgramApplications()
+        .then(res => setApplications(res.data))
+        .catch(() => setApplications([]))
+        .finally(() => setAppLoading(false));
+    }
+  }, [isAuthenticated, user]);
+
+  // Helper to get application status for a program
+  const getAppStatus = (programId: string) => {
+    const app = applications.find(a => a.program && a.program._id === programId);
+    return app ? app.status : null;
+  };
+
+  // Handler for Apply Now
+  const handleApplyNow = (program: Program) => {
+    setApplyProgram(program);
+    setShowApplyModal(true);
+  };
+
+  // Handler after successful application
+  const handleApplySuccess = () => {
+    setShowApplyModal(false);
+    setApplyProgram(null);
+    // Refresh applications
+    if (isAuthenticated && user?.role === 'student') {
+      programService.getProgramApplications()
+        .then(res => setApplications(res.data));
+    }
   };
 
   return (
@@ -298,9 +339,26 @@ const Programs: React.FC = () => {
                     {/* Action Buttons */}
                     <div className="flex space-x-2">
                       {isAuthenticated && user?.role === 'student' && (
-                        <button className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors duration-200">
-                          Apply Now
-                        </button>
+                        getAppStatus(program._id) === 'pending' ? (
+                          <button className="flex-1 bg-yellow-400 text-white px-4 py-2 rounded-lg font-semibold cursor-not-allowed" disabled>
+                            Pending
+                          </button>
+                        ) : getAppStatus(program._id) === 'verified' ? (
+                          <button className="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg font-semibold cursor-not-allowed" disabled>
+                            Verified
+                          </button>
+                        ) : getAppStatus(program._id) === 'rejected' ? (
+                          <button className="flex-1 bg-red-500 text-white px-4 py-2 rounded-lg font-semibold cursor-not-allowed" disabled>
+                            Rejected
+                          </button>
+                        ) : (
+                          <button
+                            className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors duration-200"
+                            onClick={e => { e.stopPropagation(); handleApplyNow(program); }}
+                          >
+                            Apply Now
+                          </button>
+                        )
                       )}
                       {program.brochureUrl && (
                         <button className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200">
@@ -493,6 +551,14 @@ const Programs: React.FC = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Apply Program Modal */}
+      <ApplyProgramModal
+        open={showApplyModal}
+        onClose={() => { setShowApplyModal(false); setApplyProgram(null); }}
+        program={applyProgram}
+        onSuccess={handleApplySuccess}
+      />
     </div>
   );
 };
