@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Select, { StylesConfig } from 'react-select';
 import { useUpdateNotice } from '../../../api/hooks/useNotices';
 import { Notice } from '../../../api/types/notices';
 
@@ -7,6 +8,11 @@ interface EditNoticeModalProps {
   notice: Notice | null;
   onClose: () => void;
   onSuccess?: () => void;
+}
+
+interface SelectOption {
+  value: string;
+  label: string;
 }
 
 const initialValidationErrors = {
@@ -18,6 +24,41 @@ const initialValidationErrors = {
   publishDate: '',
   author: '',
   expiryDate: '',
+};
+
+// Custom styles for react-select
+const selectStyles: StylesConfig<SelectOption> = {
+  control: (provided, state) => ({
+    ...provided,
+    minHeight: '48px',
+    border: state.isFocused ? '2px solid #3b82f6' : '1px solid #e5e7eb',
+    borderRadius: '8px',
+    boxShadow: state.isFocused ? '0 0 0 2px rgba(59, 130, 246, 0.1)' : 'none',
+    '&:hover': {
+      border: '1px solid #d1d5db'
+    }
+  }),
+  option: (provided, state) => ({
+    ...provided,
+    backgroundColor: state.isSelected ? '#3b82f6' : state.isFocused ? '#f3f4f6' : 'white',
+    color: state.isSelected ? 'white' : '#374151',
+    '&:hover': {
+      backgroundColor: state.isSelected ? '#3b82f6' : '#f3f4f6'
+    }
+  }),
+  menu: (provided) => ({
+    ...provided,
+    borderRadius: '8px',
+    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'
+  }),
+  placeholder: (provided) => ({
+    ...provided,
+    color: '#9ca3af'
+  }),
+  singleValue: (provided) => ({
+    ...provided,
+    color: '#374151'
+  })
 };
 
 const EditNoticeModal: React.FC<EditNoticeModalProps> = ({ isOpen, notice, onClose, onSuccess }) => {
@@ -198,56 +239,83 @@ const EditNoticeModal: React.FC<EditNoticeModalProps> = ({ isOpen, notice, onClo
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700">Type *</label>
-                <select
-                  name="type"
-                  value={form.type}
-                  onChange={handleChange}
-                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
-                  required
-                >
-                  <option value="announcement">Announcement</option>
-                  <option value="academic">Academic</option>
-                  <option value="administrative">Administrative</option>
-                  <option value="event">Event</option>
-                  <option value="emergency">Emergency</option>
-                  <option value="maintenance">Maintenance</option>
-                  <option value="other">Other</option>
-                </select>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Type *</label>
+                <Select<SelectOption>
+                  options={[
+                    { value: 'announcement', label: 'Announcement' },
+                    { value: 'academic', label: 'Academic' },
+                    { value: 'administrative', label: 'Administrative' },
+                    { value: 'event', label: 'Event' },
+                    { value: 'emergency', label: 'Emergency' },
+                    { value: 'maintenance', label: 'Maintenance' },
+                    { value: 'other', label: 'Other' },
+                  ]}
+                  onChange={(selectedOption: SelectOption | null) => {
+                    const newValue = selectedOption?.value || '';
+                    setForm((prev) => ({ ...prev, type: newValue }));
+                    validateField('type', newValue);
+                  }}
+                  value={
+                    form.type
+                      ? { value: form.type, label: form.type.charAt(0).toUpperCase() + form.type.slice(1) }
+                      : null
+                  }
+                  placeholder="Select type"
+                  styles={selectStyles}
+                  className="w-full"
+                />
                 {validationErrors.type && <div className="text-red-600 text-xs mt-1">{validationErrors.type}</div>}
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">Category *</label>
-                <select
-                  name="category"
-                  value={form.category}
-                  onChange={handleChange}
-                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
-                  required
-                >
-                  <option value="all">All</option>
-                  <option value="undergraduate">Undergraduate</option>
-                  <option value="graduate">Graduate</option>
-                  <option value="faculty">Faculty</option>
-                  <option value="staff">Staff</option>
-                </select>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Category *</label>
+                <Select<SelectOption>
+                  options={[
+                    { value: 'all', label: 'All' },
+                    { value: 'undergraduate', label: 'Undergraduate' },
+                    { value: 'graduate', label: 'Graduate' },
+                    { value: 'faculty', label: 'Faculty' },
+                    { value: 'staff', label: 'Staff' },
+                  ]}
+                  onChange={(selectedOption: SelectOption | null) => {
+                    const newValue = selectedOption?.value || '';
+                    setForm((prev) => ({ ...prev, category: newValue }));
+                    validateField('category', newValue);
+                  }}
+                  value={
+                    form.category
+                      ? { value: form.category, label: form.category.charAt(0).toUpperCase() + form.category.slice(1) }
+                      : null
+                  }
+                  placeholder="Select category"
+                  styles={selectStyles}
+                  className="w-full"
+                />
                 {validationErrors.category && <div className="text-red-600 text-xs mt-1">{validationErrors.category}</div>}
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700">Priority *</label>
-                <select
-                  name="priority"
-                  value={form.priority}
-                  onChange={handleChange}
-                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
-                  required
-                >
-                  <option value="high">High</option>
-                  <option value="medium">Medium</option>
-                  <option value="low">Low</option>
-                </select>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Priority *</label>
+                <Select<SelectOption>
+                  options={[
+                    { value: 'high', label: 'High' },
+                    { value: 'medium', label: 'Medium' },
+                    { value: 'low', label: 'Low' },
+                  ]}
+                  onChange={(selectedOption: SelectOption | null) => {
+                    const newValue = selectedOption?.value || '';
+                    setForm((prev) => ({ ...prev, priority: newValue }));
+                    validateField('priority', newValue);
+                  }}
+                  value={
+                    form.priority
+                      ? { value: form.priority, label: form.priority.charAt(0).toUpperCase() + form.priority.slice(1) }
+                      : null
+                  }
+                  placeholder="Select priority"
+                  styles={selectStyles}
+                  className="w-full"
+                />
                 {validationErrors.priority && <div className="text-red-600 text-xs mt-1">{validationErrors.priority}</div>}
               </div>
               <div>
