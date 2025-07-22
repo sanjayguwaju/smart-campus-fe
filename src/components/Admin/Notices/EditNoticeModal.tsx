@@ -226,7 +226,7 @@ const EditNoticeModal: React.FC<EditNoticeModalProps> = ({ isOpen, notice, onClo
               {validationErrors.title && <div className="text-red-600 text-xs mt-1">{validationErrors.title}</div>}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">Content *</label>
+              <label className="block text-sm font-medium text-gray-700">Description *</label>
               <textarea
                 name="content"
                 value={typeof form.content === 'string' ? form.content : ''}
