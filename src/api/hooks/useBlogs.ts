@@ -11,11 +11,12 @@ export const useBlogs = (params?: {
 }) => {
   const queryClient = useQueryClient();
 
-  const blogsQuery = useQuery({
-    queryKey: ['blogs', params],
-    queryFn: () => blogService.getBlogs(params),
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    refetchInterval: 2000, // Poll every 2 seconds for live updates
+  const blogsQuery = useQuery({ 
+    queryKey: ['blogs'], 
+    queryFn: async () => {
+      const response = await blogService.getBlogs();
+      return response.data.data; // Access the nested data array
+    }
   });
 
   const createBlog = useMutation({
@@ -33,5 +34,15 @@ export const useBlogs = (params?: {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['blogs'] })
   });
 
-  return { blogsQuery, createBlog, updateBlog, deleteBlog };
+  const publishBlog = useMutation({
+    mutationFn: blogService.publishBlog,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['blogs'] })
+  });
+
+  const unpublishBlog = useMutation({
+    mutationFn: blogService.unpublishBlog,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['blogs'] })
+  });
+
+  return { blogsQuery, createBlog, updateBlog, deleteBlog, publishBlog, unpublishBlog };
 }; 

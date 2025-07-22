@@ -4,6 +4,7 @@ import { useBlogs } from '../api/hooks/useBlogs';
 import { BlogPost } from '../api/services/blogService';
 
 const Blog: React.FC = () => {
+  const { blogsQuery } = useBlogs();
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const { blogsQuery } = useBlogs();
@@ -53,6 +54,44 @@ const Blog: React.FC = () => {
     { key: 'research', name: 'Research' },
     { key: 'events', name: 'Events' },
   ];
+
+  // Get published blogs from API
+  const blogPosts: BlogPost[] = Array.isArray(blogsQuery.data)
+    ? blogsQuery.data.filter((post: BlogPost) => post.isPublished)
+    : [];
+
+  const filteredPosts = blogPosts.filter(post => {
+    const matchesCategory = selectedCategory === 'all' ||
+      post.tags.some(tag => tag.toLowerCase() === selectedCategory);
+    const matchesSearch = post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      post.summary.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      post.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+    return matchesCategory && matchesSearch;
+  });
+
+  const featuredPost = filteredPosts.length > 0 ? filteredPosts[0] : null;
+  const remainingPosts = filteredPosts.slice(1);
+
+  // Loading state
+  if (blogsQuery.isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (blogsQuery.error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Error Loading Blogs</h2>
+          <p className="text-gray-600">Unable to load blog posts. Please try again later.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -111,25 +150,11 @@ const Blog: React.FC = () => {
             <div className="md:flex">
               <div className="md:w-1/2">
                 {featuredPost.coverImage ? (
-                  <div className="h-64 md:h-full relative overflow-hidden">
-                    <img
-                      src={featuredPost.coverImage}
-                      alt={featuredPost.title}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.style.display = 'none';
-                        target.nextElementSibling?.classList.remove('hidden');
-                      }}
-                    />
-                    {/* Fallback placeholder */}
-                    <div className="hidden h-64 md:h-full bg-gradient-to-br from-blue-400 to-purple-600 flex items-center justify-center">
-                      <div className="text-white text-center">
-                        <Calendar className="h-16 w-16 mx-auto mb-4" />
-                        <p className="text-lg">Featured Article</p>
-                      </div>
-                    </div>
-                  </div>
+                  <img
+                    src={featuredPost.coverImage}
+                    alt={featuredPost.title}
+                    className="h-64 md:h-full w-full object-cover"
+                  />
                 ) : (
                   <div className="h-64 md:h-full bg-gradient-to-br from-blue-400 to-purple-600 flex items-center justify-center">
                     <div className="text-white text-center">
@@ -141,10 +166,14 @@ const Blog: React.FC = () => {
               </div>
               <div className="md:w-1/2 p-8">
                 <div className="flex items-center text-sm text-gray-500 mb-4">
-                  <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
-                    Blog
-                  </span>
-                  <span className="mx-2">•</span>
+                  {featuredPost.tags && featuredPost.tags.length > 0 && (
+                    <>
+                      <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
+                        {featuredPost.tags[0]}
+                      </span>
+                      <span className="mx-2">•</span>
+                    </>
+                  )}
                   <span>{featuredPost.createdAt ? new Date(featuredPost.createdAt).toLocaleDateString() : ''}</span>
                 </div>
                 <h2 className="text-2xl font-bold text-gray-900 mb-4">{featuredPost.title}</h2>
@@ -167,71 +196,72 @@ const Blog: React.FC = () => {
 
       {/* Blog Posts Grid */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredPosts.map((post: BlogPost) => (
-            <article key={post._id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-              {post.coverImage ? (
-                <div className="h-48 relative overflow-hidden">
+        {remainingPosts.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {remainingPosts.map((post) => (
+              <article key={post._id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+                {post.coverImage ? (
                   <img
                     src={post.coverImage}
                     alt={post.title}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.style.display = 'none';
-                      target.nextElementSibling?.classList.remove('hidden');
-                    }}
+                    className="h-48 w-full object-cover"
                   />
-                  {/* Fallback placeholder */}
-                  <div className="hidden h-48 bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
+                ) : (
+                  <div className="h-48 bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
                     <Tag className="h-12 w-12 text-gray-400" />
                   </div>
-                </div>
-              ) : (
-                <div className="h-48 bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
-                  <Tag className="h-12 w-12 text-gray-400" />
-                </div>
-              )}
-              <div className="p-6">
-                <div className="flex items-center text-sm text-gray-500 mb-3">
-                  <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs font-medium">
-                    Blog
-                  </span>
-                </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-3 line-clamp-2">
-                  {post.title}
-                </h3>
-                <p className="text-gray-600 mb-4 line-clamp-3">
-                  {post.summary}
-                </p>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <User className="h-4 w-4 text-gray-400 mr-1" />
-                    <span className="text-sm text-gray-600">{post.author}</span>
+                )}
+                <div className="p-6">
+                  <div className="flex items-center text-sm text-gray-500 mb-3">
+                    {post.tags && post.tags.length > 0 && (
+                      <>
+                        <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs font-medium">
+                          {post.tags[0]}
+                        </span>
+                        <span className="mx-2">•</span>
+                      </>
+                    )}
+                    <span>{post.createdAt ? new Date(post.createdAt).toLocaleDateString() : ''}</span>
                   </div>
-                  <span className="text-sm text-gray-500">
-                    {post.createdAt ? new Date(post.createdAt).toLocaleDateString() : ''}
-                  </span>
-                </div>
-                <div className="mt-4 pt-4 border-t border-gray-200">
-                  <div className="flex flex-wrap gap-2">
-                    {post.tags && post.tags.map((tag: string, index: number) => (
-                      <span
-                        key={index}
-                        className="bg-blue-50 text-blue-700 px-2 py-1 rounded text-xs"
-                      >
-                        {tag}
-                      </span>
-                    ))}
+                  <h3 className="text-xl font-bold text-gray-900 mb-3 line-clamp-2">
+                    {post.title}
+                  </h3>
+                  <p className="text-gray-600 mb-4 line-clamp-3">
+                    {post.summary}
+                  </p>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <User className="h-4 w-4 text-gray-400 mr-1" />
+                      <span className="text-sm text-gray-600">{post.author}</span>
+                    </div>
                   </div>
+                  {post.tags && post.tags.length > 0 && (
+                    <div className="mt-4 pt-4 border-t border-gray-200">
+                      <div className="flex flex-wrap gap-2">
+                        {post.tags.map((tag, index) => (
+                          <span
+                            key={index}
+                            className="bg-blue-50 text-blue-700 px-2 py-1 rounded text-xs"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  <button className="mt-4 w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">
+                    Read Article
+                  </button>
                 </div>
-                <button className="mt-4 w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">
-                  Read Article
-                </button>
-              </div>
-            </article>
-          ))}
-        </div>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">No blog posts found</h3>
+            <p className="text-gray-600">Try adjusting your search or filter criteria.</p>
+          </div>
+        )}
       </div>
 
       {/* Newsletter Signup */}
