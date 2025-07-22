@@ -213,163 +213,194 @@ const EditNoticeModal: React.FC<EditNoticeModalProps> = ({ isOpen, notice, onClo
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6">
           <form onSubmit={handleSubmit} className="space-y-8">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Title *</label>
-              <input
-                type="text"
-                name="title"
-                value={typeof form.title === 'string' ? form.title : ''}
-                onChange={handleChange}
-                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
-                required
-              />
-              {validationErrors.title && <div className="text-red-600 text-xs mt-1">{validationErrors.title}</div>}
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Description *</label>
-              <textarea
-                name="content"
-                value={typeof form.content === 'string' ? form.content : ''}
-                onChange={handleChange}
-                className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
-                rows={4}
-                required
-              />
-              {validationErrors.content && <div className="text-red-600 text-xs mt-1">{validationErrors.content}</div>}
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Type *</label>
-                <Select<SelectOption>
-                  options={[
-                    { value: 'announcement', label: 'Announcement' },
-                    { value: 'academic', label: 'Academic' },
-                    { value: 'administrative', label: 'Administrative' },
-                    { value: 'event', label: 'Event' },
-                    { value: 'emergency', label: 'Emergency' },
-                    { value: 'maintenance', label: 'Maintenance' },
-                    { value: 'other', label: 'Other' },
-                  ]}
-                  onChange={(selectedOption: SelectOption | null) => {
-                    const newValue = selectedOption?.value || '';
-                    setForm((prev) => ({ ...prev, type: newValue }));
-                    validateField('type', newValue);
-                  }}
-                  value={
-                    form.type
-                      ? { value: form.type, label: form.type.charAt(0).toUpperCase() + form.type.slice(1) }
-                      : null
-                  }
-                  placeholder="Select type"
-                  styles={selectStyles}
-                  className="w-full"
-                />
-                {validationErrors.type && <div className="text-red-600 text-xs mt-1">{validationErrors.type}</div>}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Category *</label>
-                <Select<SelectOption>
-                  options={[
-                    { value: 'all', label: 'All' },
-                    { value: 'undergraduate', label: 'Undergraduate' },
-                    { value: 'graduate', label: 'Graduate' },
-                    { value: 'faculty', label: 'Faculty' },
-                    { value: 'staff', label: 'Staff' },
-                  ]}
-                  onChange={(selectedOption: SelectOption | null) => {
-                    const newValue = selectedOption?.value || '';
-                    setForm((prev) => ({ ...prev, category: newValue }));
-                    validateField('category', newValue);
-                  }}
-                  value={
-                    form.category
-                      ? { value: form.category, label: form.category.charAt(0).toUpperCase() + form.category.slice(1) }
-                      : null
-                  }
-                  placeholder="Select category"
-                  styles={selectStyles}
-                  className="w-full"
-                />
-                {validationErrors.category && <div className="text-red-600 text-xs mt-1">{validationErrors.category}</div>}
-              </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Priority *</label>
-                <Select<SelectOption>
-                  options={[
-                    { value: 'high', label: 'High' },
-                    { value: 'medium', label: 'Medium' },
-                    { value: 'low', label: 'Low' },
-                  ]}
-                  onChange={(selectedOption: SelectOption | null) => {
-                    const newValue = selectedOption?.value || '';
-                    setForm((prev) => ({ ...prev, priority: newValue }));
-                    validateField('priority', newValue);
-                  }}
-                  value={
-                    form.priority
-                      ? { value: form.priority, label: form.priority.charAt(0).toUpperCase() + form.priority.slice(1) }
-                      : null
-                  }
-                  placeholder="Select priority"
-                  styles={selectStyles}
-                  className="w-full"
-                />
-                {validationErrors.priority && <div className="text-red-600 text-xs mt-1">{validationErrors.priority}</div>}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Publish Date *</label>
-                <input
-                  type="date"
-                  name="publishDate"
-                  value={form.publishDate?.toString().slice(0, 10) || ''}
-                  onChange={handleChange}
-                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
-                  required
-                />
-                {validationErrors.publishDate && <div className="text-red-600 text-xs mt-1">{validationErrors.publishDate}</div>}
+            {/* Basic Information Section */}
+            <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                <svg className="h-5 w-5 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Basic Information
+              </h3>
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Title *</label>
+                  <input
+                    type="text"
+                    name="title"
+                    value={typeof form.title === 'string' ? form.title : ''}
+                    onChange={handleChange}
+                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                    required
+                  />
+                  {validationErrors.title && <div className="text-red-600 text-xs mt-1">{validationErrors.title}</div>}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Description *</label>
+                  <textarea
+                    name="content"
+                    value={typeof form.content === 'string' ? form.content : ''}
+                    onChange={handleChange}
+                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                    rows={4}
+                    required
+                  />
+                  {validationErrors.content && <div className="text-red-600 text-xs mt-1">{validationErrors.content}</div>}
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Type *</label>
+                    <Select<SelectOption>
+                      options={[
+                        { value: 'announcement', label: 'Announcement' },
+                        { value: 'academic', label: 'Academic' },
+                        { value: 'administrative', label: 'Administrative' },
+                        { value: 'event', label: 'Event' },
+                        { value: 'emergency', label: 'Emergency' },
+                        { value: 'maintenance', label: 'Maintenance' },
+                        { value: 'other', label: 'Other' },
+                      ]}
+                      onChange={(selectedOption: SelectOption | null) => {
+                        const newValue = selectedOption?.value || '';
+                        setForm((prev) => ({ ...prev, type: newValue }));
+                        validateField('type', newValue);
+                      }}
+                      value={
+                        form.type
+                          ? { value: form.type, label: form.type.charAt(0).toUpperCase() + form.type.slice(1) }
+                          : null
+                      }
+                      placeholder="Select type"
+                      styles={selectStyles}
+                      className="w-full"
+                    />
+                    {validationErrors.type && <div className="text-red-600 text-xs mt-1">{validationErrors.type}</div>}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Category *</label>
+                    <Select<SelectOption>
+                      options={[
+                        { value: 'all', label: 'All' },
+                        { value: 'undergraduate', label: 'Undergraduate' },
+                        { value: 'graduate', label: 'Graduate' },
+                        { value: 'faculty', label: 'Faculty' },
+                        { value: 'staff', label: 'Staff' },
+                      ]}
+                      onChange={(selectedOption: SelectOption | null) => {
+                        const newValue = selectedOption?.value || '';
+                        setForm((prev) => ({ ...prev, category: newValue }));
+                        validateField('category', newValue);
+                      }}
+                      value={
+                        form.category
+                          ? { value: form.category, label: form.category.charAt(0).toUpperCase() + form.category.slice(1) }
+                          : null
+                      }
+                      placeholder="Select category"
+                      styles={selectStyles}
+                      className="w-full"
+                    />
+                    {validationErrors.category && <div className="text-red-600 text-xs mt-1">{validationErrors.category}</div>}
+                  </div>
+                </div>
               </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Expiry Date</label>
-                <input
-                  type="date"
-                  name="expiryDate"
-                  value={form.expiryDate?.toString().slice(0, 10) || ''}
-                  onChange={handleChange}
-                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
-                  required
-                />
-                {validationErrors.expiryDate && <div className="text-red-600 text-xs mt-1">{validationErrors.expiryDate}</div>}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Author *</label>
-                <input
-                  type="text"
-                  name="author"
-                  value={typeof form.author === 'object' && form.author !== null ? form.author.name : form.author || ''}
-                  readOnly
-                  className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-100"
-                  required
-                />
-                {validationErrors.author && <div className="text-red-600 text-xs mt-1">{validationErrors.author}</div>}
+
+            {/* Date & Time Section */}
+            <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                <svg className="h-5 w-5 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                Date & Time
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Publish Date *</label>
+                  <input
+                    type="date"
+                    name="publishDate"
+                    value={form.publishDate?.toString().slice(0, 10) || ''}
+                    onChange={handleChange}
+                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                    required
+                  />
+                  {validationErrors.publishDate && <div className="text-red-600 text-xs mt-1">{validationErrors.publishDate}</div>}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Expiry Date</label>
+                  <input
+                    type="date"
+                    name="expiryDate"
+                    value={form.expiryDate?.toString().slice(0, 10) || ''}
+                    onChange={handleChange}
+                    className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2"
+                    required
+                  />
+                  {validationErrors.expiryDate && <div className="text-red-600 text-xs mt-1">{validationErrors.expiryDate}</div>}
+                </div>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                name="pinned"
-                checked={!!form.pinned}
-                onChange={handleChange}
-                className="h-4 w-4 text-blue-600 border-gray-300 rounded"
-              />
-              <label className="text-sm text-gray-700">Pin to top</label>
+
+            {/* Additional Information Section */}
+            <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                <svg className="h-5 w-5 text-purple-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4" />
+                </svg>
+                Additional Information
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Priority *</label>
+                  <Select<SelectOption>
+                    options={[
+                      { value: 'high', label: 'High' },
+                      { value: 'medium', label: 'Medium' },
+                      { value: 'low', label: 'Low' },
+                    ]}
+                    onChange={(selectedOption: SelectOption | null) => {
+                      const newValue = selectedOption?.value || '';
+                      setForm((prev) => ({ ...prev, priority: newValue }));
+                      validateField('priority', newValue);
+                    }}
+                    value={
+                      form.priority
+                        ? { value: form.priority, label: form.priority.charAt(0).toUpperCase() + form.priority.slice(1) }
+                        : null
+                    }
+                    placeholder="Select priority"
+                    styles={selectStyles}
+                    className="w-full"
+                  />
+                  {validationErrors.priority && <div className="text-red-600 text-xs mt-1">{validationErrors.priority}</div>}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Author *</label>
+                  <input
+                    type="text"
+                    name="author"
+                    value={typeof form.author === 'object' && form.author !== null ? form.author.name : form.author || ''}
+                    readOnly
+                    className="my-2 block w-full border border-gray-300 rounded-md px-3 py-2.5 bg-gray-100"
+                    required
+                  />
+                  {validationErrors.author && <div className="text-red-600 text-xs mt-1">{validationErrors.author}</div>}
+                </div>
+              </div>
             </div>
             {error && <div className="text-red-600 text-sm">{error}</div>}
             {serverError && <div className="text-red-600 text-sm mb-2">{serverError}</div>}
-            <div className="flex justify-end">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  name="pinned"
+                  checked={!!form.pinned}
+                  onChange={handleChange}
+                  className="h-4 w-4 text-blue-600 border-gray-300 rounded"
+                />
+                <label className="text-sm text-gray-700">Pin to top</label>
+              </div>
               <button
                 type="submit"
                 className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
