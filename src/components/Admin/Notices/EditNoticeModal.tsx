@@ -401,13 +401,22 @@ const EditNoticeModal: React.FC<EditNoticeModalProps> = ({ isOpen, notice, onClo
                 />
                 <label className="text-sm text-gray-700">Pin to top</label>
               </div>
-              <button
-                type="submit"
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-                disabled={Object.values(validationErrors).some((msg) => msg) || updateNotice.status === 'pending'}
-              >
-                {updateNotice.status === 'pending' ? 'Saving...' : 'Update Notice'}
-              </button>
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="px-6 py-3 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors duration-200 font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium shadow-lg hover:shadow-xl"
+                  disabled={Object.values(validationErrors).some((msg) => msg) || updateNotice.status === 'pending'}
+                >
+                  {updateNotice.status === 'pending' ? 'Saving...' : 'Update Notice'}
+                </button>
+              </div>
             </div>
           </form>
         </div>
