@@ -177,7 +177,7 @@ export const facultyAdvisees = [
       title: "Department Meeting",
       date: "2024-07-10",
       time: "14:00",
-      location: "Main Conference Room",
+      location: "MainhvhJXmjkjk",
       description: "Monthly department meeting for all faculty members.",
       type: "Meeting",
       department: "Electrical"

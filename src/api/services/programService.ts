@@ -50,6 +50,62 @@ export async function getPrograms(params?: {
   return response.data;
 }
 
+// Types for program application
+export interface ProgramApplication {
+  _id: string;
+  student: any;
+  program: any;
+  campusId: string;
+  documents?: { url: string; name: string }[];
+  status: 'pending' | 'verified' | 'rejected';
+  adminRemarks?: string;
+  verifiedBy?: any;
+  verifiedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ProgramApplicationResponse {
+  success: boolean;
+  message: string;
+  data: ProgramApplication;
+  timestamp: string;
+}
+
+export interface ProgramApplicationsResponse {
+  success: boolean;
+  message: string;
+  data: ProgramApplication[];
+  timestamp: string;
+}
+
+// Submit a new program application
+async function submitProgramApplication(payload: {
+  program: string;
+  campusId: string;
+  documents?: { url: string; name: string }[];
+}): Promise<ProgramApplicationResponse> {
+  const response = await apiClient.post<ProgramApplicationResponse>(
+    '/programs/applications',
+    payload
+  );
+  return response.data;
+}
+
+// Get program applications (student or admin)
+async function getProgramApplications(params?: {
+  status?: string;
+  program?: string;
+}): Promise<ProgramApplicationsResponse> {
+  let url = '/programs/applications';
+  const query: string[] = [];
+  if (params?.status) query.push(`status=${params.status}`);
+  if (params?.program) query.push(`program=${params.program}`);
+  if (query.length) url += `?${query.join('&')}`;
+  const response = await apiClient.get<ProgramApplicationsResponse>(url);
+  return response.data;
+}
+
 export const programService = {
   getPrograms,
   async getProgramById(id: string): Promise<ProgramResponse> {
@@ -90,4 +146,6 @@ export const programService = {
     const response = await apiClient.put(`/programs/${id}/publish`, { isPublished: false });
     return response.data;
   },
+  submitProgramApplication,
+  getProgramApplications,
 };
