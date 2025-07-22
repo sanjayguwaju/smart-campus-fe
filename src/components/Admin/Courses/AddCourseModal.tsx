@@ -1,11 +1,12 @@
 import React from 'react';
 import { useForm, Controller } from 'react-hook-form';
-import Select, { StylesConfig, SingleValue } from 'react-select';
+import AsyncSelect from 'react-select/async';
+import { StylesConfig, SingleValue } from 'react-select';
 import { useCreateCourse } from '../../../api/hooks/useCourses';
 import { CreateCourseRequest } from '../../../api/types/courses';
-import { usePrograms } from '../../../api/hooks/usePrograms';
-import { useDepartments } from '../../../api/hooks/useDepartments';
-import { useUsers } from '../../../api/hooks/useUsers';
+import { departmentService } from '../../../api/services/departmentService';
+import { userService } from '../../../api/services/userService';
+import { programService } from '../../../api/services/programService';
 
 interface AddCourseModalProps {
   isOpen: boolean;
@@ -74,12 +75,54 @@ const AddCourseModal: React.FC<AddCourseModalProps> = ({ isOpen, onClose }) => {
     }
   });
 
-  const { data: programsData, isLoading: programsLoading } = usePrograms(1, 100);
-  const programOptions = programsData?.programs?.map((p: { _id: string; name: string }) => ({ value: p._id, label: p.name })) || [];
-  const { data: departmentsData, isLoading: departmentsLoading } = useDepartments(1, 100);
-  const departmentOptions = departmentsData?.departments?.map((d: { _id: string; name: string }) => ({ value: d._id, label: d.name })) || [];
-  const { data: usersData, isLoading: usersLoading } = useUsers(1, 100, '', { role: 'faculty' });
-  const instructorOptions = (usersData?.users?.map((u: { _id: string; fullName: string }) => ({ value: u._id, label: u.fullName })) || []).sort((a, b) => a.label.localeCompare(b.label));
+  // State to store selected option labels
+  const [selectedDepartment, setSelectedDepartment] = React.useState<SelectOption | null>(null);
+  const [selectedInstructor, setSelectedInstructor] = React.useState<SelectOption | null>(null);
+  const [selectedProgram, setSelectedProgram] = React.useState<SelectOption | null>(null);
+
+
+
+  // Load options functions for AsyncSelect
+  const loadDepartmentOptions = async (inputValue: string) => {
+    try {
+      const response = await departmentService.getDepartments(1, 100, inputValue);
+      console.log('Department response xxxx:', response.data);
+      const options = response.data?.map((d: { _id: string; name: string }) => ({ value: d._id, label: d.name })) || [];
+      return options.filter((option: SelectOption) =>
+        option.label.toLowerCase().includes(inputValue.toLowerCase())
+      );
+    } catch (error) {
+      console.error('Error loading departments:', error);
+      return [];
+    }
+  };
+
+  const loadInstructorOptions = async (inputValue: string) => {
+    try {
+      const response = await userService.getUsers(1, 100, inputValue, { role: 'faculty' });
+      const options = (response.data?.map((u: { _id: string; fullName: string }) => ({ value: u._id, label: u.fullName })) || [])
+        .sort((a: SelectOption, b: SelectOption) => a.label.localeCompare(b.label));
+      return options.filter((option: SelectOption) =>
+        option.label.toLowerCase().includes(inputValue.toLowerCase())
+      );
+    } catch (error) {
+      console.error('Error loading instructors:', error);
+      return [];
+    }
+  };
+
+  const loadProgramOptions = async (inputValue: string) => {
+    try {
+      const response = await programService.getPrograms({ page: 1, limit: 100, search: inputValue });
+      const options = response.programs?.map((p: { _id: string; name: string }) => ({ value: p._id, label: p.name })) || [];
+      return options.filter((option: SelectOption) =>
+        option.label.toLowerCase().includes(inputValue.toLowerCase())
+      );
+    } catch (error) {
+      console.error('Error loading programs:', error);
+      return [];
+    }
+  };
 
   const onSubmit = async (data: CreateCourseRequest) => {
     try {
@@ -282,15 +325,21 @@ const AddCourseModal: React.FC<AddCourseModalProps> = ({ isOpen, onClose }) => {
                     control={control}
                     rules={{ required: 'Department is required' }}
                     render={({ field }) => (
-                      <Select
-                        options={departmentOptions}
-                        isLoading={departmentsLoading}
-                        onChange={(newValue) => field.onChange((newValue as { value: string; label: string } | null)?.value)}
+                      <AsyncSelect
+                        loadOptions={loadDepartmentOptions}
+                        onChange={(newValue) => {
+                          const singleValue = newValue as SingleValue<SelectOption>;
+                          field.onChange(singleValue?.value || '');
+                          setSelectedDepartment(singleValue);
+                        }}
                         onBlur={field.onBlur}
-                        value={departmentOptions.find((opt: { value: string; label: string }) => opt.value === field.value) || null}
+                        value={selectedDepartment}
                         placeholder="Select department"
                         styles={selectStyles}
                         className="w-full"
+                        isSearchable
+                        cacheOptions
+                        defaultOptions
                       />
                     )}
                   />
@@ -308,16 +357,21 @@ const AddCourseModal: React.FC<AddCourseModalProps> = ({ isOpen, onClose }) => {
                     control={control}
                     rules={{ required: 'Instructor is required' }}
                     render={({ field }) => (
-                      <Select
-                        options={instructorOptions}
-                        isLoading={usersLoading}
-                        isSearchable
-                        onChange={(newValue) => field.onChange((newValue as { value: string; label: string } | null)?.value)}
+                      <AsyncSelect
+                        loadOptions={loadInstructorOptions}
+                        onChange={(newValue) => {
+                          const singleValue = newValue as SingleValue<SelectOption>;
+                          field.onChange(singleValue?.value || '');
+                          setSelectedInstructor(singleValue);
+                        }}
                         onBlur={field.onBlur}
-                        value={instructorOptions.find((opt: { value: string; label: string }) => opt.value === field.value) || null}
+                        value={selectedInstructor}
                         placeholder="Select instructor"
                         styles={selectStyles}
                         className="w-full"
+                        isSearchable
+                        cacheOptions
+                        defaultOptions
                       />
                     )}
                   />
@@ -351,27 +405,7 @@ const AddCourseModal: React.FC<AddCourseModalProps> = ({ isOpen, onClose }) => {
                   )}
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Semester Term (optional)
-                  </label>
-                  <Controller
-                    name="semesterTerm"
-                    control={control}
-                    render={({ field }) => (
-                      <select
-                        {...field}
-                        className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 border-gray-200"
-                      >
-                        <option value="">Select term (optional)</option>
-                        <option value="Fall">Fall</option>
-                        <option value="Spring">Spring</option>
-                        <option value="Summer">Summer</option>
-                        <option value="Winter">Winter</option>
-                      </select>
-                    )}
-                  />
-                </div>
+
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -382,15 +416,21 @@ const AddCourseModal: React.FC<AddCourseModalProps> = ({ isOpen, onClose }) => {
                     control={control}
                     rules={{ required: 'Program is required' }}
                     render={({ field }) => (
-                      <Select
-                        options={programOptions}
-                        isLoading={programsLoading}
-                        onChange={(newValue) => field.onChange((newValue as { value: string; label: string } | null)?.value)}
+                      <AsyncSelect
+                        loadOptions={loadProgramOptions}
+                        onChange={(newValue) => {
+                          const singleValue = newValue as SingleValue<SelectOption>;
+                          field.onChange(singleValue?.value || '');
+                          setSelectedProgram(singleValue);
+                        }}
                         onBlur={field.onBlur}
-                        value={programOptions.find((opt: { value: string; label: string }) => opt.value === field.value) || null}
+                        value={selectedProgram}
                         placeholder="Select program"
                         styles={selectStyles}
                         className="w-full"
+                        isSearchable
+                        cacheOptions
+                        defaultOptions
                       />
                     )}
                   />
