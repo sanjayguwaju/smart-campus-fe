@@ -24,7 +24,7 @@ const ApplyProgramModal: React.FC<ApplyProgramModalProps> = ({ open, onClose, pr
     try {
       await programService.submitProgramApplication({
         program: program._id,
-        campusId,
+        studentId: campusId, // changed from campusId to studentId
       });
       setSuccess(true);
       if (onSuccess) onSuccess();

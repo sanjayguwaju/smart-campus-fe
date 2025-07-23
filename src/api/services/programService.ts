@@ -86,7 +86,7 @@ async function submitProgramApplication(payload: {
   documents?: { url: string; name: string }[];
 }): Promise<ProgramApplicationResponse> {
   const response = await apiClient.post<ProgramApplicationResponse>(
-    '/programs/applications',
+    '/program-applications',
     payload
   );
   return response.data;
@@ -97,7 +97,7 @@ async function getProgramApplications(params?: {
   status?: string;
   program?: string;
 }): Promise<ProgramApplicationsResponse> {
-  let url = '/programs/applications';
+  let url = '/program-applications';
   const query: string[] = [];
   if (params?.status) query.push(`status=${params.status}`);
   if (params?.program) query.push(`program=${params.program}`);

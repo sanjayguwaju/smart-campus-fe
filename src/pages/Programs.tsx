@@ -30,7 +30,7 @@ const Programs: React.FC = () => {
     selectedDepartment !== 'all' ? selectedDepartment : undefined,
     selectedLevel !== 'all' ? selectedLevel : undefined,
     {
-      refetchInterval: 3000, // auto-refresh every 3 seconds
+      // refetchInterval: 3000, // auto-refresh every 3 seconds (removed to prevent too many requests)
       refetchOnWindowFocus: true, // also refresh when tab is focused
     }
   );
