@@ -55,12 +55,10 @@ export interface ProgramApplication {
   _id: string;
   student: any;
   program: any;
-  campusId: string;
-  documents?: { url: string; name: string }[];
-  status: 'pending' | 'verified' | 'rejected';
-  adminRemarks?: string;
-  verifiedBy?: any;
-  verifiedAt?: string;
+  studentId: string;
+  status: 'pending' | 'approved' | 'rejected';
+  reason?: string;
+  appliedAt: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -106,6 +104,16 @@ async function getProgramApplications(params?: {
   return response.data;
 }
 
+// Approve a program application
+async function approveProgramApplication(id: string) {
+  return apiClient.patch(`/program-applications/${id}/approve`);
+}
+
+// Reject a program application
+async function rejectProgramApplication(id: string, reason: string) {
+  return apiClient.patch(`/program-applications/${id}/reject`, { reason });
+}
+
 export const programService = {
   getPrograms,
   async getProgramById(id: string): Promise<ProgramResponse> {
@@ -148,4 +156,6 @@ export const programService = {
   },
   submitProgramApplication,
   getProgramApplications,
+  approveProgramApplication,
+  rejectProgramApplication,
 };
