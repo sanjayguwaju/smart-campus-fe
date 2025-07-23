@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Program } from '../../api/types/programs';
 import { programService } from '../../api/services/programService';
 import ImageUpload from './ImageUpload';
+import { toast } from 'react-hot-toast';
 
 interface ApplyProgramModalProps {
   open: boolean;
@@ -29,16 +30,17 @@ const ApplyProgramModal: React.FC<ApplyProgramModalProps> = ({ open, onClose, pr
       return;
     }
     try {
-      console.log('Submitting application:', { program: program?._id, studentId: campusId, idCardUrl });
       await programService.submitProgramApplication({
         program: program._id,
-        studentId: campusId, // changed from campusId to studentId
+        studentId: campusId, // campusId for admin reference
         idCardUrl,
       });
       setSuccess(true);
       if (onSuccess) onSuccess();
     } catch (err: any) {
-      setError(err?.response?.data?.message || err.message || 'Failed to submit application');
+      const msg = err?.response?.data?.message || err.message || 'Failed to submit application';
+      setError(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
@@ -88,7 +90,7 @@ const ApplyProgramModal: React.FC<ApplyProgramModalProps> = ({ open, onClose, pr
               />
               {!idCardUrl && <div className="text-red-500 text-xs mt-1">ID card image is required.</div>}
             </div>
-            {error && <div className="text-red-600 text-sm">{error}</div>}
+            {error && <div className="text-red-600 text-sm font-semibold bg-red-50 border border-red-200 rounded p-2">{error}</div>}
             <button
               type="submit"
               className="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50"

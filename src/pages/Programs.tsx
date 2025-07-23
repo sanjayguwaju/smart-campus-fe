@@ -103,6 +103,12 @@ const Programs: React.FC = () => {
     return app ? app.status : null;
   };
 
+  // Helper to check if user can apply (no pending/approved app)
+  const canApply = (programId: string) => {
+    const app = applications.find(a => a.program && a.program._id === programId);
+    return !app || app.status === 'rejected';
+  };
+
   // Handler for Apply Now
   const handleApplyNow = (program: Program) => {
     setApplyProgram(program);
@@ -343,20 +349,20 @@ const Programs: React.FC = () => {
                           <button className="flex-1 bg-yellow-400 text-white px-4 py-2 rounded-lg font-semibold cursor-not-allowed" disabled>
                             Pending
                           </button>
-                        ) : getAppStatus(program._id) === 'verified' ? (
+                        ) : getAppStatus(program._id) === 'approved' ? (
                           <button className="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg font-semibold cursor-not-allowed" disabled>
-                            Verified
+                            Approved
                           </button>
-                        ) : getAppStatus(program._id) === 'rejected' ? (
-                          <button className="flex-1 bg-red-500 text-white px-4 py-2 rounded-lg font-semibold cursor-not-allowed" disabled>
-                            Rejected
-                          </button>
-                        ) : (
+                        ) : canApply(program._id) ? (
                           <button
                             className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors duration-200"
                             onClick={e => { e.stopPropagation(); handleApplyNow(program); }}
                           >
                             Apply Now
+                          </button>
+                        ) : (
+                          <button className="flex-1 bg-red-500 text-white px-4 py-2 rounded-lg font-semibold cursor-not-allowed" disabled>
+                            Rejected
                           </button>
                         )
                       )}
