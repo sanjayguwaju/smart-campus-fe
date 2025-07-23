@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Program } from '../../api/types/programs';
 import { programService } from '../../api/services/programService';
+import ImageUpload from './ImageUpload';
 
 interface ApplyProgramModalProps {
   open: boolean;
@@ -11,6 +12,7 @@ interface ApplyProgramModalProps {
 
 const ApplyProgramModal: React.FC<ApplyProgramModalProps> = ({ open, onClose, program, onSuccess }) => {
   const [campusId, setCampusId] = useState('');
+  const [idCardUrl, setIdCardUrl] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -21,11 +23,17 @@ const ApplyProgramModal: React.FC<ApplyProgramModalProps> = ({ open, onClose, pr
     e.preventDefault();
     setLoading(true);
     setError(null);
+    if (!idCardUrl) {
+      setError('ID Card image is required.');
+      setLoading(false);
+      return;
+    }
     try {
-      console.log('Submitting application:', { program: program?._id, studentId: campusId });
+      console.log('Submitting application:', { program: program?._id, studentId: campusId, idCardUrl });
       await programService.submitProgramApplication({
         program: program._id,
         studentId: campusId, // changed from campusId to studentId
+        idCardUrl,
       });
       setSuccess(true);
       if (onSuccess) onSuccess();
@@ -38,6 +46,7 @@ const ApplyProgramModal: React.FC<ApplyProgramModalProps> = ({ open, onClose, pr
 
   const handleClose = () => {
     setCampusId('');
+    setIdCardUrl('');
     setError(null);
     setSuccess(false);
     onClose();
@@ -69,12 +78,21 @@ const ApplyProgramModal: React.FC<ApplyProgramModalProps> = ({ open, onClose, pr
                 disabled={loading}
               />
             </div>
-            {/* Optional: Add document upload here */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">College ID Card <span className="text-red-500">*</span></label>
+              <ImageUpload
+                onImageUpload={setIdCardUrl}
+                currentImage={idCardUrl}
+                className="w-full h-40"
+                disabled={loading}
+              />
+              {!idCardUrl && <div className="text-red-500 text-xs mt-1">ID card image is required.</div>}
+            </div>
             {error && <div className="text-red-600 text-sm">{error}</div>}
             <button
               type="submit"
               className="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50"
-              disabled={loading || !campusId}
+              disabled={loading || !campusId || !idCardUrl}
             >
               {loading ? 'Submitting...' : 'Submit Application'}
             </button>

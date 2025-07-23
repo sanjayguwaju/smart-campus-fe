@@ -80,8 +80,8 @@ export interface ProgramApplicationsResponse {
 // Submit a new program application
 async function submitProgramApplication(payload: {
   program: string;
-  campusId: string;
-  documents?: { url: string; name: string }[];
+  studentId: string;
+  idCardUrl: string;
 }): Promise<ProgramApplicationResponse> {
   const response = await apiClient.post<ProgramApplicationResponse>(
     '/program-applications',
