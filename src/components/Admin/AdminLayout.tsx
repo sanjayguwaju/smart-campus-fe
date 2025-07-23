@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import {
@@ -13,7 +13,6 @@ import {
   Settings,
 } from 'lucide-react';
 import { AdminHeader } from './AdminHeader';
-import { useState } from 'react';
 
 interface NavigationItem {
   name: string;
@@ -26,7 +25,21 @@ interface NavigationItem {
 const AdminLayout: React.FC = () => {
   const { user, logout } = useAuthStore();
   const location = useLocation();
-  const [programsOpen, setProgramsOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState<string | null>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Click-away listener for dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setDropdownOpen(null);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const navigation: NavigationItem[] = [
     { name: 'Dashboard', href: '/admin', icon: Home },
@@ -34,10 +47,10 @@ const AdminLayout: React.FC = () => {
     { name: 'Departments', href: '/admin/departments', icon: Building },
     {
       name: 'Programs',
+      href: '/admin/programs',
       icon: GraduationCap,
       dropdown: true,
       children: [
-        { name: 'Programs', href: '/admin/programs', icon: GraduationCap },
         { name: 'Courses', href: '/admin/courses', icon: BookOpen },
         { name: 'Program Applications', href: '/admin/program-applications', icon: FileText },
       ],
@@ -62,29 +75,44 @@ const AdminLayout: React.FC = () => {
         <nav className="mt-8 px-4">
           <ul className="space-y-2">
             {navigation.map((item) => (
-              <li key={item.name}>
+              <li key={item.name} className="relative">
                 {item.dropdown ? (
-                  <div>
-                    <button
-                      type="button"
-                      className={`flex items-center w-full px-4 py-3 text-sm font-medium rounded-lg transition-colors ${programsOpen ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}`}
-                      onClick={() => setProgramsOpen((open) => !open)}
-                    >
-                      <item.icon className="mr-3 h-5 w-5" />
-                      {item.name}
-                      <svg className={`ml-auto h-4 w-4 transition-transform ${programsOpen ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
-                    </button>
-                    {programsOpen && (
-                      <ul className="pl-6 mt-1 space-y-1">
+                  <div ref={dropdownRef}>
+                    <div className="flex items-center">
+                      <Link
+                        to={item.href!}
+                        className={`flex-1 flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors w-full ${isActive(item.href!) ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'}`}
+                        tabIndex={0}
+                      >
+                        <item.icon className="mr-3 h-5 w-5" />
+                        {item.name}
+                      </Link>
+                      <button
+                        type="button"
+                        className="dropdown-arrow ml-1 p-2 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        aria-label="Toggle Programs Dropdown"
+                        tabIndex={0}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setDropdownOpen(dropdownOpen === item.name ? null : item.name);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Escape') setDropdownOpen(null);
+                        }}
+                      >
+                        <svg className={`h-4 w-4 transition-transform ${dropdownOpen === item.name ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                      </button>
+                    </div>
+                    {dropdownOpen === item.name && (
+                      <ul className="absolute left-0 mt-2 w-56 bg-white shadow-xl border border-gray-100 rounded-lg z-50 py-2 animate-fade-in">
                         {item.children?.map((child) => (
                           <li key={child.name}>
                             {child.href && (
                               <Link
                                 to={child.href}
-                                className={`flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors ${isActive(child.href)
-                                  ? 'bg-blue-100 text-blue-700'
-                                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                                }`}
+                                className="flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors text-gray-700 hover:bg-blue-50 hover:text-blue-700"
+                                onClick={() => setDropdownOpen(null)}
+                                tabIndex={0}
                               >
                                 <child.icon className="mr-3 h-4 w-4" />
                                 {child.name}

@@ -227,12 +227,22 @@ const ProgramApplicationsList: React.FC = () => {
               const name = app.studentId || student.fullName || (student.firstName && student.lastName ? `${student.firstName} ${student.lastName}` : typeof student === 'string' ? student : 'N/A');
               const email = student.email || '-';
               const initials = getInitials(name);
+              // TypeScript: app may have idCardUrl from backend, but not in type
+              const idCardUrl = (app as any).idCardUrl || (app as any).id_card_url || (app as any).id_card;
               return (
                 <tr key={app._id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-6 py-4 whitespace-nowrap flex items-center gap-3">
-                    <span className="inline-flex items-center justify-center h-9 w-9 rounded-full bg-blue-100 text-blue-700 font-bold text-lg">
-                      {initials}
-                    </span>
+                    {idCardUrl ? (
+                      <img
+                        src={idCardUrl}
+                        alt="ID Card"
+                        className="h-9 w-9 rounded-full object-cover border border-gray-200 shadow-sm bg-white"
+                      />
+                    ) : (
+                      <span className="inline-flex items-center justify-center h-9 w-9 rounded-full bg-blue-100 text-blue-700 font-bold text-lg">
+                        {initials}
+                      </span>
+                    )}
                     <span className="font-medium text-gray-900">{name}</span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-gray-700">{email}</td>
