@@ -30,6 +30,7 @@ const AdminLayout: React.FC = () => {
     { name: 'Blog', href: '/admin/blog', icon: FileText },
     { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
     { name: 'Settings', href: '/admin/settings', icon: Settings },
+    { name: 'Program Applications', href: '/admin/program-applications', icon: FileText },
   ];
 
   const isActive = (path: string) => location.pathname === path;

@@ -23,11 +23,12 @@ const ProgramApplicationsList: React.FC = () => {
     }
   };
 
-  const handleReject = async (id: string) => {
+  const handleReject = async (id: string, studentId: string) => {
     const reason = prompt('Enter rejection reason:');
     if (!reason) return;
     try {
-      await programService.rejectProgramApplication(id, reason);
+      console.log('Rejecting application:', { id, reason, studentId });
+      await programService.rejectProgramApplication(id, reason, studentId);
       setApplications(apps => apps.map(app => app._id === id ? { ...app, status: 'rejected', reason } : app));
     } catch (err: any) {
       setError(err?.response?.data?.message || 'Failed to reject application');
@@ -61,7 +62,7 @@ const ProgramApplicationsList: React.FC = () => {
                 {app.status === 'pending' && (
                   <>
                     <button className="bg-green-500 text-white px-2 py-1 rounded mr-2" onClick={() => handleApprove(app._id)}>Approve</button>
-                    <button className="bg-red-500 text-white px-2 py-1 rounded" onClick={() => handleReject(app._id)}>Reject</button>
+                    <button className="bg-red-500 text-white px-2 py-1 rounded" onClick={() => handleReject(app._id, app.studentId || app.student?.studentId || app.student)}>Reject</button>
                   </>
                 )}
                 {app.status !== 'pending' && <span className="text-gray-400">No actions</span>}

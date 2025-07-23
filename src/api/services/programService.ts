@@ -110,8 +110,8 @@ async function approveProgramApplication(id: string) {
 }
 
 // Reject a program application
-async function rejectProgramApplication(id: string, reason: string) {
-  return apiClient.patch(`/program-applications/${id}/reject`, { reason });
+async function rejectProgramApplication(id: string, reason: string, studentId: string) {
+  return apiClient.patch(`/program-applications/${id}/reject`, { reason, studentId });
 }
 
 export const programService = {

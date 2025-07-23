@@ -43,6 +43,7 @@ import Departments from './pages/Admin/Departments';
 import AdminCourses from './pages/Admin/Courses';
 import FacultyCourses from './pages/Faculty/Courses';
 import StudentMockDemo from './pages/StudentMockDemo';
+import ProgramApplicationsList from './components/Admin/ProgramApplications/ProgramApplicationsList';
 
 
 function App() {
@@ -98,6 +99,7 @@ function App() {
           <Route path="blog" element={<AdminBlog />} />
           <Route path="analytics" element={<Analytics />} />
           <Route path="settings" element={<Settings />} />
+          <Route path="program-applications" element={<ProgramApplicationsList />} />
         </Route>
 
         {/* Faculty routes with role-based protection */}
