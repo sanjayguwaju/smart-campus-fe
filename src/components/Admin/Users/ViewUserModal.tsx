@@ -1,6 +1,8 @@
 import React from 'react';
 import { X, User, Mail, Phone, Calendar, Shield, UserCheck, UserX, Building, GraduationCap, Briefcase } from 'lucide-react';
-import { UserData } from '../../api/types/users';
+import { useDepartments } from '../../../api/hooks/useDepartments';
+import { UserData } from '../../../api/types/users';
+import { DepartmentData } from '../../../api/types/departments';
 
 interface ViewUserModalProps {
   isOpen: boolean;
@@ -14,6 +16,10 @@ const ViewUserModal: React.FC<ViewUserModalProps> = ({
   user
 }) => {
   if (!isOpen || !user) return null;
+
+  const { data: departmentData } = useDepartments(1, 100);
+  const departments: DepartmentData[] = departmentData?.departments || [];
+  const getDepartmentName = (id: string) => departments.find((dep: DepartmentData) => dep._id === id)?.name || id;
 
   // Helper function to get display name
   const getDisplayName = (user: UserData) => {
@@ -174,7 +180,7 @@ const ViewUserModal: React.FC<ViewUserModalProps> = ({
                   <Building className="h-4 w-4 text-gray-400" />
                   <div>
                     <p className="text-xs text-gray-500">Department</p>
-                    <p className="text-sm font-medium text-gray-900">{user.department}</p>
+                    <p className="text-sm font-medium text-gray-900">{getDepartmentName(user.department)}</p>
                   </div>
                 </div>
               )}

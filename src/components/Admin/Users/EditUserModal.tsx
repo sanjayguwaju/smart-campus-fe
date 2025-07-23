@@ -3,6 +3,7 @@ import { useForm, Controller } from 'react-hook-form';
 import Select, { StylesConfig } from 'react-select';
 import { useUpdateUser } from '../../../api/hooks/useUsers';
 import { UpdateUserRequest, UserData } from '../../../api/types/users';
+import { useDepartments } from '../../../api/hooks/useDepartments';
 
 interface EditUserModalProps {
   isOpen: boolean;
@@ -17,6 +18,8 @@ interface SelectOption {
 
 const EditUserModal: React.FC<EditUserModalProps> = ({ isOpen, onClose, user }) => {
   const updateUserMutation = useUpdateUser();
+  const { data: departmentData } = useDepartments(1, 100);
+  const departments = departmentData?.departments || [];
   
   // Custom styles for react-select
   const selectStyles: StylesConfig<SelectOption> = {
@@ -308,15 +311,23 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ isOpen, onClose, user }) 
                     <Controller
                       name="department"
                       control={control}
+                      rules={{ required: 'Department is required' }}
                       render={({ field }) => (
-                        <input
-                          {...field}
-                          type="text"
-                          className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
-                          placeholder="Enter department"
+                        <Select<SelectOption>
+                          options={departments.map(dep => ({ value: dep._id, label: dep.name }))}
+                          onChange={(selectedOption: SelectOption | null) => field.onChange(selectedOption?.value)}
+                          onBlur={field.onBlur}
+                          value={departments.length ? departments.map(dep => ({ value: dep._id, label: dep.name })).find(opt => opt.value === field.value) || null : null}
+                          placeholder="Select department"
+                          styles={selectStyles}
+                          className="w-full"
+                          isLoading={!departments.length}
                         />
                       )}
                     />
+                    {errors.department && (
+                      <p className="mt-1 text-sm text-red-600">{errors.department.message}</p>
+                    )}
                   </div>
                 )}
               </div>

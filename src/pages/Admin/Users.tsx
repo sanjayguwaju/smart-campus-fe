@@ -4,6 +4,8 @@ import { toast } from 'react-hot-toast';
 import Select, { StylesConfig } from 'react-select';
 import { useDebounce } from '@uidotdev/usehooks';
 import { useUsers, useDeleteUser, useActivateUser, useDeactivateUser, useResetPassword, useVerifyUser, useUnverifyUser } from '../../api/hooks/useUsers';
+import { useDepartments } from '../../api/hooks/useDepartments';
+import { DepartmentData } from '../../api/types/departments';
 import { UserData } from '../../api/types/users';
 import LoadingSpinner from '../../components/Layout/LoadingSpinner';
 import { AddUserModal } from '../../components/Admin/Users';
@@ -114,6 +116,9 @@ const Users: React.FC = () => {
 
   // TanStack Query hooks
   const { data, isLoading, error } = useUsers(currentPage, pageSize, debouncedSearchTerm, filters);
+  const { data: departmentData } = useDepartments(1, 100);
+  const allDepartments: DepartmentData[] = departmentData?.departments || [];
+  const getDepartmentName = (id: string) => allDepartments.find(dep => dep._id === id)?.name || '-';
   const deleteUserMutation = useDeleteUser();
   const activateUserMutation = useActivateUser();
   const deactivateUserMutation = useDeactivateUser();
@@ -509,7 +514,7 @@ const Users: React.FC = () => {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {user.department || '-'}
+                    {user.department ? getDepartmentName(user.department) : '-'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {getUserId(user)}

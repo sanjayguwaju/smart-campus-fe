@@ -1,20 +1,39 @@
 import { Bell, LogOut } from "lucide-react";
 import { UserData } from "../../api/types/users";
 
+interface NavigationItem {
+  name: string;
+  href?: string;
+  icon?: any;
+  dropdown?: boolean;
+  children?: NavigationItem[];
+}
+
 interface AdminHeaderProps {
   user: UserData | null;
-  navigation: Array<{ href: string; name: string }>;
+  navigation: NavigationItem[];
   isActive: (href: string) => boolean;
   logout: () => void;
 }
 
 export const AdminHeader = ({ user, navigation, isActive, logout }: AdminHeaderProps) => {
+  // Find the active item, including children
+  const findActiveName = (nav: NavigationItem[]): string => {
+    for (const item of nav) {
+      if (item.href && isActive(item.href)) return item.name;
+      if (item.children) {
+        const child = item.children.find(child => child.href && isActive(child.href));
+        if (child) return child.name;
+      }
+    }
+    return 'Dashboard';
+  };
   return (
     <header className="fixed top-0 right-0 left-64 z-50 bg-white shadow-sm border-b border-gray-200">
       <div className="flex h-16 items-center justify-between px-6">
         <div className="flex items-center space-x-4">
           <h2 className="text-lg font-semibold text-gray-900">
-            {navigation.find(item => isActive(item.href))?.name || 'Dashboard'}
+            {findActiveName(navigation)}
           </h2>
         </div>
         
