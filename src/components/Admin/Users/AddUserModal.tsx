@@ -76,8 +76,13 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose }) => {
   const departments = departmentData?.departments || [];
 
   const onSubmit = async (data: CreateUserRequest) => {
+    // Remove department if role is admin or department is empty
+    const payload = { ...data };
+    if (payload.role === 'admin' || !payload.department) {
+      delete payload.department;
+    }
     try {
-      await createUserMutation.mutateAsync(data);
+      await createUserMutation.mutateAsync(payload);
       reset();
       onClose();
     } catch (error) {

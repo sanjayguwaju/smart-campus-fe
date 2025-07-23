@@ -91,8 +91,13 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ isOpen, onClose, user }) 
 
   const onSubmit = async (data: UpdateUserRequest) => {
     if (!user) return;
+    // Remove department if role is admin or department is empty
+    const payload = { ...data };
+    if (payload.role === 'admin' || !payload.department) {
+      delete payload.department;
+    }
     try {
-      await updateUserMutation.mutateAsync({ id: user._id, userData: data });
+      await updateUserMutation.mutateAsync({ id: user._id, userData: payload });
       reset();
       onClose();
     } catch (error) {
