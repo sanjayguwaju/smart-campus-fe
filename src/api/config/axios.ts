@@ -51,8 +51,14 @@ apiClient.interceptors.response.use(
     console.error("Data:", error?.response?.data);
     console.error("Message:", error?.message);
 
-    if (error.response?.status === 401) {
-      // Clear auth data and redirect to login
+    // Don't redirect to login for public endpoints
+    const publicEndpoints = ['/programs', '/events', '/notices', '/blog'];
+    const isPublicEndpoint = publicEndpoints.some(endpoint => 
+      error.config?.url?.includes(endpoint)
+    );
+
+    if (error.response?.status === 401 && !isPublicEndpoint) {
+      // Clear auth data and redirect to login only for protected endpoints
       useAuthStore.getState().clearAuth();
       window.location.href = "/login";
     }
