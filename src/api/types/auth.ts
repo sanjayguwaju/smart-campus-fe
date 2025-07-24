@@ -20,7 +20,6 @@ export interface User {
   lastName: string;
   email: string;
   role: 'admin' | 'faculty' | 'student';
-  department?: string;
   phone?: string;
   avatar?: string | null;
   isActive: boolean;
@@ -43,7 +42,6 @@ export interface RegisterRequest {
   email: string;
   password: string;
   role: 'student' | 'faculty';
-  department: string;
   studentId?: string;
   employeeId?: string;
 }

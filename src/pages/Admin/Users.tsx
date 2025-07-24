@@ -47,7 +47,6 @@ const Users: React.FC = () => {
   const [filters, setFilters] = useState({
     role: '',
     status: '',
-    department: '',
     searchTerm: '',
     dateRange: '',
     isEmailVerified: ''
@@ -157,8 +156,7 @@ const Users: React.FC = () => {
     return user.email.charAt(0).toUpperCase();
   };
 
-  // Get unique departments from users
-  const departments = Array.from(new Set(users.map((user: UserData) => user.department).filter(Boolean))) as string[];
+
 
   // Use users directly since filtering is now handled by the API
   const filteredUsers = users;
@@ -290,7 +288,6 @@ const Users: React.FC = () => {
     setFilters({
       role: '',
       status: '',
-      department: '',
       searchTerm: '',
       dateRange: '',
       isEmailVerified: ''
@@ -455,9 +452,7 @@ const Users: React.FC = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Verification
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Department
-                </th>
+
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   ID
                 </th>
@@ -508,9 +503,7 @@ const Users: React.FC = () => {
                       {user.isVerified ? 'Verified' : 'Pending'}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {user.department || '-'}
-                  </td>
+
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {getUserId(user)}
                   </td>
@@ -822,7 +815,6 @@ const Users: React.FC = () => {
         filters={filters}
         onApplyFilters={handleApplyFilters}
         onClearFilters={handleClearFilters}
-        departments={departments}
       />
     </div>
   );

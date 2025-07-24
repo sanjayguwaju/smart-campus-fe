@@ -24,7 +24,6 @@ const StudentProfile: React.FC = () => {
       lastName: user?.lastName || '',
       email: user?.email || '',
       phone: user?.phone || '',
-      department: user?.department || '',
     }
   });
 
@@ -230,24 +229,7 @@ const StudentProfile: React.FC = () => {
                     )}
                   </div>
 
-                  {/* Department */}
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      <Building className="inline h-4 w-4 mr-1" />
-                      Department
-                    </label>
-                    <input
-                      type="text"
-                      {...register('department')}
-                      disabled={!isEditing}
-                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                        errors.department ? 'border-red-500' : 'border-gray-300'
-                      } ${!isEditing ? 'bg-gray-50' : 'bg-white'}`}
-                    />
-                    {errors.department && (
-                      <p className="mt-1 text-sm text-red-600">{errors.department.message}</p>
-                    )}
-                  </div>
+
                 </div>
 
                 {/* Account Information (Read-only) */}

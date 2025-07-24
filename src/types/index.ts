@@ -4,7 +4,6 @@ export interface User {
   name: string;
   role: 'student' | 'faculty' | 'admin';
   avatar?: string;
-  department?: string;
   studentId?: string;
   employeeId?: string;
   createdAt: Date;

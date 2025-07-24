@@ -169,15 +169,7 @@ const ViewUserModal: React.FC<ViewUserModalProps> = ({
           <div className="bg-gray-50 rounded-lg p-4">
             <h4 className="text-sm font-medium text-gray-900 mb-3">Academic/Professional Information</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {user.department && (
-                <div className="flex items-center space-x-2">
-                  <Building className="h-4 w-4 text-gray-400" />
-                  <div>
-                    <p className="text-xs text-gray-500">Department</p>
-                    <p className="text-sm font-medium text-gray-900">{user.department}</p>
-                  </div>
-                </div>
-              )}
+
               {getUserId(user) !== '-' && (
                 <div className="flex items-center space-x-2">
                   <Shield className="h-4 w-4 text-gray-400" />

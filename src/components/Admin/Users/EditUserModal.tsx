@@ -66,7 +66,6 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ isOpen, onClose, user }) 
       lastName: '',
       email: '',
       role: 'student',
-      department: '',
       phone: '',
       isActive: true
     }
@@ -80,7 +79,6 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ isOpen, onClose, user }) 
       setValue('lastName', user.lastName || '');
       setValue('email', user.email || '');
       setValue('role', user.role || 'student');
-      setValue('department', user.department || '');
       setValue('phone', user.phone || '');
       setValue('isActive', user.isActive);
     }
@@ -300,25 +298,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ isOpen, onClose, user }) 
                   )}
                 </div>
 
-                {(watchedRole === 'student' || watchedRole === 'faculty') && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Department
-                    </label>
-                    <Controller
-                      name="department"
-                      control={control}
-                      render={({ field }) => (
-                        <input
-                          {...field}
-                          type="text"
-                          className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
-                          placeholder="Enter department"
-                        />
-                      )}
-                    />
-                  </div>
-                )}
+
               </div>
             </div>
 

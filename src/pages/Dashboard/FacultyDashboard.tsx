@@ -48,8 +48,8 @@ const FacultyDashboard: React.FC = () => {
           <div className="flex justify-between items-center py-6">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Faculty Dashboard</h1>
-              <p className="text-gray-600">Welcome back, {user?.name}!</p>
-              <p className="text-sm text-gray-500">Department: {user?.department}</p>
+              <p className="text-gray-600">Welcome back, {user?.firstName} {user?.lastName}!</p>
+
             </div>
             <div className="flex space-x-3">
               <Link

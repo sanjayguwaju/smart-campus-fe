@@ -5,7 +5,6 @@ import Select, { StylesConfig } from 'react-select';
 interface FilterState {
   role: string;
   status: string;
-  department: string;
   searchTerm: string;
   dateRange: string;
   isEmailVerified: string;
@@ -17,7 +16,6 @@ interface UsersFilterDrawerProps {
   filters: FilterState;
   onApplyFilters: (filters: FilterState) => void;
   onClearFilters: () => void;
-  departments: string[];
 }
 
 // Select option interface
@@ -31,8 +29,7 @@ const UsersFilterDrawer: React.FC<UsersFilterDrawerProps> = ({
   onClose,
   filters,
   onApplyFilters,
-  onClearFilters,
-  departments
+  onClearFilters
 }) => {
   const [localFilters, setLocalFilters] = useState(filters);
 
@@ -50,10 +47,7 @@ const UsersFilterDrawer: React.FC<UsersFilterDrawerProps> = ({
     { value: 'inactive', label: 'Inactive' }
   ];
 
-  const departmentOptions: SelectOption[] = [
-    { value: '', label: 'All Departments' },
-    ...departments.map(dept => ({ value: dept, label: dept }))
-  ];
+
 
   const emailVerificationOptions: SelectOption[] = [
     { value: '', label: 'All Users' },
@@ -86,7 +80,6 @@ const UsersFilterDrawer: React.FC<UsersFilterDrawerProps> = ({
     setLocalFilters({
       role: '',
       status: '',
-      department: '',
       searchTerm: '',
       dateRange: '',
       isEmailVerified: ''
@@ -182,20 +175,7 @@ const UsersFilterDrawer: React.FC<UsersFilterDrawerProps> = ({
             />
           </div>
 
-          {/* Department Filter */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Department
-            </label>
-            <Select
-              value={departmentOptions.find(option => option.value === localFilters.department)}
-              onChange={(option) => handleFilterChange('department', option?.value || '')}
-              options={departmentOptions}
-              styles={selectStyles}
-              isClearable={false}
-              placeholder="Select department..."
-            />
-          </div>
+
 
           {/* Email Verification Filter */}
           <div>
@@ -254,17 +234,7 @@ const UsersFilterDrawer: React.FC<UsersFilterDrawerProps> = ({
                     </button>
                   </div>
                 )}
-                {localFilters.department && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-600">Department: {localFilters.department}</span>
-                    <button
-                      onClick={() => handleFilterChange('department', '')}
-                      className="text-red-500 hover:text-red-700 text-xs"
-                    >
-                      ×
-                    </button>
-                  </div>
-                )}
+
                 {localFilters.isEmailVerified && (
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-gray-600">Email: {localFilters.isEmailVerified}</span>

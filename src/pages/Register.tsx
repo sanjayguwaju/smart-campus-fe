@@ -15,7 +15,6 @@ interface RegisterForm {
   password: string;
   confirmPassword: string;
   role: 'student' | 'faculty';
-  department: string;
   studentId?: string;
   employeeId?: string;
   agreeTerms: boolean;
@@ -45,27 +44,11 @@ const Register: React.FC = () => {
   const watchRole = watch('role');
   const watchPassword = watch('password');
 
-  const departments = [
-    'Computer Science',
-    'Engineering',
-    'Business Administration',
-    'Medicine',
-    'Law',
-    'Arts & Sciences',
-    'Education',
-    'Architecture',
-  ];
-
   // Select options
   const roleOptions: SelectOption[] = [
     { value: 'student', label: 'Student' },
     { value: 'faculty', label: 'Faculty' }
   ];
-
-  const departmentOptions: SelectOption[] = departments.map(dept => ({
-    value: dept,
-    label: dept
-  }));
 
   // Custom styles for React Select
   const selectStyles: StylesConfig<SelectOption, false> = {
@@ -110,7 +93,6 @@ const Register: React.FC = () => {
         email: data.email,
         password: data.password,
         role: data.role,
-        department: data.department,
         ...(data.role === 'student' && { studentId: data.studentId }),
         ...(data.role === 'faculty' && { employeeId: data.employeeId }),
       };
@@ -283,30 +265,7 @@ const Register: React.FC = () => {
                 )}
               </div>
 
-              <div>
-                <label htmlFor="department" className="block text-sm font-medium text-gray-700 mb-1">
-                  Department
-                </label>
-                <Controller
-                  name="department"
-                  control={control}
-                  rules={{ required: 'Department is required' }}
-                  render={({ field }) => (
-                    <Select
-                      {...field}
-                      options={departmentOptions}
-                      styles={selectStyles}
-                      placeholder="Select department"
-                      isClearable={false}
-                      onChange={(option) => field.onChange(option?.value)}
-                      value={departmentOptions.find(option => option.value === field.value)}
-                    />
-                  )}
-                />
-                {errors.department && (
-                  <p className="mt-1 text-sm text-red-600">{errors.department.message}</p>
-                )}
-              </div>
+
 
               {watchRole === 'student' && (
                 <div className="md:col-span-2">

@@ -5,7 +5,6 @@ export interface UserData {
   name?: string; // For legacy users
   email: string;
   role: "admin" | "faculty" | "student";
-  department?: string;
   phone?: string;
   avatar?: string | null;
   isActive: boolean;
@@ -30,7 +29,6 @@ export interface CreateUserRequest {
   email: string;
   password: string;
   role: "admin" | "faculty" | "student";
-  department?: string;
   phone?: string;
 }
 
@@ -39,7 +37,6 @@ export interface UpdateUserRequest {
   lastName?: string;
   email?: string;
   role?: "admin" | "faculty" | "student";
-  department?: string;
   phone?: string;
   isActive?: boolean;
 }

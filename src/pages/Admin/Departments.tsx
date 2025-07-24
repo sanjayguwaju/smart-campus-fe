@@ -28,7 +28,10 @@ const Departments: React.FC = () => {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [filters, setFilters] = useState({ 
     name: '', 
-    status: '' 
+    code: '',
+    status: '', 
+    location: '',
+    headOfDepartment: ''
   });
 
   // Debounce search term
@@ -83,9 +86,9 @@ const Departments: React.FC = () => {
       setDeleteOpen(false);
       setSelectedDepartment(null);
       toast.success('Department deleted successfully');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to delete department:', error);
-      toast.error(error?.toString() || 'Failed to delete department. Please try again.');
+      toast.error(error instanceof Error ? error.message : 'Failed to delete department. Please try again.');
     }
   };
 
@@ -124,16 +127,23 @@ const Departments: React.FC = () => {
 
 
 
-  const getStatusBadgeColor = (isActive: boolean) => {
-    return isActive 
+  const getStatusBadgeColor = (status: string) => {
+    return status === 'active'
       ? 'bg-green-100 text-green-800' 
       : 'bg-red-100 text-red-800';
   };
 
-  const handleFiltersChange = (newFilters: { name?: string;  status?: string }) => {
+  const handleApplyFilters = (newFilters: { name: string; code: string; status: string; location: string; headOfDepartment: string }) => {
+    setFilters(newFilters);
+  };
+
+  const handleClearFilters = () => {
     setFilters({
-      name: newFilters.name || '',
-      status: newFilters.status || ''
+      name: '',
+      code: '',
+      status: '',
+      location: '',
+      headOfDepartment: ''
     });
   };
 
@@ -240,6 +250,9 @@ const Departments: React.FC = () => {
                   Name
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Code
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
                 </th>
                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -250,7 +263,7 @@ const Departments: React.FC = () => {
             <tbody className="bg-white divide-y divide-gray-200">
               {departments.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="text-center py-8 text-gray-500">
+                  <td colSpan={7} className="text-center py-8 text-gray-500">
                     No departments found.
                   </td>
                 </tr>
@@ -269,8 +282,11 @@ const Departments: React.FC = () => {
                       <div className="text-sm font-medium text-gray-900">{dept.name}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeColor(dept.isActive)}`}>
-                        {dept.isActive ? 'Active' : 'Inactive'}
+                      <div className="text-sm text-gray-900">{dept.code}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeColor(dept.status)}`}>
+                        {dept.status === 'active' ? 'Active' : 'Inactive'}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
@@ -457,7 +473,8 @@ const Departments: React.FC = () => {
         isOpen={isFilterOpen} 
         onClose={() => setFilterOpen(false)} 
         filters={filters} 
-        setFilters={handleFiltersChange}
+        onApplyFilters={handleApplyFilters}
+        onClearFilters={handleClearFilters}
       />
     </div>
   );

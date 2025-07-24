@@ -65,7 +65,6 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose }) => {
       email: '',
       password: '',
       role: 'student',
-      department: '',
       phone: ''
     }
   });
@@ -312,25 +311,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose }) => {
                   )}
                 </div>
 
-                {(watchedRole === 'student' || watchedRole === 'faculty') && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Department
-                    </label>
-                    <Controller
-                      name="department"
-                      control={control}
-                      render={({ field }) => (
-                        <input
-                          {...field}
-                          type="text"
-                          className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
-                          placeholder="Enter department"
-                        />
-                      )}
-                    />
-                  </div>
-                )}
+
               </div>
             </div>
 

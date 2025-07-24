@@ -4,11 +4,25 @@ export interface DepartmentData {
   code: string;
   description?: string;
   headOfDepartment?: string;
-  facultyCount: number;
-  studentCount: number;
-  isActive: boolean;
+  contactEmail?: string;
+  contactPhone?: string;
+  location?: string;
+  address?: {
+    street: string;
+    city: string;
+    state: string;
+    postalCode: string;
+    country: string;
+  };
+  logo?: string;
+  status: 'active' | 'inactive';
+  facultyCount?: number;
+  studentCount?: number;
+  createdBy?: string;
   createdAt: string;
   updatedAt: string;
+  fullName?: string;
+  fullAddress?: string;
   id: string;
 }
 
@@ -17,6 +31,18 @@ export interface CreateDepartmentRequest {
   code: string;
   description?: string;
   headOfDepartment?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+  location?: string;
+  address?: {
+    street: string;
+    city: string;
+    state: string;
+    postalCode: string;
+    country: string;
+  };
+  logo?: string;
+  status?: 'active' | 'inactive';
 }
 
 export interface UpdateDepartmentRequest {
@@ -24,7 +50,18 @@ export interface UpdateDepartmentRequest {
   code?: string;
   description?: string;
   headOfDepartment?: string;
-  isActive?: boolean;
+  contactEmail?: string;
+  contactPhone?: string;
+  location?: string;
+  address?: {
+    street: string;
+    city: string;
+    state: string;
+    postalCode: string;
+    country: string;
+  };
+  logo?: string;
+  status?: 'active' | 'inactive';
 }
 
 export interface PaginationInfo {
