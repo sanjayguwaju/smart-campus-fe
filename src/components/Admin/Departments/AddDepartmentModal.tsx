@@ -1,7 +1,53 @@
 import React from 'react';
 import { useForm, Controller } from 'react-hook-form';
+import Select, { StylesConfig } from 'react-select';
 import { useCreateDepartment } from '../../../api/hooks/useDepartments';
 import { CreateDepartmentRequest } from '../../../api/types/departments';
+
+// Select option interface
+interface SelectOption {
+  value: string;
+  label: string;
+}
+
+const selectStyles: StylesConfig<SelectOption> = {
+  control: (provided, state) => ({
+    ...provided,
+    minHeight: '48px',
+    border: state.isFocused ? '2px solid #3b82f6' : '1px solid #e5e7eb',
+    borderRadius: '8px',
+    boxShadow: state.isFocused ? '0 0 0 2px rgba(59, 130, 246, 0.1)' : 'none',
+    '&:hover': {
+      border: '1px solid #d1d5db'
+    }
+  }),
+  option: (provided, state) => ({
+    ...provided,
+    backgroundColor: state.isSelected ? '#3b82f6' : state.isFocused ? '#f3f4f6' : 'white',
+    color: state.isSelected ? 'white' : '#374151',
+    '&:hover': {
+      backgroundColor: state.isSelected ? '#3b82f6' : '#f3f4f6'
+    }
+  }),
+  menu: (provided) => ({
+    ...provided,
+    borderRadius: '8px',
+    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'
+  }),
+  placeholder: (provided) => ({
+    ...provided,
+    color: '#9ca3af'
+  }),
+  singleValue: (provided) => ({
+    ...provided,
+    color: '#374151'
+  })
+};
+
+const statusOptions: SelectOption[] = [
+  { value: 'active', label: 'Active' },
+  { value: 'inactive', label: 'Inactive' }
+];
 
 interface AddDepartmentModalProps {
   isOpen: boolean;
@@ -164,13 +210,17 @@ const AddDepartmentModal: React.FC<AddDepartmentModalProps> = ({ isOpen, onClose
                     name="status"
                     control={control}
                     render={({ field }) => (
-                      <select
+                      <Select
                         {...field}
-                        className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
-                      >
-                        <option value="active">Active</option>
-                        <option value="inactive">Inactive</option>
-                      </select>
+                        options={statusOptions}
+                        value={statusOptions.find(option => option.value === field.value)}
+                        onChange={(option: any) => {
+                          field.onChange(option?.value || 'active');
+                        }}
+                        styles={selectStyles}
+                        placeholder="Select status"
+                        isClearable={false}
+                      />
                     )}
                   />
                 </div>

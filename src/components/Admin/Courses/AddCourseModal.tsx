@@ -113,7 +113,7 @@ const AddCourseModal: React.FC<AddCourseModalProps> = ({ isOpen, onClose }) => {
   const loadProgramOptions = async (inputValue: string) => {
     try {
       const response = await programService.getPrograms({ page: 1, limit: 100, search: inputValue });
-      const options = response.programs?.map((p: { _id: string; name: string }) => ({ value: p._id, label: p.name })) || [];
+      const options = response.data?.map((p: { _id: string; name: string }) => ({ value: p?._id, label: p?.name })) || [];
       return options.filter((option: SelectOption) =>
         option.label.toLowerCase().includes(inputValue.toLowerCase())
       );

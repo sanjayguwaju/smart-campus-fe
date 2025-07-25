@@ -4,7 +4,7 @@ import { Program, ProgramPayload } from "../types/programs";
 export interface ProgramsResponse {
   success: boolean;
   message: string;
-  programs: Program[];
+  data: Program[];
   pagination: {
     page: number;
     limit: number;
