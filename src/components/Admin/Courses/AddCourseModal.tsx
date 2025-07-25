@@ -20,7 +20,7 @@ interface SelectOption {
 
 const AddCourseModal: React.FC<AddCourseModalProps> = ({ isOpen, onClose }) => {
   const createCourseMutation = useCreateCourse();
-  
+
   // Custom styles for react-select
   const selectStyles: StylesConfig<SelectOption> = {
     control: (provided, state) => ({
@@ -86,7 +86,7 @@ const AddCourseModal: React.FC<AddCourseModalProps> = ({ isOpen, onClose }) => {
   const loadDepartmentOptions = async (inputValue: string) => {
     try {
       const response = await departmentService.getDepartments(1, 100, inputValue);
-      const options = response.data?.map((d: { _id: string; name: string }) => ({ value: d._id, label: d.name })) || [];
+      const options = response?.data?.map((d: { _id: string; name: string }) => ({ value: d._id, label: d.name })) || [];
       return options.filter((option: SelectOption) =>
         option.label.toLowerCase().includes(inputValue.toLowerCase())
       );
@@ -99,7 +99,7 @@ const AddCourseModal: React.FC<AddCourseModalProps> = ({ isOpen, onClose }) => {
   const loadInstructorOptions = async (inputValue: string) => {
     try {
       const response = await userService.getUsers(1, 100, inputValue, { role: 'faculty' });
-      const options = (response.data?.map((u: { _id: string; fullName: string }) => ({ value: u._id, label: u.fullName })) || [])
+      const options = (response?.data?.map((u: { _id: string; fullName: string }) => ({ value: u._id, label: u.fullName })) || [])
         .sort((a: SelectOption, b: SelectOption) => a.label.localeCompare(b.label));
       return options.filter((option: SelectOption) =>
         option.label.toLowerCase().includes(inputValue.toLowerCase())
@@ -110,10 +110,11 @@ const AddCourseModal: React.FC<AddCourseModalProps> = ({ isOpen, onClose }) => {
     }
   };
 
+
   const loadProgramOptions = async (inputValue: string) => {
     try {
       const response = await programService.getPrograms({ page: 1, limit: 100, search: inputValue });
-      const options = response.data?.map((p: { _id: string; name: string }) => ({ value: p?._id, label: p?.name })) || [];
+      const options = response?.data?.map((p: { _id: string; name: string }) => ({ value: p?._id, label: p?.name })) || [];
       return options.filter((option: SelectOption) =>
         option.label.toLowerCase().includes(inputValue.toLowerCase())
       );
@@ -122,6 +123,7 @@ const AddCourseModal: React.FC<AddCourseModalProps> = ({ isOpen, onClose }) => {
       return [];
     }
   };
+
 
   const onSubmit = async (data: CreateCourseRequest) => {
     try {
@@ -174,7 +176,7 @@ const AddCourseModal: React.FC<AddCourseModalProps> = ({ isOpen, onClose }) => {
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900">Basic Information</h3>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -188,9 +190,8 @@ const AddCourseModal: React.FC<AddCourseModalProps> = ({ isOpen, onClose }) => {
                       <input
                         {...field}
                         type="text"
-                        className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 ${
-                          errors.name ? 'border-red-300' : 'border-gray-200'
-                        }`}
+                        className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 ${errors.name ? 'border-red-300' : 'border-gray-200'
+                          }`}
                         placeholder="Enter course name"
                       />
                     )}
@@ -212,9 +213,8 @@ const AddCourseModal: React.FC<AddCourseModalProps> = ({ isOpen, onClose }) => {
                       <input
                         {...field}
                         type="text"
-                        className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 ${
-                          errors.code ? 'border-red-300' : 'border-gray-200'
-                        }`}
+                        className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 ${errors.code ? 'border-red-300' : 'border-gray-200'
+                          }`}
                         placeholder="e.g., CS101"
                       />
                     )}
@@ -237,9 +237,8 @@ const AddCourseModal: React.FC<AddCourseModalProps> = ({ isOpen, onClose }) => {
                         {...field}
                         type="number"
                         min="1"
-                        className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 ${
-                          errors.credits ? 'border-red-300' : 'border-gray-200'
-                        }`}
+                        className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 ${errors.credits ? 'border-red-300' : 'border-gray-200'
+                          }`}
                         placeholder="3"
                         onChange={(e) => field.onChange(parseInt(e.target.value) || 3)}
                       />
@@ -263,9 +262,8 @@ const AddCourseModal: React.FC<AddCourseModalProps> = ({ isOpen, onClose }) => {
                         {...field}
                         type="number"
                         min="1"
-                        className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 ${
-                          errors.maxStudents ? 'border-red-300' : 'border-gray-200'
-                        }`}
+                        className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 ${errors.maxStudents ? 'border-red-300' : 'border-gray-200'
+                          }`}
                         placeholder="30"
                         onChange={(e) => field.onChange(parseInt(e.target.value) || 30)}
                       />
@@ -288,7 +286,7 @@ const AddCourseModal: React.FC<AddCourseModalProps> = ({ isOpen, onClose }) => {
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900">Description</h3>
               </div>
-              
+
               <Controller
                 name="description"
                 control={control}
@@ -313,7 +311,7 @@ const AddCourseModal: React.FC<AddCourseModalProps> = ({ isOpen, onClose }) => {
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900">Academic Details</h3>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -450,9 +448,8 @@ const AddCourseModal: React.FC<AddCourseModalProps> = ({ isOpen, onClose }) => {
                       <input
                         {...field}
                         type="text"
-                        className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 ${
-                          errors.academicYear ? 'border-red-300' : 'border-gray-200'
-                        }`}
+                        className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 ${errors.academicYear ? 'border-red-300' : 'border-gray-200'
+                          }`}
                         placeholder="e.g., 2024-2025"
                       />
                     )}
