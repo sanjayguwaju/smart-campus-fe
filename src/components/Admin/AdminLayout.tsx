@@ -27,7 +27,7 @@ const AdminLayout: React.FC = () => {
     { name: 'Departments', href: '/admin/departments', icon: Building },
     { name: 'Programs', href: '/admin/programs', icon: GraduationCap },
     // Courses is now a child of Programs
-    { name: 'Courses', href: '/admin/courses', icon: BookOpen, child: true },
+    { name: 'Courses', href: '/admin/courses', icon: BookOpen},
     { name: 'Enrollments', href: '/admin/enrollments', icon: UserCheck },
     { name: 'Assignments', href: '/admin/assignments', icon: ClipboardList },
     { name: 'Submissions', href: '/admin/submissions', icon: Upload },

@@ -184,9 +184,9 @@ const Login: React.FC = () => {
           <div className="mt-6 p-4 bg-gray-50 rounded-lg">
             <p className="text-xs text-gray-600 mb-2">Demo Credentials:</p>
             <div className="space-y-1 text-xs text-gray-500">
-              <p><strong>Admin:</strong> admin@smartcampus.com / Admin123@#</p>
-              <p><strong>Faculty:</strong> faculty@smartcampus.com / Faculty123@#</p>
-              <p><strong>Student:</strong> student@smartcampus.com / Student123@#</p>
+              <p><strong>Admin:</strong> admin@smartcampus.com / Test123@#</p>
+              <p><strong>Faculty:</strong> faculty@smartcampus.com / Test123@#</p>
+              <p><strong>Student:</strong> student@smartcampus.com / Test123@#</p>
             </div>
           </div>
         </div>

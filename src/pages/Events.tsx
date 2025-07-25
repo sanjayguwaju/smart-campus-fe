@@ -60,7 +60,6 @@ const Events: React.FC = () => {
     });
 
   const handleRSVP = (eventId: string) => {
-    console.log("eventId", eventId);
     if (!isAuthenticated || !user) {
       toast.error('Please login to RSVP for events');
       return;

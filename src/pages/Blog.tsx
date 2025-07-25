@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Calendar, User, Tag, ArrowRight, Search, Filter } from 'lucide-react';
 import { useBlogs } from '../api/hooks/useBlogs';
 import { BlogPost } from '../api/services/blogService';
@@ -8,8 +8,7 @@ const Blog: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const { blogsQuery } = useBlogs();
 
-  // Debug: log when blogsQuery.data changes
-  React.useEffect(() => {
+  useEffect(() => {
     console.log('blogsQuery.data updated:', blogsQuery.data);
   }, [blogsQuery.data]);
 

@@ -86,7 +86,6 @@ const AddCourseModal: React.FC<AddCourseModalProps> = ({ isOpen, onClose }) => {
   const loadDepartmentOptions = async (inputValue: string) => {
     try {
       const response = await departmentService.getDepartments(1, 100, inputValue);
-      console.log('Department response xxxx:', response.data);
       const options = response.data?.map((d: { _id: string; name: string }) => ({ value: d._id, label: d.name })) || [];
       return options.filter((option: SelectOption) =>
         option.label.toLowerCase().includes(inputValue.toLowerCase())

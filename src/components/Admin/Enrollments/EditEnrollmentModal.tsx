@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import Select, { StylesConfig } from 'react-select';
+import AsyncSelect from 'react-select/async';
 import { useUpdateEnrollment } from '../../../api/hooks/useEnrollments';
 import { UpdateEnrollmentRequest, EnrollmentData } from '../../../api/types/enrollments';
 
@@ -477,19 +478,45 @@ const EditEnrollmentModal: React.FC<EditEnrollmentModalProps> = ({ isOpen, onClo
               <Controller
                 name="courses"
                 control={control}
-                render={({ field }) => (
-                  <Select
-                    {...field}
-                    placeholder="Select courses..."
-                    options={enrollment.courses.map(course => ({
-                      value: course._id,
-                      label: `${course.code} - ${course.name} (${course.creditHours} credits)`
-                    }))}
-                    styles={selectStyles}
-                    isMulti
-                    isClearable
-                  />
-                )}
+                render={({ field }) => {
+                  // Mock data for courses - in real app, this would come from API
+                  const mockCourses = enrollment?.courses?.map(course => ({
+                    value: course._id,
+                    label: `${course.code} - ${course.name} (${course.creditHours} credits)`
+                  })) || [];
+
+                  const loadCourseOptions = (inputValue: string) => {
+                    return new Promise<SelectOption[]>((resolve) => {
+                      setTimeout(() => {
+                        const filtered = mockCourses.filter(course =>
+                          course.label.toLowerCase().includes(inputValue.toLowerCase())
+                        );
+                        resolve(filtered);
+                      }, 300);
+                    });
+                  };
+
+                  return (
+                    <AsyncSelect
+                      value={field.value?.map(courseId => 
+                        mockCourses.find(course => course.value === courseId)
+                      ).filter(Boolean) || []}
+                      onChange={(selectedOptions: any) => {
+                        const selectedValues = selectedOptions?.map((option: any) => option.value) || [];
+                        field.onChange(selectedValues);
+                      }}
+                      loadOptions={loadCourseOptions}
+                      placeholder="Search and select courses..."
+                      styles={selectStyles}
+                      isMulti
+                      isClearable
+                      noOptionsMessage={() => "No courses found"}
+                      loadingMessage={() => "Loading courses..."}
+                      cacheOptions
+                      defaultOptions
+                    />
+                  );
+                }}
               />
               {errors.courses && (
                 <p className="mt-1 text-sm text-red-600">{errors.courses.message}</p>

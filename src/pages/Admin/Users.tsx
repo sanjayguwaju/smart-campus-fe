@@ -452,10 +452,6 @@ const Users: React.FC = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Verification
                 </th>
-
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  ID
-                </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Joined
                 </th>
@@ -502,10 +498,6 @@ const Users: React.FC = () => {
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getVerificationBadgeColor(user.isVerified)}`}>
                       {user.isVerified ? 'Verified' : 'Pending'}
                     </span>
-                  </td>
-
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {getUserId(user)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {new Date(user.createdAt).toLocaleDateString()}

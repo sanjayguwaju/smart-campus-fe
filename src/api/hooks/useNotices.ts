@@ -66,11 +66,9 @@ export const usePublishNotice = () => {
 
   return useMutation({
     mutationFn: (noticeId: string) => {
-      console.log("Publishing notice with ID:", noticeId);
       return noticeService.publishNotice(noticeId);
     },
     onSuccess: (data) => {
-      console.log("Publish success:", data);
       queryClient.invalidateQueries({ queryKey: ["notices"] });
     },
     onError: (error) => {
@@ -84,11 +82,9 @@ export const useUnpublishNotice = () => {
 
   return useMutation({
     mutationFn: (noticeId: string) => {
-      console.log("Unpublishing notice with ID:", noticeId);
       return noticeService.unpublishNotice(noticeId);
     },
     onSuccess: (data) => {
-      console.log("Unpublish success:", data);
       queryClient.invalidateQueries({ queryKey: ["notices"] });
     },
     onError: (error) => {

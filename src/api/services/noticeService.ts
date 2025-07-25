@@ -32,15 +32,10 @@ export const noticeService = {
   async publishNotice(
     id: string
   ): Promise<{ success: boolean; message: string }> {
-    console.log("=== PUBLISH SERVICE ===");
-    console.log("Publishing notice with ID:", id);
-    console.log("URL will be:", `/notices/${id}`);
-    console.log("Payload:", { status: "published" });
 
     const response = await apiClient.put(`/notices/${id}`, {
       status: "published",
     });
-    console.log("Publish response:", response.data);
     return response.data;
   },
 
@@ -48,13 +43,7 @@ export const noticeService = {
   async unpublishNotice(
     id: string
   ): Promise<{ success: boolean; message: string }> {
-    console.log("=== UNPUBLISH SERVICE ===");
-    console.log("Unpublishing notice with ID:", id);
-    console.log("URL will be:", `/notices/${id}`);
-    console.log("Payload:", { status: "draft" });
-
     const response = await apiClient.put(`/notices/${id}`, { status: "draft" });
-    console.log("Unpublish response:", response.data);
     return response.data;
   },
 };

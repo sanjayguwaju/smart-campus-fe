@@ -2,6 +2,13 @@ import React, { useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { useUpdateDepartment } from '../../../api/hooks/useDepartments';
 import { UpdateDepartmentRequest, DepartmentData } from '../../../api/types/departments';
+import Select, { StylesConfig } from 'react-select';
+
+// Select option interface
+interface SelectOption {
+  value: string;
+  label: string;
+}
 
 interface EditDepartmentModalProps {
   isOpen: boolean;
@@ -187,15 +194,48 @@ const EditDepartmentModal: React.FC<EditDepartmentModalProps> = ({ isOpen, onClo
                   <Controller
                     name="status"
                     control={control}
-                    render={({ field }) => (
-                      <select
-                        {...field}
-                        className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
-                      >
-                        <option value="active">Active</option>
-                        <option value="inactive">Inactive</option>
-                      </select>
-                    )}
+                    render={({ field }) => {
+                      const statusOptions: SelectOption[] = [
+                        { value: 'active', label: 'Active' },
+                        { value: 'inactive', label: 'Inactive' }
+                      ];
+
+                      const selectStyles: StylesConfig<SelectOption, false> = {
+                        control: (provided) => ({
+                          ...provided,
+                          border: '1px solid #d1d5db',
+                          borderRadius: '0.5rem',
+                          minHeight: '48px',
+                          boxShadow: 'none',
+                          '&:hover': {
+                            border: '1px solid #d1d5db'
+                          }
+                        }),
+                        option: (provided, state) => ({
+                          ...provided,
+                          backgroundColor: state.isSelected ? '#3b82f6' : state.isFocused ? '#f3f4f6' : 'white',
+                          color: state.isSelected ? 'white' : '#374151',
+                          '&:hover': {
+                            backgroundColor: state.isSelected ? '#3b82f6' : '#f3f4f6'
+                          }
+                        }),
+                        menu: (provided) => ({
+                          ...provided,
+                          zIndex: 9999
+                        })
+                      };
+
+                      return (
+                        <Select
+                          value={statusOptions.find(option => option.value === field.value)}
+                          onChange={(option) => field.onChange(option?.value || 'active')}
+                          options={statusOptions}
+                          styles={selectStyles}
+                          isClearable={false}
+                          placeholder="Select status..."
+                        />
+                      );
+                    }}
                   />
                 </div>
               </div>
