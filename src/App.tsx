@@ -42,6 +42,7 @@ import FacultyBlog from './pages/Faculty/Blog';
 import Departments from './pages/Admin/Departments';
 import AdminCourses from './pages/Admin/Courses';
 import Enrollments from './pages/Admin/Enrollments';
+import Assignments from './pages/Admin/Assignments';
 import FacultyCourses from './pages/Faculty/Courses';
 import StudentMockDemo from './pages/StudentMockDemo';
 
@@ -94,6 +95,7 @@ function App() {
           <Route path="departments" element={<Departments />} />
           <Route path="courses" element={<AdminCourses />} />
           <Route path="enrollments" element={<Enrollments />} />
+          <Route path="assignments" element={<Assignments />} />
           <Route path="events" element={<AdminEvents />} />
           <Route path="notices" element={<Notices />} />
           <Route path="programs" element={<AdminPrograms />} />

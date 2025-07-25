@@ -12,6 +12,7 @@ import {
   BarChart3,
   Settings,
   UserCheck,
+  ClipboardList,
 } from 'lucide-react';
 import { AdminHeader } from './AdminHeader';
 
@@ -27,6 +28,7 @@ const AdminLayout: React.FC = () => {
     // Courses is now a child of Programs
     { name: 'Courses', href: '/admin/courses', icon: BookOpen, child: true },
     { name: 'Enrollments', href: '/admin/enrollments', icon: UserCheck },
+    { name: 'Assignments', href: '/admin/assignments', icon: ClipboardList },
     { name: 'Events', href: '/admin/events', icon: Calendar },
     { name: 'Notices', href: '/admin/notices', icon: FileText },
     { name: 'Blog', href: '/admin/blog', icon: FileText },
