@@ -233,8 +233,26 @@ const EditProgramModal: React.FC<EditProgramModalProps> = ({ isOpen, onClose, pr
                   <label className="block text-sm font-medium">Level</label>
                   <Select
                     options={[
-                      { value: 'Undergraduate', label: 'Undergraduate' },
-                      { value: 'Postgraduate', label: 'Postgraduate' }
+                      { 
+                        value: 'Certificate', 
+                        label: 'Certificate' 
+                      },
+                      { 
+                        value: 'Diploma', 
+                        label: 'Diploma' 
+                      },
+                      { 
+                        value: 'Undergraduate', 
+                        label: 'Undergraduate' 
+                      },
+                      { 
+                        value: 'Postgraduate', 
+                        label: 'Postgraduate' 
+                      },
+                      { 
+                        value: 'Doctorate', 
+                        label: 'Doctorate' 
+                      }
                     ]}
                     value={{ value: form.level || 'Undergraduate', label: form.level || 'Undergraduate' }}
                     onChange={(option: any) => {

@@ -1,9 +1,16 @@
 import React, { useState } from 'react';
 import { ProgramPayload } from '../../../api/types/programs';
 import Select, { StylesConfig } from 'react-select';
+import AsyncSelect from 'react-select/async';
 import { useDepartments } from '../../../api/hooks/useDepartments';
 import MultipleImageUpload from '../../common/MultipleImageUpload';
 import { GraduationCap } from 'lucide-react';
+
+// Select option interface
+interface SelectOption {
+  value: string;
+  label: string;
+}
 
 interface AddProgramModalProps {
   isOpen: boolean;
@@ -175,26 +182,72 @@ const AddProgramModal: React.FC<AddProgramModalProps> = ({ isOpen, onClose, onAd
                 </div>
                 <div>
                   <label className="block text-sm font-medium">Department</label>
-                  <select
-                    name="department"
-                    value={form.department}
-                    onChange={handleChange}
-                    className="w-full border rounded px-3 py-2"
-                    required
-                  >
-                    <option value="">Select Department</option>
-                    {departments.map((dep: any) => (
-                      <option key={dep._id} value={dep._id}>{dep.name}</option>
-                    ))}
-                  </select>
+                  <AsyncSelect
+                    value={form.department ? { value: form.department, label: departments.find((dep: any) => dep._id === form.department)?.name || '' } : null}
+                    onChange={(option: any) => {
+                      setForm(prev => ({ ...prev, department: option?.value || '' }));
+                      if (errors.department) {
+                        setErrors(prev => ({ ...prev, department: '' }));
+                      }
+                    }}
+                    loadOptions={(inputValue) => {
+                      return new Promise<SelectOption[]>((resolve) => {
+                        setTimeout(() => {
+                          const filtered = departments
+                            .filter((dep: any) => 
+                              dep.name.toLowerCase().includes(inputValue.toLowerCase())
+                            )
+                            .map((dep: any) => ({
+                              value: dep._id,
+                              label: dep.name
+                            }));
+                          resolve(filtered);
+                        }, 300);
+                      });
+                    }}
+                    styles={selectStyles}
+                    isClearable
+                    placeholder="Search departments..."
+                    noOptionsMessage={() => "No departments found"}
+                    loadingMessage={() => "Loading departments..."}
+                    cacheOptions
+                    defaultOptions
+                  />
                   {errors.department && <span className="text-red-500 text-xs">{errors.department}</span>}
                 </div>
                 <div>
                   <label className="block text-sm font-medium">Level</label>
-                  <select name="level" value={form.level} onChange={handleChange} className="w-full border rounded px-3 py-2" required>
-                    <option value="Undergraduate">Undergraduate</option>
-                    <option value="Postgraduate">Postgraduate</option>
-                  </select>
+                  <Select
+                    options={[
+                      {
+                        value: 'Certificate',
+                        label: 'Certificate'
+                      },
+                      {
+                        value: 'Diploma',
+                        label: 'Diploma'
+                      },
+                      {
+                        value: 'Undergraduate',
+                        label: 'Undergraduate'
+                      },
+                      {
+                        value: 'Postgraduate',
+                        label: 'Postgraduate'
+                      },
+                      {
+                        value: 'Doctorate',
+                        label: 'Doctorate'
+                      }
+                    ]}
+                    value={{ value: form.level || 'Undergraduate', label: form.level || 'Undergraduate' }}
+                    onChange={(option: any) => {
+                      setForm(prev => ({ ...prev, level: option?.value || 'Undergraduate' }));
+                    }}
+                    styles={selectStyles}
+                    isClearable={false}
+                    placeholder="Select level..."
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium">Semesters</label>
