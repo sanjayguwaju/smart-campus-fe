@@ -11,6 +11,7 @@ import {
   GraduationCap,
   BarChart3,
   Settings,
+  UserCheck,
 } from 'lucide-react';
 import { AdminHeader } from './AdminHeader';
 
@@ -25,6 +26,7 @@ const AdminLayout: React.FC = () => {
     { name: 'Programs', href: '/admin/programs', icon: GraduationCap },
     // Courses is now a child of Programs
     { name: 'Courses', href: '/admin/courses', icon: BookOpen, child: true },
+    { name: 'Enrollments', href: '/admin/enrollments', icon: UserCheck },
     { name: 'Events', href: '/admin/events', icon: Calendar },
     { name: 'Notices', href: '/admin/notices', icon: FileText },
     { name: 'Blog', href: '/admin/blog', icon: FileText },
