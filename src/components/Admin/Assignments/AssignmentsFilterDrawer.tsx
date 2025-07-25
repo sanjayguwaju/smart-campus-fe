@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { X, Filter, Calendar } from 'lucide-react';
-import Select from 'react-select';
+import { X, Filter } from 'lucide-react';
+import Select, { StylesConfig } from 'react-select';
+import AsyncSelect from 'react-select/async';
 import { useCourses } from '../../../api/hooks/useCourses';
 import { useUsers } from '../../../api/hooks/useUsers';
 import { AssignmentFilters } from '../../../api/types/assignments';
@@ -15,6 +16,7 @@ interface AssignmentsFilterDrawerProps {
   onClearFilters: () => void;
 }
 
+// Select option interface
 interface SelectOption {
   value: string;
   label: string;
@@ -37,17 +39,24 @@ const AssignmentsFilterDrawer: React.FC<AssignmentsFilterDrawerProps> = ({
   const faculty = usersData?.users || [];
 
   // Select options
-  const courseOptions: SelectOption[] = courses.map((course: CourseData) => ({
-    value: course._id,
-    label: `${course.code} - ${course.name}`
-  }));
+  const courseOptions: SelectOption[] = [
+    { value: '', label: 'All Courses' },
+    ...courses.map((course: CourseData) => ({
+      value: course._id,
+      label: `${course.code} - ${course.name}`
+    }))
+  ];
 
-  const facultyOptions: SelectOption[] = faculty.map((user: UserData) => ({
-    value: user._id,
-    label: `${user.firstName} ${user.lastName}`
-  }));
+  const facultyOptions: SelectOption[] = [
+    { value: '', label: 'All Faculty' },
+    ...faculty.map((user: UserData) => ({
+      value: user._id,
+      label: `${user.firstName} ${user.lastName}`
+    }))
+  ];
 
   const assignmentTypeOptions: SelectOption[] = [
+    { value: '', label: 'All Types' },
     { value: 'Homework', label: 'Homework' },
     { value: 'Project', label: 'Project' },
     { value: 'Quiz', label: 'Quiz' },
@@ -57,6 +66,7 @@ const AssignmentsFilterDrawer: React.FC<AssignmentsFilterDrawerProps> = ({
   ];
 
   const statusOptions: SelectOption[] = [
+    { value: '', label: 'All Status' },
     { value: 'draft', label: 'Draft' },
     { value: 'published', label: 'Published' },
     { value: 'submission_closed', label: 'Submission Closed' },
@@ -65,18 +75,44 @@ const AssignmentsFilterDrawer: React.FC<AssignmentsFilterDrawerProps> = ({
   ];
 
   const difficultyOptions: SelectOption[] = [
+    { value: '', label: 'All Difficulties' },
     { value: 'Easy', label: 'Easy' },
     { value: 'Medium', label: 'Medium' },
     { value: 'Hard', label: 'Hard' }
   ];
 
   const dueDateRangeOptions: SelectOption[] = [
+    { value: '', label: 'All Dates' },
     { value: 'today', label: 'Due Today' },
     { value: 'week', label: 'Due This Week' },
     { value: 'month', label: 'Due This Month' },
     { value: 'overdue', label: 'Overdue' },
     { value: 'upcoming', label: 'Upcoming' }
   ];
+
+  // Async load options for courses
+  const loadCourseOptions = (inputValue: string) => {
+    return new Promise<SelectOption[]>((resolve) => {
+      setTimeout(() => {
+        const filtered = courseOptions.filter(course =>
+          course.label.toLowerCase().includes(inputValue.toLowerCase())
+        );
+        resolve(filtered);
+      }, 300);
+    });
+  };
+
+  // Async load options for faculty
+  const loadFacultyOptions = (inputValue: string) => {
+    return new Promise<SelectOption[]>((resolve) => {
+      setTimeout(() => {
+        const filtered = facultyOptions.filter(faculty =>
+          faculty.label.toLowerCase().includes(inputValue.toLowerCase())
+        );
+        resolve(filtered);
+      }, 300);
+    });
+  };
 
   // Reset local filters when props change
   useEffect(() => {
@@ -108,67 +144,100 @@ const AssignmentsFilterDrawer: React.FC<AssignmentsFilterDrawerProps> = ({
     };
     setLocalFilters(clearedFilters);
     onClearFilters();
-    onClose();
   };
 
-  if (!isOpen) return null;
+  const hasActiveFilters = Object.values(localFilters).some(value => value !== '');
+
+  // Custom styles for React Select
+  const selectStyles: StylesConfig<SelectOption, false> = {
+    control: (provided) => ({
+      ...provided,
+      border: '1px solid #d1d5db',
+      borderRadius: '0.5rem',
+      minHeight: '40px',
+      boxShadow: 'none',
+      '&:hover': {
+        border: '1px solid #d1d5db'
+      }
+    }),
+    option: (provided, state) => ({
+      ...provided,
+      backgroundColor: state.isSelected ? '#3b82f6' : state.isFocused ? '#f3f4f6' : 'white',
+      color: state.isSelected ? 'white' : '#374151',
+      '&:hover': {
+        backgroundColor: state.isSelected ? '#3b82f6' : '#f3f4f6'
+      }
+    }),
+    menu: (provided) => ({
+      ...provided,
+      zIndex: 9999
+    })
+  };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg w-full max-w-md max-h-[90vh] overflow-y-auto">
+    <>
+      {/* Backdrop */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-40"
+          onClick={onClose}
+        />
+      )}
+
+      {/* Drawer */}
+      <div className={`fixed -top-5 right-0 h-full w-80 bg-white shadow-2xl transform transition-transform duration-300 ease-in-out z-50 ${isOpen ? 'translate-x-0' : 'translate-x-full'
+        }`}>
+        {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div className="flex items-center">
-            <Filter className="h-5 w-5 text-gray-400 mr-2" />
-            <h2 className="text-lg font-semibold text-gray-900">Filter Assignments</h2>
+            <Filter className="h-5 w-5 text-blue-600 mr-2" />
+            <h3 className="text-lg font-semibold text-gray-900">Filter Assignments</h3>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
+            className="text-gray-400 hover:text-gray-600 transition-colors"
           >
             <X className="h-6 w-6" />
           </button>
         </div>
 
-        <div className="p-6 space-y-6">
-          {/* Title Filter */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Assignment Title
-            </label>
-            <input
-              type="text"
-              value={localFilters.title || ''}
-              onChange={(e) => handleInputChange('title', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Search by title..."
-            />
-          </div>
-
-          {/* Course Filter */}
+        {/* Filter Content */}
+        <div className="p-6 space-y-6 overflow-y-auto h-full">
+          {/* Course Filter - Async Select */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Course
             </label>
-            <Select
+            <AsyncSelect
               value={courseOptions.find(option => option.value === localFilters.course)}
               onChange={(option) => handleInputChange('course', option?.value || '')}
-              options={courseOptions}
-              placeholder="Select course"
+              loadOptions={loadCourseOptions}
+              styles={selectStyles}
               isClearable
+              placeholder="Search courses..."
+              noOptionsMessage={() => "No courses found"}
+              loadingMessage={() => "Loading courses..."}
+              cacheOptions
+              defaultOptions
             />
           </div>
 
-          {/* Faculty Filter */}
+          {/* Faculty Filter - Async Select */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Faculty
             </label>
-            <Select
+            <AsyncSelect
               value={facultyOptions.find(option => option.value === localFilters.faculty)}
               onChange={(option) => handleInputChange('faculty', option?.value || '')}
-              options={facultyOptions}
-              placeholder="Select faculty"
+              loadOptions={loadFacultyOptions}
+              styles={selectStyles}
               isClearable
+              placeholder="Search faculty..."
+              noOptionsMessage={() => "No faculty found"}
+              loadingMessage={() => "Loading faculty..."}
+              cacheOptions
+              defaultOptions
             />
           </div>
 
@@ -181,8 +250,9 @@ const AssignmentsFilterDrawer: React.FC<AssignmentsFilterDrawerProps> = ({
               value={assignmentTypeOptions.find(option => option.value === localFilters.assignmentType)}
               onChange={(option) => handleInputChange('assignmentType', option?.value || '')}
               options={assignmentTypeOptions}
-              placeholder="Select assignment type"
-              isClearable
+              styles={selectStyles}
+              isClearable={false}
+              placeholder="Select assignment type..."
             />
           </div>
 
@@ -195,8 +265,9 @@ const AssignmentsFilterDrawer: React.FC<AssignmentsFilterDrawerProps> = ({
               value={statusOptions.find(option => option.value === localFilters.status)}
               onChange={(option) => handleInputChange('status', option?.value || '')}
               options={statusOptions}
-              placeholder="Select status"
-              isClearable
+              styles={selectStyles}
+              isClearable={false}
+              placeholder="Select status..."
             />
           </div>
 
@@ -209,8 +280,9 @@ const AssignmentsFilterDrawer: React.FC<AssignmentsFilterDrawerProps> = ({
               value={difficultyOptions.find(option => option.value === localFilters.difficulty)}
               onChange={(option) => handleInputChange('difficulty', option?.value || '')}
               options={difficultyOptions}
-              placeholder="Select difficulty"
-              isClearable
+              styles={selectStyles}
+              isClearable={false}
+              placeholder="Select difficulty..."
             />
           </div>
 
@@ -223,8 +295,9 @@ const AssignmentsFilterDrawer: React.FC<AssignmentsFilterDrawerProps> = ({
               value={dueDateRangeOptions.find(option => option.value === localFilters.dueDateRange)}
               onChange={(option) => handleInputChange('dueDateRange', option?.value || '')}
               options={dueDateRangeOptions}
-              placeholder="Select date range"
-              isClearable
+              styles={selectStyles}
+              isClearable={false}
+              placeholder="Select date range..."
             />
           </div>
 
@@ -237,29 +310,128 @@ const AssignmentsFilterDrawer: React.FC<AssignmentsFilterDrawerProps> = ({
               type="text"
               value={localFilters.tags || ''}
               onChange={(e) => handleInputChange('tags', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="Search by tags..."
             />
           </div>
 
-          {/* Filter Actions */}
-          <div className="flex space-x-3 pt-6 border-t border-gray-200">
+          {/* Active Filters Display */}
+          {hasActiveFilters && (
+            <div className="bg-gray-50 rounded-lg p-4">
+              <h4 className="text-sm font-medium text-gray-700 mb-2">Active Filters:</h4>
+              <div className="space-y-1">
+                {localFilters.title && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-600">Title: {localFilters.title}</span>
+                    <button
+                      onClick={() => handleInputChange('title', '')}
+                      className="text-red-500 hover:text-red-700 text-xs"
+                    >
+                      ×
+                    </button>
+                  </div>
+                )}
+                {localFilters.course && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-600">Course: {courseOptions.find(opt => opt.value === localFilters.course)?.label}</span>
+                    <button
+                      onClick={() => handleInputChange('course', '')}
+                      className="text-red-500 hover:text-red-700 text-xs"
+                    >
+                      ×
+                    </button>
+                  </div>
+                )}
+                {localFilters.faculty && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-600">Faculty: {facultyOptions.find(opt => opt.value === localFilters.faculty)?.label}</span>
+                    <button
+                      onClick={() => handleInputChange('faculty', '')}
+                      className="text-red-500 hover:text-red-700 text-xs"
+                    >
+                      ×
+                    </button>
+                  </div>
+                )}
+                {localFilters.assignmentType && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-600">Type: {localFilters.assignmentType}</span>
+                    <button
+                      onClick={() => handleInputChange('assignmentType', '')}
+                      className="text-red-500 hover:text-red-700 text-xs"
+                    >
+                      ×
+                    </button>
+                  </div>
+                )}
+                {localFilters.status && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-600">Status: {localFilters.status}</span>
+                    <button
+                      onClick={() => handleInputChange('status', '')}
+                      className="text-red-500 hover:text-red-700 text-xs"
+                    >
+                      ×
+                    </button>
+                  </div>
+                )}
+                {localFilters.difficulty && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-600">Difficulty: {localFilters.difficulty}</span>
+                    <button
+                      onClick={() => handleInputChange('difficulty', '')}
+                      className="text-red-500 hover:text-red-700 text-xs"
+                    >
+                      ×
+                    </button>
+                  </div>
+                )}
+                {localFilters.dueDateRange && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-600">Date Range: {localFilters.dueDateRange.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
+                    <button
+                      onClick={() => handleInputChange('dueDateRange', '')}
+                      className="text-red-500 hover:text-red-700 text-xs"
+                    >
+                      ×
+                    </button>
+                  </div>
+                )}
+                {localFilters.tags && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-600">Tags: {localFilters.tags}</span>
+                    <button
+                      onClick={() => handleInputChange('tags', '')}
+                      className="text-red-500 hover:text-red-700 text-xs"
+                    >
+                      ×
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Footer Actions */}
+        <div className="absolute bottom-0 left-0 right-0 p-6 border-t border-gray-200 bg-white">
+          <div className="flex space-x-3">
             <button
               onClick={handleClearFilters}
-              className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+              className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
             >
               Clear All
             </button>
             <button
               onClick={handleApplyFilters}
-              className="flex-1 px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700"
+              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
               Apply Filters
             </button>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

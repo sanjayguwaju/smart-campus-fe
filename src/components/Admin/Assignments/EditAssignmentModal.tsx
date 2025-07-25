@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Plus, Trash2, Upload } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import Select from 'react-select';
+import AsyncSelect from 'react-select/async';
 import { useUpdateAssignment } from '../../../api/hooks/useAssignmentsDev';
 import { useCourses } from '../../../api/hooks/useCourses';
 import { useUsers } from '../../../api/hooks/useUsers';
@@ -298,11 +299,24 @@ const EditAssignmentModal: React.FC<EditAssignmentModalProps> = ({ isOpen, onClo
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Course *
               </label>
-              <Select
+              <AsyncSelect
                 value={courseOptions.find(option => option.value === formData.course)}
                 onChange={(option) => handleInputChange('course', option?.value)}
-                options={courseOptions}
-                placeholder="Select course"
+                loadOptions={(inputValue) => {
+                  return new Promise<SelectOption[]>((resolve) => {
+                    setTimeout(() => {
+                      const filtered = courseOptions.filter(course =>
+                        course.label.toLowerCase().includes(inputValue.toLowerCase())
+                      );
+                      resolve(filtered);
+                    }, 300);
+                  });
+                }}
+                placeholder="Search courses..."
+                noOptionsMessage={() => "No courses found"}
+                loadingMessage={() => "Loading courses..."}
+                cacheOptions
+                defaultOptions
               />
             </div>
 
