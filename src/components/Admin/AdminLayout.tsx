@@ -13,6 +13,7 @@ import {
   Settings,
   UserCheck,
   ClipboardList,
+  Upload,
 } from 'lucide-react';
 import { AdminHeader } from './AdminHeader';
 
@@ -29,6 +30,7 @@ const AdminLayout: React.FC = () => {
     { name: 'Courses', href: '/admin/courses', icon: BookOpen, child: true },
     { name: 'Enrollments', href: '/admin/enrollments', icon: UserCheck },
     { name: 'Assignments', href: '/admin/assignments', icon: ClipboardList },
+    { name: 'Submissions', href: '/admin/submissions', icon: Upload },
     { name: 'Events', href: '/admin/events', icon: Calendar },
     { name: 'Notices', href: '/admin/notices', icon: FileText },
     { name: 'Blog', href: '/admin/blog', icon: FileText },
