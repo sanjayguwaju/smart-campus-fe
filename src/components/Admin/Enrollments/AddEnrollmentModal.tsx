@@ -1,8 +1,13 @@
 import React from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import Select, { StylesConfig } from 'react-select';
+import AsyncSelect from 'react-select/async';
 import { useCreateEnrollment } from '../../../api/hooks/useEnrollments';
 import { CreateEnrollmentRequest } from '../../../api/types/enrollments';
+import { userService } from '../../../api/services/userService';
+import { programService } from '../../../api/services/programService';
+
+import { courseService } from '../../../api/services/courseService';
 
 interface AddEnrollmentModalProps {
   isOpen: boolean;
@@ -16,6 +21,11 @@ interface SelectOption {
 
 const AddEnrollmentModal: React.FC<AddEnrollmentModalProps> = ({ isOpen, onClose }) => {
   const createEnrollmentMutation = useCreateEnrollment();
+  
+  // State to track selected options for display
+  const [selectedStudent, setSelectedStudent] = React.useState<SelectOption | null>(null);
+  const [selectedProgram, setSelectedProgram] = React.useState<SelectOption | null>(null);
+  const [selectedCourses, setSelectedCourses] = React.useState<SelectOption[]>([]);
   
   // Custom styles for react-select
   const selectStyles: StylesConfig<SelectOption> = {
@@ -56,7 +66,7 @@ const AddEnrollmentModal: React.FC<AddEnrollmentModalProps> = ({ isOpen, onClose
     control,
     handleSubmit,
     reset,
-    watch,
+
     formState: { errors, isSubmitting }
   } = useForm<CreateEnrollmentRequest>({
     defaultValues: {
@@ -68,12 +78,62 @@ const AddEnrollmentModal: React.FC<AddEnrollmentModalProps> = ({ isOpen, onClose
       courses: [],
       status: 'active',
       enrollmentType: 'full_time',
-      advisor: '',
+
       notes: ''
     }
   });
 
-  const watchedEnrollmentType = watch('enrollmentType');
+  // Load options functions for AsyncSelect
+  const loadStudentOptions = async (inputValue: string) => {
+    try {
+      const response = await userService.getUsers(1, 100, inputValue, { role: 'student' });
+      const options = (response?.data?.map((u: { _id: string; fullName: string; email: string }) => ({ 
+        value: u._id, 
+        label: `${u.fullName} (${u.email})` 
+      })) || [])
+        .sort((a: SelectOption, b: SelectOption) => a.label.localeCompare(b.label));
+      return options.filter((option: SelectOption) =>
+        option.label.toLowerCase().includes(inputValue.toLowerCase())
+      );
+    } catch (error) {
+      console.error('Error loading students:', error);
+      return [];
+    }
+  };
+
+  const loadProgramOptions = async (inputValue: string) => {
+    try {
+      const response = await programService.getPrograms({ page: 1, limit: 100, search: inputValue });
+      const options = response?.data?.map((p: { _id: string; name: string }) => ({ 
+        value: p._id, 
+        label: p.name 
+      })) || [];
+      return options.filter((option: SelectOption) =>
+        option.label.toLowerCase().includes(inputValue.toLowerCase())
+      );
+    } catch (error) {
+      console.error('Error loading programs:', error);
+      return [];
+    }
+  };
+
+
+
+  const loadCourseOptions = async (inputValue: string) => {
+    try {
+      const response = await courseService.getCourses(1, 100, inputValue);
+      const options = response?.data?.map((c: { _id: string; name: string; code: string; credits: number }) => ({ 
+        value: c._id, 
+        label: `${c.code} - ${c.name} (${c.credits} credits)` 
+      })) || [];
+      return options.filter((option: SelectOption) =>
+        option.label.toLowerCase().includes(inputValue.toLowerCase())
+      );
+    } catch (error) {
+      console.error('Error loading courses:', error);
+      return [];
+    }
+  };
 
   const onSubmit = async (data: CreateEnrollmentRequest) => {
     try {
@@ -126,15 +186,21 @@ const AddEnrollmentModal: React.FC<AddEnrollmentModalProps> = ({ isOpen, onClose
                 control={control}
                 rules={{ required: 'Student is required' }}
                 render={({ field }) => (
-                  <Select
-                    {...field}
-                    placeholder="Select a student..."
-                    options={[
-                      { value: 'student1', label: 'John Doe (john@example.com)' },
-                      { value: 'student2', label: 'Jane Smith (jane@example.com)' }
-                    ]}
+                  <AsyncSelect
+                    loadOptions={loadStudentOptions}
+                    onChange={(option: any) => {
+                      field.onChange(option?.value || '');
+                      setSelectedStudent(option);
+                    }}
+                    onBlur={field.onBlur}
+                    value={selectedStudent}
+                    placeholder="Search students..."
                     styles={selectStyles}
                     isClearable
+                    cacheOptions
+                    defaultOptions
+                    noOptionsMessage={() => "No students found"}
+                    loadingMessage={() => "Loading students..."}
                   />
                 )}
               />
@@ -153,16 +219,21 @@ const AddEnrollmentModal: React.FC<AddEnrollmentModalProps> = ({ isOpen, onClose
                 control={control}
                 rules={{ required: 'Program is required' }}
                 render={({ field }) => (
-                  <Select
-                    {...field}
-                    placeholder="Select a program..."
-                    options={[
-                      { value: 'program1', label: 'Bachelor of Computer Science' },
-                      { value: 'program2', label: 'Bachelor of Engineering' },
-                      { value: 'program3', label: 'Master of Business Administration' }
-                    ]}
+                  <AsyncSelect
+                    loadOptions={loadProgramOptions}
+                    onChange={(option: any) => {
+                      field.onChange(option?.value || '');
+                      setSelectedProgram(option);
+                    }}
+                    onBlur={field.onBlur}
+                    value={selectedProgram}
+                    placeholder="Search programs..."
                     styles={selectStyles}
                     isClearable
+                    cacheOptions
+                    defaultOptions
+                    noOptionsMessage={() => "No programs found"}
+                    loadingMessage={() => "Loading programs..."}
                   />
                 )}
               />
@@ -170,6 +241,8 @@ const AddEnrollmentModal: React.FC<AddEnrollmentModalProps> = ({ isOpen, onClose
                 <p className="mt-1 text-sm text-red-600">{errors.program.message}</p>
               )}
             </div>
+
+
 
             {/* Semester and Term */}
             <div>
@@ -303,33 +376,6 @@ const AddEnrollmentModal: React.FC<AddEnrollmentModalProps> = ({ isOpen, onClose
               )}
             </div>
 
-            {/* Advisor Selection */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Advisor *
-              </label>
-              <Controller
-                name="advisor"
-                control={control}
-                rules={{ required: 'Advisor is required' }}
-                render={({ field }) => (
-                  <Select
-                    {...field}
-                    placeholder="Select an advisor..."
-                    options={[
-                      { value: 'advisor1', label: 'Dr. Smith (smith@example.com)' },
-                      { value: 'advisor2', label: 'Dr. Johnson (johnson@example.com)' }
-                    ]}
-                    styles={selectStyles}
-                    isClearable
-                  />
-                )}
-              />
-              {errors.advisor && (
-                <p className="mt-1 text-sm text-red-600">{errors.advisor.message}</p>
-              )}
-            </div>
-
             {/* Courses Selection */}
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -339,17 +385,25 @@ const AddEnrollmentModal: React.FC<AddEnrollmentModalProps> = ({ isOpen, onClose
                 name="courses"
                 control={control}
                 render={({ field }) => (
-                  <Select
-                    {...field}
-                    placeholder="Select courses..."
-                    options={[
-                      { value: 'course1', label: 'CS101 - Introduction to Computer Science (3 credits)' },
-                      { value: 'course2', label: 'MATH101 - Calculus I (4 credits)' },
-                      { value: 'course3', label: 'ENG101 - English Composition (3 credits)' }
-                    ]}
+                  <AsyncSelect
+                    loadOptions={loadCourseOptions}
+                    onChange={(options: any) => {
+                      const selectedValues = Array.isArray(options) 
+                        ? options.map((option: SelectOption) => option.value)
+                        : [];
+                      field.onChange(selectedValues);
+                      setSelectedCourses(Array.isArray(options) ? options : []);
+                    }}
+                    onBlur={field.onBlur}
+                    value={selectedCourses}
+                    placeholder="Search courses..."
                     styles={selectStyles}
                     isMulti
                     isClearable
+                    cacheOptions
+                    defaultOptions
+                    noOptionsMessage={() => "No courses found"}
+                    loadingMessage={() => "Loading courses..."}
                   />
                 )}
               />
