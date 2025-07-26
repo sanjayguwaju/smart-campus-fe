@@ -46,6 +46,7 @@ import Assignments from './pages/Admin/Assignments';
 import Submissions from './pages/Admin/Submissions';
 import FacultyCourses from './pages/Faculty/Courses';
 import StudentMockDemo from './pages/StudentMockDemo';
+import FacultyStudents from './pages/Faculty/Users';
 
 
 function App() {
@@ -117,7 +118,7 @@ function App() {
         >
           <Route index element={<Dashboard />} />
           <Route path="courses" element={<FacultyCourses />} />
-          <Route path="students" element={<Students />} />
+          <Route path="students" element={<FacultyStudents />} />
           <Route path="events" element={<FacultyEvents />} />
           <Route path="notices" element={<FacultyNotices />} />
           <Route path="grades" element={<Grades />} />
