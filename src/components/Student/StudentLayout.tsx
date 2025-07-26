@@ -12,6 +12,7 @@ import {
   GraduationCap,
   LogOut,
   Beaker,
+  User,
 } from 'lucide-react';
 
 const StudentLayout: React.FC = () => {
@@ -21,12 +22,10 @@ const StudentLayout: React.FC = () => {
   const navigation = [
     { name: 'Dashboard', href: '/student', icon: Home },
     { name: 'My Courses', href: '/student/courses', icon: BookOpen },
-    { name: 'Course Selection', href: '/student/mock-students', icon: Beaker },
-    { name: 'My Grades', href: '/student/grades', icon: Award },
+    { name: 'Assignments', href: '/student/calendar', icon: Clock },
     { name: 'Events', href: '/student/events', icon: Calendar },
     { name: 'Notices', href: '/student/notices', icon: FileText },
-    { name: 'Assignments', href: '/student/calendar', icon: Clock },
-    { name: 'Programs', href: '/student/programs', icon: GraduationCap },
+    { name: 'Profile', href: '/student/profile', icon: User },
   ];
 
   const isActive = (path: string) => location.pathname === path;
