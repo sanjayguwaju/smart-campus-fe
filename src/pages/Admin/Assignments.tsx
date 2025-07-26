@@ -6,11 +6,11 @@ import { useDebounce } from '@uidotdev/usehooks';
 import { useAssignments, useDeleteAssignment } from '../../api/hooks/useAssignmentsDev';
 import { AssignmentData } from '../../api/types/assignments';
 import LoadingSpinner from '../../components/Layout/LoadingSpinner';
-import { 
-  AddAssignmentModal, 
-  EditAssignmentModal, 
-  ViewAssignmentModal, 
-  AssignmentsFilterDrawer 
+import {
+  AddAssignmentModal,
+  EditAssignmentModal,
+  ViewAssignmentModal,
+  AssignmentsFilterDrawer
 } from '../../components/Admin/Assignments';
 
 // Select option interface
@@ -116,8 +116,8 @@ const Assignments: React.FC = () => {
   const filteredAssignments = Array.isArray(assignments) ? assignments : [];
 
   const handleSelectAssignment = (assignmentId: string) => {
-    setSelectedAssignments(prev => 
-      prev.includes(assignmentId) 
+    setSelectedAssignments(prev =>
+      prev.includes(assignmentId)
         ? prev.filter(id => id !== assignmentId)
         : [...prev, assignmentId]
     );
@@ -149,7 +149,7 @@ const Assignments: React.FC = () => {
 
   const handleDeleteSelected = async () => {
     if (selectedAssignments.length === 0) return;
-    
+
     if (window.confirm(`Are you sure you want to delete ${selectedAssignments.length} selected assignment(s)?`)) {
       try {
         // Delete assignments one by one
@@ -261,7 +261,7 @@ const Assignments: React.FC = () => {
   if (error) {
     const errorMessage = error?.response?.data?.message || error?.message || 'Failed to load assignments';
     const isAuthError = error?.response?.status === 401;
-    
+
     return (
       <div className="text-center py-8">
         <div className="max-w-md mx-auto">
@@ -274,8 +274,8 @@ const Assignments: React.FC = () => {
               <p className="text-sm text-yellow-800">
                 <strong>Authentication Required:</strong> Please log in to view assignments.
               </p>
-              <a 
-                href="/login" 
+              <a
+                href="/login"
                 className="inline-block mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
               >
                 Go to Login
@@ -283,8 +283,8 @@ const Assignments: React.FC = () => {
             </div>
           )}
           {!isAuthError && (
-            <button 
-              onClick={() => window.location.reload()} 
+            <button
+              onClick={() => window.location.reload()}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
             >
               Try Again
@@ -310,7 +310,7 @@ const Assignments: React.FC = () => {
             </div>
           )}
         </div>
-        <button 
+        <button
           onClick={() => setIsAddAssignmentModalOpen(true)}
           className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center"
         >
@@ -352,7 +352,7 @@ const Assignments: React.FC = () => {
               isSearchable={false}
               className="w-full"
             />
-            <button 
+            <button
               onClick={() => setIsFilterDrawerOpen(true)}
               className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center"
             >
@@ -481,7 +481,7 @@ const Assignments: React.FC = () => {
                       >
                         <MoreHorizontal className="h-4 w-4" />
                       </button>
-                      
+
                       {openDropdown === assignment._id && (
                         <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50 border border-gray-200">
                           <div className="py-1">
@@ -532,7 +532,7 @@ const Assignments: React.FC = () => {
                       </svg>
                       <h3 className="mt-2 text-sm font-medium text-gray-900">No assignments found</h3>
                       <p className="mt-1 text-sm text-gray-500">
-                        {searchTerm || Object.values(filters).some(v => v !== '') 
+                        {searchTerm || Object.values(filters).some(v => v !== '')
                           ? 'Try adjusting your search or filter criteria.'
                           : 'Get started by creating a new assignment.'
                         }
@@ -599,7 +599,7 @@ const Assignments: React.FC = () => {
                     <span className="sr-only">Previous</span>
                     <ChevronLeft className="h-5 w-5" />
                   </button>
-                  
+
                   {/* Page numbers */}
                   {Array.from({ length: Math.min(5, pagination.pages) }, (_, i) => {
                     let pageNum;
@@ -612,22 +612,21 @@ const Assignments: React.FC = () => {
                     } else {
                       pageNum = currentPage - 2 + i;
                     }
-                    
+
                     return (
                       <button
                         key={pageNum}
                         onClick={() => handlePageChange(pageNum)}
-                        className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                          currentPage === pageNum
+                        className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${currentPage === pageNum
                             ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
                             : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
-                        }`}
+                          }`}
                       >
                         {pageNum}
                       </button>
                     );
                   })}
-                  
+
                   <button
                     onClick={() => handlePageChange(currentPage + 1)}
                     disabled={currentPage >= pagination.pages}
@@ -666,13 +665,13 @@ const Assignments: React.FC = () => {
       </div>
 
       {/* Add Assignment Modal */}
-      <AddAssignmentModal 
+      <AddAssignmentModal
         isOpen={isAddAssignmentModalOpen}
         onClose={() => setIsAddAssignmentModalOpen(false)}
       />
 
       {/* Edit Assignment Modal */}
-      <EditAssignmentModal 
+      <EditAssignmentModal
         isOpen={isEditAssignmentModalOpen}
         onClose={() => {
           setIsEditAssignmentModalOpen(false);
@@ -714,7 +713,7 @@ const Assignments: React.FC = () => {
       </div>
 
       {/* View Assignment Modal */}
-      <ViewAssignmentModal 
+      <ViewAssignmentModal
         isOpen={isViewAssignmentModalOpen}
         onClose={() => {
           setIsViewAssignmentModalOpen(false);

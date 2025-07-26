@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import AsyncSelect from 'react-select/async';
 import { StylesConfig, SingleValue } from 'react-select';
@@ -60,6 +60,7 @@ const AddCourseModal: React.FC<AddCourseModalProps> = ({ isOpen, onClose }) => {
     control,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors, isSubmitting }
   } = useForm<CreateCourseRequest>({
     defaultValues: {
@@ -79,8 +80,14 @@ const AddCourseModal: React.FC<AddCourseModalProps> = ({ isOpen, onClose }) => {
   const [selectedDepartment, setSelectedDepartment] = React.useState<SelectOption | null>(null);
   const [selectedInstructor, setSelectedInstructor] = React.useState<SelectOption | null>(null);
   const [selectedProgram, setSelectedProgram] = React.useState<SelectOption | null>(null);
+  const [programOptionsKey, setProgramOptionsKey] = React.useState<number>(0);
 
-
+  // Trigger program options reload when department changes
+  useEffect(() => {
+    if (selectedDepartment) {
+      setProgramOptionsKey(prev => prev + 1);
+    }
+  }, [selectedDepartment]);
 
   // Load options functions for AsyncSelect
   const loadDepartmentOptions = async (inputValue: string) => {
@@ -111,10 +118,27 @@ const AddCourseModal: React.FC<AddCourseModalProps> = ({ isOpen, onClose }) => {
   };
 
 
+
   const loadProgramOptions = async (inputValue: string) => {
     try {
-      const response = await programService.getPrograms({ page: 1, limit: 100, search: inputValue });
+      // Only load programs if a department is selected
+      if (!selectedDepartment?.value) {
+        return [];
+      }
+      
+      const response = await programService.getPrograms({ 
+        page: 1, 
+        limit: 100, 
+        search: inputValue,
+        department: selectedDepartment.value 
+      });
       const options = response?.data?.map((p: { _id: string; name: string }) => ({ value: p?._id, label: p?.name })) || [];
+      
+      // If no search input, return all options, otherwise filter
+      if (!inputValue) {
+        return options;
+      }
+      
       return options.filter((option: SelectOption) =>
         option.label.toLowerCase().includes(inputValue.toLowerCase())
       );
@@ -123,7 +147,6 @@ const AddCourseModal: React.FC<AddCourseModalProps> = ({ isOpen, onClose }) => {
       return [];
     }
   };
-
 
   const onSubmit = async (data: CreateCourseRequest) => {
     try {
@@ -328,6 +351,13 @@ const AddCourseModal: React.FC<AddCourseModalProps> = ({ isOpen, onClose }) => {
                           const singleValue = newValue as SingleValue<SelectOption>;
                           field.onChange(singleValue?.value || '');
                           setSelectedDepartment(singleValue);
+                          
+                          // Clear selected program when department changes
+                          if (selectedProgram) {
+                            setSelectedProgram(null);
+                            // Reset the program field in the form
+                            setValue('program', '');
+                          }
                         }}
                         onBlur={field.onBlur}
                         value={selectedDepartment}
@@ -342,6 +372,42 @@ const AddCourseModal: React.FC<AddCourseModalProps> = ({ isOpen, onClose }) => {
                   />
                   {errors.department && (
                     <p className="mt-1 text-sm text-red-600">{errors.department.message}</p>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Program *
+                  </label>
+                  <Controller
+                    name="program"
+                    control={control}
+                    rules={{ required: 'Program is required' }}
+                    render={({ field }) => (
+                      <AsyncSelect
+                        key={programOptionsKey}
+                        loadOptions={loadProgramOptions}
+                        onChange={(newValue) => {
+                          const singleValue = newValue as SingleValue<SelectOption>;
+                          field.onChange(singleValue?.value || '');
+                          setSelectedProgram(singleValue);
+                        }}
+                        onBlur={field.onBlur}
+                        value={selectedProgram}
+                        placeholder={selectedDepartment ? "Select program" : "Please select a department first"}
+                        styles={selectStyles}
+                        className="w-full"
+                        isSearchable
+                        cacheOptions
+                        defaultOptions
+                        isDisabled={!selectedDepartment}
+                      />
+                    )}
+                  />
+                  {!selectedDepartment && (
+                    <p className="mt-1 text-sm text-gray-500">Please select a department first to view available programs</p>
+                  )}
+                  {errors.program && (
+                    <p className="mt-1 text-sm text-red-600">{errors.program.message}</p>
                   )}
                 </div>
 
@@ -404,37 +470,7 @@ const AddCourseModal: React.FC<AddCourseModalProps> = ({ isOpen, onClose }) => {
 
 
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Program *
-                  </label>
-                  <Controller
-                    name="program"
-                    control={control}
-                    rules={{ required: 'Program is required' }}
-                    render={({ field }) => (
-                      <AsyncSelect
-                        loadOptions={loadProgramOptions}
-                        onChange={(newValue) => {
-                          const singleValue = newValue as SingleValue<SelectOption>;
-                          field.onChange(singleValue?.value || '');
-                          setSelectedProgram(singleValue);
-                        }}
-                        onBlur={field.onBlur}
-                        value={selectedProgram}
-                        placeholder="Select program"
-                        styles={selectStyles}
-                        className="w-full"
-                        isSearchable
-                        cacheOptions
-                        defaultOptions
-                      />
-                    )}
-                  />
-                  {errors.program && (
-                    <p className="mt-1 text-sm text-red-600">{errors.program.message}</p>
-                  )}
-                </div>
+
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">

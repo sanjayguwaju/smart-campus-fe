@@ -4,6 +4,9 @@ import Select, { StylesConfig } from 'react-select';
 import AsyncSelect from 'react-select/async';
 import { useUpdateEnrollment } from '../../../api/hooks/useEnrollments';
 import { UpdateEnrollmentRequest, EnrollmentData } from '../../../api/types/enrollments';
+import { userService } from '../../../api/services/userService';
+import { programService } from '../../../api/services/programService';
+import { courseService } from '../../../api/services/courseService';
 
 interface EditEnrollmentModalProps {
   isOpen: boolean;
@@ -18,6 +21,12 @@ interface SelectOption {
 
 const EditEnrollmentModal: React.FC<EditEnrollmentModalProps> = ({ isOpen, onClose, enrollment }) => {
   const updateEnrollmentMutation = useUpdateEnrollment();
+  
+  // State to track selected options for display
+  const [selectedStudent, setSelectedStudent] = React.useState<SelectOption | null>(null);
+  const [selectedProgram, setSelectedProgram] = React.useState<SelectOption | null>(null);
+  const [selectedCourses, setSelectedCourses] = React.useState<SelectOption[]>([]);
+  const [selectedAdvisor, setSelectedAdvisor] = React.useState<SelectOption | null>(null);
   
   // Custom styles for react-select
   const selectStyles: StylesConfig<SelectOption> = {
@@ -54,6 +63,73 @@ const EditEnrollmentModal: React.FC<EditEnrollmentModalProps> = ({ isOpen, onClo
     })
   };
 
+  // Load options functions for AsyncSelect
+  const loadStudentOptions = async (inputValue: string) => {
+    try {
+      const response = await userService.getUsers(1, 100, inputValue, { role: 'student' });
+      const options = (response?.data?.map((u: { _id: string; fullName: string; email: string }) => ({ 
+        value: u._id, 
+        label: `${u.fullName} (${u.email})` 
+      })) || [])
+        .sort((a: SelectOption, b: SelectOption) => a.label.localeCompare(b.label));
+      return options.filter((option: SelectOption) =>
+        option.label.toLowerCase().includes(inputValue.toLowerCase())
+      );
+    } catch (error) {
+      console.error('Error loading students:', error);
+      return [];
+    }
+  };
+
+  const loadProgramOptions = async (inputValue: string) => {
+    try {
+      const response = await programService.getPrograms({ page: 1, limit: 100, search: inputValue });
+      const options = response?.data?.map((p: { _id: string; name: string }) => ({ 
+        value: p._id, 
+        label: p.name 
+      })) || [];
+      return options.filter((option: SelectOption) =>
+        option.label.toLowerCase().includes(inputValue.toLowerCase())
+      );
+    } catch (error) {
+      console.error('Error loading programs:', error);
+      return [];
+    }
+  };
+
+  const loadCourseOptions = async (inputValue: string) => {
+    try {
+      const response = await courseService.getCourses(1, 100, inputValue);
+      const options = response?.data?.map((c: { _id: string; name: string; code: string; credits: number }) => ({ 
+        value: c._id, 
+        label: `${c.code} - ${c.name} (${c.credits} credits)` 
+      })) || [];
+      return options.filter((option: SelectOption) =>
+        option.label.toLowerCase().includes(inputValue.toLowerCase())
+      );
+    } catch (error) {
+      console.error('Error loading courses:', error);
+      return [];
+    }
+  };
+
+  const loadAdvisorOptions = async (inputValue: string) => {
+    try {
+      const response = await userService.getUsers(1, 100, inputValue, { role: 'faculty' });
+      const options = (response?.data?.map((u: { _id: string; fullName: string; email: string }) => ({ 
+        value: u._id, 
+        label: `${u.fullName} (${u.email})` 
+      })) || [])
+        .sort((a: SelectOption, b: SelectOption) => a.label.localeCompare(b.label));
+      return options.filter((option: SelectOption) =>
+        option.label.toLowerCase().includes(inputValue.toLowerCase())
+      );
+    } catch (error) {
+      console.error('Error loading advisors:', error);
+      return [];
+    }
+  };
+
   const {
     control,
     handleSubmit,
@@ -84,6 +160,24 @@ const EditEnrollmentModal: React.FC<EditEnrollmentModalProps> = ({ isOpen, onClo
   // Reset form when enrollment data changes
   useEffect(() => {
     if (enrollment) {
+      // Set selected options for display
+      setSelectedStudent({
+        value: enrollment.student._id,
+        label: `${enrollment.student.fullName} (${enrollment.student.email})`
+      });
+      setSelectedProgram({
+        value: enrollment.program._id,
+        label: enrollment.program.name
+      });
+      setSelectedCourses(enrollment.courses.map(course => ({
+        value: course._id,
+        label: `${course.code} - ${course.name} (${course.creditHours} credits)`
+      })));
+      setSelectedAdvisor({
+        value: enrollment.advisor._id,
+        label: `${enrollment.advisor.fullName} (${enrollment.advisor.email})`
+      });
+
       reset({
         student: enrollment.student._id,
         program: enrollment.program._id,
@@ -158,15 +252,20 @@ const EditEnrollmentModal: React.FC<EditEnrollmentModalProps> = ({ isOpen, onClo
                 control={control}
                 rules={{ required: 'Student is required' }}
                 render={({ field }) => (
-                  <Select
-                    {...field}
-                    placeholder="Select a student..."
-                    options={[
-                      { value: enrollment.student._id, label: `${enrollment.student.fullName} (${enrollment.student.email})` },
-                      { value: 'student2', label: 'Jane Smith (jane@example.com)' }
-                    ]}
+                  <AsyncSelect
+                    value={selectedStudent}
+                    onChange={(option: any) => {
+                      field.onChange(option?.value || '');
+                      setSelectedStudent(option);
+                    }}
+                    loadOptions={loadStudentOptions}
+                    placeholder="Search and select a student..."
                     styles={selectStyles}
                     isClearable
+                    noOptionsMessage={() => "No students found"}
+                    loadingMessage={() => "Loading students..."}
+                    cacheOptions
+                    defaultOptions
                   />
                 )}
               />
@@ -185,16 +284,20 @@ const EditEnrollmentModal: React.FC<EditEnrollmentModalProps> = ({ isOpen, onClo
                 control={control}
                 rules={{ required: 'Program is required' }}
                 render={({ field }) => (
-                  <Select
-                    {...field}
-                    placeholder="Select a program..."
-                    options={[
-                      { value: enrollment.program._id, label: enrollment.program.name },
-                      { value: 'program2', label: 'Bachelor of Engineering' },
-                      { value: 'program3', label: 'Master of Business Administration' }
-                    ]}
+                  <AsyncSelect
+                    value={selectedProgram}
+                    onChange={(option: any) => {
+                      field.onChange(option?.value || '');
+                      setSelectedProgram(option);
+                    }}
+                    loadOptions={loadProgramOptions}
+                    placeholder="Search and select a program..."
                     styles={selectStyles}
                     isClearable
+                    noOptionsMessage={() => "No programs found"}
+                    loadingMessage={() => "Loading programs..."}
+                    cacheOptions
+                    defaultOptions
                   />
                 )}
               />
@@ -345,15 +448,20 @@ const EditEnrollmentModal: React.FC<EditEnrollmentModalProps> = ({ isOpen, onClo
                 control={control}
                 rules={{ required: 'Advisor is required' }}
                 render={({ field }) => (
-                  <Select
-                    {...field}
-                    placeholder="Select an advisor..."
-                    options={[
-                      { value: enrollment.advisor._id, label: `${enrollment.advisor.fullName} (${enrollment.advisor.email})` },
-                      { value: 'advisor2', label: 'Dr. Johnson (johnson@example.com)' }
-                    ]}
+                  <AsyncSelect
+                    value={selectedAdvisor}
+                    onChange={(option: any) => {
+                      field.onChange(option?.value || '');
+                      setSelectedAdvisor(option);
+                    }}
+                    loadOptions={loadAdvisorOptions}
+                    placeholder="Search and select an advisor..."
                     styles={selectStyles}
                     isClearable
+                    noOptionsMessage={() => "No advisors found"}
+                    loadingMessage={() => "Loading advisors..."}
+                    cacheOptions
+                    defaultOptions
                   />
                 )}
               />
@@ -479,31 +587,12 @@ const EditEnrollmentModal: React.FC<EditEnrollmentModalProps> = ({ isOpen, onClo
                 name="courses"
                 control={control}
                 render={({ field }) => {
-                  // Mock data for courses - in real app, this would come from API
-                  const mockCourses = enrollment?.courses?.map(course => ({
-                    value: course._id,
-                    label: `${course.code} - ${course.name} (${course.creditHours} credits)`
-                  })) || [];
-
-                  const loadCourseOptions = (inputValue: string) => {
-                    return new Promise<SelectOption[]>((resolve) => {
-                      setTimeout(() => {
-                        const filtered = mockCourses.filter(course =>
-                          course.label.toLowerCase().includes(inputValue.toLowerCase())
-                        );
-                        resolve(filtered);
-                      }, 300);
-                    });
-                  };
-
                   return (
                     <AsyncSelect
-                      value={field.value?.map(courseId => 
-                        mockCourses.find(course => course.value === courseId)
-                      ).filter(Boolean) || []}
+                      value={selectedCourses}
                       onChange={(selectedOptions: any) => {
-                        const selectedValues = selectedOptions?.map((option: any) => option.value) || [];
-                        field.onChange(selectedValues);
+                        setSelectedCourses(selectedOptions || []);
+                        field.onChange(selectedOptions?.map((option: any) => option.value) || []);
                       }}
                       loadOptions={loadCourseOptions}
                       placeholder="Search and select courses..."

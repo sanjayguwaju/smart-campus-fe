@@ -363,7 +363,7 @@ const Enrollments: React.FC = () => {
                         </span>
                       </div>
                       <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">{enrollment.student?.fullName || 'N/A'}</div>
+                        <div className="text-sm font-medium text-gray-900">{enrollment?.student?.fullName || 'N/A'}</div>
                         <div className="text-sm text-gray-500">{enrollment.student?.email || 'N/A'}</div>
                       </div>
                     </div>
