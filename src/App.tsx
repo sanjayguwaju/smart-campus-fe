@@ -33,7 +33,6 @@ import StudentEvents from './pages/Student/Events';
 import StudentNotices from './pages/Student/Notices';
 import StudentCalendar from './pages/Student/Calendar';
 import StudentPrograms from './pages/Student/Programs';
-import Students from './pages/Faculty/Students';
 import FacultyEvents from './pages/Faculty/Events';
 import FacultyNotices from './pages/Faculty/Notices';
 import Grades from './pages/Faculty/Grades';
@@ -47,6 +46,7 @@ import Submissions from './pages/Admin/Submissions';
 import FacultyCourses from './pages/Faculty/Courses';
 import StudentMockDemo from './pages/StudentMockDemo';
 import FacultyStudents from './pages/Faculty/Users';
+import FacultyAssignments from './pages/Faculty/Assignments';
 
 
 function App() {
@@ -119,6 +119,7 @@ function App() {
           <Route index element={<Dashboard />} />
           <Route path="courses" element={<FacultyCourses />} />
           <Route path="students" element={<FacultyStudents />} />
+          <Route path="assignments" element={<FacultyAssignments />} />
           <Route path="events" element={<FacultyEvents />} />
           <Route path="notices" element={<FacultyNotices />} />
           <Route path="grades" element={<Grades />} />
