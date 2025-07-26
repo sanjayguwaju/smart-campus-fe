@@ -163,12 +163,6 @@ const ViewDepartmentModal: React.FC<ViewDepartmentModalProps> = ({ isOpen, onClo
           <div className="bg-gray-50 rounded-lg p-4">
             <h4 className="text-sm font-medium text-gray-900 mb-3">Additional Information</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {department.headOfDepartment && (
-                <div>
-                  <p className="text-xs text-gray-500">Head of Department</p>
-                  <p className="text-sm font-medium text-gray-900">{department.headOfDepartment}</p>
-                </div>
-              )}
               {department.fullName && (
                 <div>
                   <p className="text-xs text-gray-500">Full Name</p>

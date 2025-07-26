@@ -67,7 +67,6 @@ const AddDepartmentModal: React.FC<AddDepartmentModalProps> = ({ isOpen, onClose
       name: '',
       code: '',
       description: '',
-      headOfDepartment: '',
       contactEmail: '',
       contactPhone: '',
       location: '',
@@ -182,24 +181,6 @@ const AddDepartmentModal: React.FC<AddDepartmentModalProps> = ({ isOpen, onClose
                   {errors.code && (
                     <p className="mt-1 text-sm text-red-600">{errors.code.message}</p>
                   )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Head of Department
-                  </label>
-                  <Controller
-                    name="headOfDepartment"
-                    control={control}
-                    render={({ field }) => (
-                      <input
-                        {...field}
-                        type="text"
-                        className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
-                        placeholder="e.g., Dr. John Smith"
-                      />
-                    )}
-                  />
                 </div>
 
                 <div>

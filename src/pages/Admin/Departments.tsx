@@ -31,7 +31,6 @@ const Departments: React.FC = () => {
     code: '',
     status: '', 
     location: '',
-    headOfDepartment: ''
   });
 
   // Debounce search term
@@ -133,7 +132,7 @@ const Departments: React.FC = () => {
       : 'bg-red-100 text-red-800';
   };
 
-  const handleApplyFilters = (newFilters: { name: string; code: string; status: string; location: string; headOfDepartment: string }) => {
+  const handleApplyFilters = (newFilters: { name: string; code: string; status: string; location: string; }) => {
     setFilters(newFilters);
   };
 
@@ -143,7 +142,6 @@ const Departments: React.FC = () => {
       code: '',
       status: '',
       location: '',
-      headOfDepartment: ''
     });
   };
 

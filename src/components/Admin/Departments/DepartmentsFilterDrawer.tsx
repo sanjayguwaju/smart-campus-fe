@@ -15,14 +15,12 @@ interface DepartmentsFilterDrawerProps {
     code: string;
     status: string;
     location: string;
-    headOfDepartment: string;
   };
   onApplyFilters: (filters: {
     name: string;
     code: string;
     status: string;
     location: string;
-    headOfDepartment: string;
   }) => void;
   onClearFilters: () => void;
 }
@@ -89,7 +87,6 @@ const DepartmentsFilterDrawer: React.FC<DepartmentsFilterDrawerProps> = ({
       code: '',
       status: '',
       location: '',
-      headOfDepartment: '',
     });
     onClearFilters();
   };
@@ -219,43 +216,6 @@ const DepartmentsFilterDrawer: React.FC<DepartmentsFilterDrawerProps> = ({
                     : null
                 }
                 placeholder="Select location"
-                styles={selectStyles}
-                className="w-full"
-                isClearable={false}
-              />
-            </div>
-
-            {/* Head of Department */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                <User className="h-4 w-4 inline mr-1" />
-                Head of Department
-              </label>
-              <Select<SelectOption>
-                options={[
-                  { value: '', label: 'All Heads' },
-                  { value: 'dr-john-smith', label: 'Dr. John Smith' },
-                  { value: 'dr-sarah-johnson', label: 'Dr. Sarah Johnson' },
-                  { value: 'prof-michael-brown', label: 'Prof. Michael Brown' },
-                  { value: 'dr-emily-davis', label: 'Dr. Emily Davis' },
-                  { value: 'prof-david-wilson', label: 'Prof. David Wilson' },
-                ]}
-                onChange={(selectedOption: SelectOption | null) => 
-                  handleFilterChange('headOfDepartment', selectedOption?.value || '')
-                }
-                value={
-                  localFilters.headOfDepartment
-                    ? [
-                        { value: '', label: 'All Heads' },
-                        { value: 'dr-john-smith', label: 'Dr. John Smith' },
-                        { value: 'dr-sarah-johnson', label: 'Dr. Sarah Johnson' },
-                        { value: 'prof-michael-brown', label: 'Prof. Michael Brown' },
-                        { value: 'dr-emily-davis', label: 'Dr. Emily Davis' },
-                        { value: 'prof-david-wilson', label: 'Prof. David Wilson' },
-                      ].find(option => option.value === localFilters.headOfDepartment)
-                    : null
-                }
-                placeholder="Select head of department"
                 styles={selectStyles}
                 className="w-full"
                 isClearable={false}

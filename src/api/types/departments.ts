@@ -3,7 +3,6 @@ export interface DepartmentData {
   name: string;
   code: string;
   description?: string;
-  headOfDepartment?: string;
   contactEmail?: string;
   contactPhone?: string;
   location?: string;
@@ -30,7 +29,6 @@ export interface CreateDepartmentRequest {
   name: string;
   code: string;
   description?: string;
-  headOfDepartment?: string;
   contactEmail?: string;
   contactPhone?: string;
   location?: string;
@@ -49,7 +47,6 @@ export interface UpdateDepartmentRequest {
   name?: string;
   code?: string;
   description?: string;
-  headOfDepartment?: string;
   contactEmail?: string;
   contactPhone?: string;
   location?: string;
