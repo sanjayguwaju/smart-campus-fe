@@ -141,7 +141,6 @@ const EditEnrollmentModal: React.FC<EditEnrollmentModalProps> = ({ isOpen, onClo
       student: '',
       program: '',
       semester: 1,
-      semesterTerm: 'Fall',
       academicYear: '2024-2025',
       courses: [],
       status: 'active',
@@ -182,7 +181,6 @@ const EditEnrollmentModal: React.FC<EditEnrollmentModalProps> = ({ isOpen, onClo
         student: enrollment.student._id,
         program: enrollment.program._id,
         semester: enrollment.semester,
-        semesterTerm: enrollment.semesterTerm,
         academicYear: enrollment.academicYear,
         courses: enrollment.courses.map(course => course._id),
         status: enrollment.status,
@@ -330,34 +328,6 @@ const EditEnrollmentModal: React.FC<EditEnrollmentModalProps> = ({ isOpen, onClo
                 <p className="mt-1 text-sm text-red-600">{errors.semester.message}</p>
               )}
             </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Semester Term *
-              </label>
-              <Controller
-                name="semesterTerm"
-                control={control}
-                rules={{ required: 'Semester term is required' }}
-                render={({ field }) => (
-                  <Select
-                    {...field}
-                    placeholder="Select semester term..."
-                    options={[
-                      { value: 'Fall', label: 'Fall' },
-                      { value: 'Spring', label: 'Spring' },
-                      { value: 'Summer', label: 'Summer' }
-                    ]}
-                    styles={selectStyles}
-                    isClearable
-                  />
-                )}
-              />
-              {errors.semesterTerm && (
-                <p className="mt-1 text-sm text-red-600">{errors.semesterTerm.message}</p>
-              )}
-            </div>
-
             {/* Academic Year */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">

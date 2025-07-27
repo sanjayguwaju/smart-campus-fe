@@ -15,7 +15,6 @@ export interface CourseData {
     department?: string;
   };
   semester: number;
-  semesterTerm?: string;
   academicYear: string;
   maxStudents: number;
   enrolledStudents: number;

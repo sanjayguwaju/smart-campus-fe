@@ -73,7 +73,6 @@ const AddEnrollmentModal: React.FC<AddEnrollmentModalProps> = ({ isOpen, onClose
       student: '',
       program: '',
       semester: 1,
-      semesterTerm: 'Fall',
       academicYear: '2024-2025',
       courses: [],
       status: 'active',
@@ -266,33 +265,6 @@ const AddEnrollmentModal: React.FC<AddEnrollmentModalProps> = ({ isOpen, onClose
               />
               {errors.semester && (
                 <p className="mt-1 text-sm text-red-600">{errors.semester.message}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Semester Term *
-              </label>
-              <Controller
-                name="semesterTerm"
-                control={control}
-                rules={{ required: 'Semester term is required' }}
-                render={({ field }) => (
-                  <Select
-                    {...field}
-                    placeholder="Select semester term..."
-                    options={[
-                      { value: 'Fall', label: 'Fall' },
-                      { value: 'Spring', label: 'Spring' },
-                      { value: 'Summer', label: 'Summer' }
-                    ]}
-                    styles={selectStyles}
-                    isClearable
-                  />
-                )}
-              />
-              {errors.semesterTerm && (
-                <p className="mt-1 text-sm text-red-600">{errors.semesterTerm.message}</p>
               )}
             </div>
 

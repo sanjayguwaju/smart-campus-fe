@@ -55,7 +55,6 @@ export interface EnrollmentData {
   student: User;
   program: Program;
   semester: number;
-  semesterTerm: string;
   academicYear: string;
   courses: Course[];
   status: string;
@@ -87,7 +86,6 @@ export interface CreateEnrollmentRequest {
   student: string;
   program: string;
   semester: number;
-  semesterTerm: string;
   academicYear: string;
   courses: string[];
   status: string;
@@ -105,7 +103,6 @@ export interface UpdateEnrollmentRequest {
   student?: string;
   program?: string;
   semester?: number;
-  semesterTerm?: string;
   academicYear?: string;
   courses?: string[];
   status?: string;

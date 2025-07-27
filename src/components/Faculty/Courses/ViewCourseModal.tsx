@@ -104,13 +104,6 @@ const ViewCourseModal: React.FC<ViewCourseModalProps> = ({ isOpen, onClose, cour
             <div className="flex items-center space-x-2">
               <BookOpen className="h-4 w-4 text-gray-400" />
               <div>
-                <p className="text-xs text-gray-500">Semester Term</p>
-                <p className="text-sm font-medium text-gray-900">{course.semesterTerm || 'N/A'}</p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-2">
-              <BookOpen className="h-4 w-4 text-gray-400" />
-              <div>
                 <p className="text-xs text-gray-500">Academic Year</p>
                 <p className="text-sm font-medium text-gray-900">{course.academicYear}</p>
               </div>
