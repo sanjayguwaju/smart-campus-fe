@@ -155,11 +155,11 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({ isOpen, onClose, cour
       setValue('code', course.code || '');
       setValue('description', course.description || '');
       setValue('credits', course.credits || 3);
-      setValue('department', course.department?._id || '');
-      setValue('program', course.program?._id || '');
-      setValue('instructor', course.instructor?._id || '');
+      setValue('department', course.department || '');
+      setValue('program', course.program || '');
+      setValue('instructor', course.instructor || '');
       setValue('semester', String(course.semester || ''));
-      setValue('academicYear', course.academicYear || '');
+      setValue('academicYear', course.year || '');
       setValue('maxStudents', course.maxStudents || 30);
       setValue('isActive', course.isActive);
 
@@ -185,13 +185,26 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({ isOpen, onClose, cour
         });
       }
 
-      if (course.instructor) {
+      // Handle instructor selection - check multiple possible fields
+      const instructorId = course.instructor || course.instructorName;
+      if (instructorId) {
+        console.log('Loading instructor options for:', instructorId);
         loadInstructorOptions('').then(options => {
-          const instructorOption = options.find(opt => opt.value === course.instructor);
+          console.log('Available instructor options:', options);
+          const instructorOption = options.find(opt => opt.value === instructorId);
+          console.log('Found instructor option:', instructorOption);
           if (instructorOption) {
             setSelectedInstructor(instructorOption);
+          } else {
+            console.log('Instructor not found in options, instructorId:', instructorId);
+            console.log('Available option values:', options.map(opt => opt.value));
           }
+        }).catch(error => {
+          console.error('Error loading instructor options:', error);
         });
+      } else {
+        console.log('No instructor found in course data');
+        console.log('Course data:', course);
       }
     }
   }, [course, setValue]);
@@ -517,9 +530,6 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({ isOpen, onClose, cour
                     <p className="mt-1 text-sm text-red-600">{errors.semester.message}</p>
                   )}
                 </div>
-
-
-
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Academic Year *

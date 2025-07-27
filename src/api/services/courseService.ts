@@ -90,7 +90,6 @@ export const courseService = {
     };
     delete (mappedData as any).instructor;
     delete (mappedData as any).credits;
-    delete (mappedData as any).semester;
     delete (mappedData as any).academicYear;
     const response = await apiClient.put<CourseResponse>(
       `/courses/${id}`,
