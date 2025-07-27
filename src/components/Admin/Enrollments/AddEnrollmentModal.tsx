@@ -302,7 +302,11 @@ const AddEnrollmentModal: React.FC<AddEnrollmentModalProps> = ({ isOpen, onClose
                 rules={{ required: 'Enrollment type is required' }}
                 render={({ field }) => (
                   <Select
-                    {...field}
+                    value={field.value ? { value: field.value, label: field.value.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ') } : null}
+                    onChange={(option: any) => {
+                      field.onChange(option?.value || '');
+                    }}
+                    onBlur={field.onBlur}
                     placeholder="Select enrollment type..."
                     options={[
                       { value: 'full_time', label: 'Full Time' },
@@ -330,13 +334,18 @@ const AddEnrollmentModal: React.FC<AddEnrollmentModalProps> = ({ isOpen, onClose
                 rules={{ required: 'Status is required' }}
                 render={({ field }) => (
                   <Select
-                    {...field}
+                    value={field.value ? { value: field.value, label: field.value.charAt(0).toUpperCase() + field.value.slice(1).replace('_', ' ') } : null}
+                    onChange={(option: any) => {
+                      field.onChange(option?.value || '');
+                    }}
+                    onBlur={field.onBlur}
                     placeholder="Select status..."
                     options={[
                       { value: 'active', label: 'Active' },
-                      { value: 'inactive', label: 'Inactive' },
+                      { value: 'completed', label: 'Completed' },
+                      { value: 'dropped', label: 'Dropped' },
                       { value: 'suspended', label: 'Suspended' },
-                      { value: 'completed', label: 'Completed' }
+                      { value: 'graduated', label: 'Graduated' }
                     ]}
                     styles={selectStyles}
                     isClearable
