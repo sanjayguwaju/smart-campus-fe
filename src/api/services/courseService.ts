@@ -5,6 +5,8 @@ import {
   CoursesResponse,
   CourseResponse,
   CreateCourseResponse,
+  FacultyAssignedCoursesResponse,
+  FacultyAssignedCoursesParams,
 } from "../types/courses";
 
 export const courseService = {
@@ -123,6 +125,34 @@ export const courseService = {
       success: boolean;
       message: string;
     }>(`/courses/${id}/deactivate`);
+    return response.data;
+  },
+
+  async getFacultyAssignedCourses({
+    facultyId,
+    page = 1,
+    limit = 10,
+    search,
+    filters,
+  }: FacultyAssignedCoursesParams): Promise<FacultyAssignedCoursesResponse> {
+    const params = new URLSearchParams();
+    params.append('page', page.toString());
+    params.append('limit', limit.toString());
+    
+    if (search) {
+      params.append('search', search);
+    }
+    
+    if (filters) {
+      if (filters.status) params.append('status', filters.status);
+      if (filters.department) params.append('department', filters.department);
+      if (filters.semester) params.append('semester', filters.semester);
+      if (filters.academicYear) params.append('academicYear', filters.academicYear);
+    }
+
+    const response = await apiClient.get<FacultyAssignedCoursesResponse>(
+      `/courses/faculty/${facultyId}?${params.toString()}`
+    );
     return response.data;
   },
 }; 

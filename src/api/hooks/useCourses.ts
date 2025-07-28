@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { courseService } from "../services/courseService";
-import { CreateCourseRequest, UpdateCourseRequest } from "../types/courses";
+import { CreateCourseRequest, UpdateCourseRequest, FacultyAssignedCoursesParams } from "../types/courses";
 
 export const useCourses = (
   page = 1,
@@ -101,5 +101,39 @@ export const useDeactivateCourse = () => {
       queryClient.invalidateQueries({ queryKey: ["courses", courseId] });
       queryClient.invalidateQueries({ queryKey: ["courses"] });
     },
+  });
+};
+
+export const useAssignedFacultyCourses = (
+  facultyId: string,
+  page = 1,
+  limit = 10,
+  search?: string,
+  filters?: {
+    status?: string;
+    department?: string;
+    semester?: string;
+    academicYear?: string;
+  }
+) => {
+  return useQuery({
+    queryKey: ["faculty-assigned-courses", facultyId, page, limit, search, filters],
+    queryFn: () => courseService.getFacultyAssignedCourses({
+      facultyId,
+      page,
+      limit,
+      search,
+      filters,
+    }),
+    select: (response) => {
+      return {
+        courses: response.data,
+        pagination: response.pagination,
+        success: response.success,
+        message: response.message,
+        timestamp: response.timestamp,
+      };
+    },
+    enabled: !!facultyId,
   });
 }; 

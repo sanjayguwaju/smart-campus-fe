@@ -3,9 +3,10 @@ import { Plus, Search, Edit, Trash2, Eye, Filter, ChevronLeft, ChevronRight, Mor
 import { toast } from 'react-hot-toast';
 import Select, { StylesConfig } from 'react-select';
 import { useDebounce } from '@uidotdev/usehooks';
-import { useCourses, useDeleteCourse } from '../../api/hooks/useCourses';
+import { useAssignedFacultyCourses, useDeleteCourse } from '../../api/hooks/useCourses';
 import { CourseData } from '../../api/types/courses';
 import LoadingSpinner from '../../components/Layout/LoadingSpinner';
+import { useAuthStore } from '../../store/authStore';
 import { 
   AddCourseModal, 
   EditCourseModal, 
@@ -21,6 +22,7 @@ interface SelectOption {
 }
 
 const Courses: React.FC = () => {
+  const { user } = useAuthStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedCourses, setSelectedCourses] = useState<string[]>([]);
@@ -102,7 +104,13 @@ const Courses: React.FC = () => {
   }, [debouncedSearchTerm]);
 
   // TanStack Query hooks
-  const { data, isLoading, error } = useCourses(currentPage, pageSize, debouncedSearchTerm, filters);
+  const { data, isLoading, error } = useAssignedFacultyCourses(
+    user?._id || '',
+    currentPage,
+    pageSize,
+    debouncedSearchTerm,
+    filters
+  );
   const deleteCourseMutation = useDeleteCourse();
 
   // Extract courses and pagination from data
@@ -114,8 +122,9 @@ const Courses: React.FC = () => {
     if (typeof course.department === 'string') {
       return course.department;
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (course.department && (course.department as any).name) || (course.department && (course.department as any).fullName) || '';
+    // Handle case where department might be an object
+    const deptObj = course.department as { _id: string; name?: string; fullName?: string };
+    return deptObj?.name || deptObj?.fullName || '';
   }).filter(Boolean))) as string[];
 
   // Use courses directly since filtering is now handled by the API
@@ -199,7 +208,21 @@ const Courses: React.FC = () => {
     setCurrentPage(1);
   };
 
-  const getStatusBadgeColor = (isActive: boolean) => {
+  const getStatusBadgeColor = (status: string, isActive?: boolean) => {
+    // Handle new status field
+    if (status) {
+      switch (status.toLowerCase()) {
+        case 'active':
+          return 'bg-green-100 text-green-800';
+        case 'inactive':
+          return 'bg-red-100 text-red-800';
+        case 'pending':
+          return 'bg-yellow-100 text-yellow-800';
+        default:
+          return 'bg-gray-100 text-gray-800';
+      }
+    }
+    // Fallback to isActive for backward compatibility
     return isActive 
       ? 'bg-green-100 text-green-800' 
       : 'bg-red-100 text-red-800';
@@ -334,6 +357,12 @@ const Courses: React.FC = () => {
                   Credits
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Location
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Enrollment
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
                 </th>
                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -390,14 +419,16 @@ const Courses: React.FC = () => {
                     {typeof course.department === 'string'
                       ? course.department
                       : (
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        (course.department && (course.department as any).name) || (course.department && (course.department as any).fullName) || '-'
+                        (() => {
+                          const deptObj = course.department as { _id: string; name?: string; fullName?: string };
+                          return deptObj?.name || deptObj?.fullName || '-';
+                        })()
                       )
                     }
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {course.faculty && (course.faculty as any).firstName
-                      ? `${(course.faculty as any).firstName} ${(course.faculty as any).lastName}`
+                    {course.faculty && typeof course.faculty === 'object' && 'firstName' in course.faculty
+                      ? course.faculty.fullName || `${course.faculty.firstName} ${course.faculty.lastName}`
                       : course.instructorName
                         ? course.instructorName
                         : '-'}
@@ -405,9 +436,20 @@ const Courses: React.FC = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {course.creditHours}
                   </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {course.fullLocation || (course.location ? `${course.location.building} - ${course.location.room}` : '-')}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {course.currentEnrollment !== undefined && course.maxStudents !== undefined
+                      ? `${course.currentEnrollment}/${course.maxStudents}`
+                      : course.enrolledStudents !== undefined && course.maxStudents !== undefined
+                        ? `${course.enrolledStudents}/${course.maxStudents}`
+                        : '-'
+                    }
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeColor(course.isActive)}`}>
-                      {course.isActive ? 'Active' : 'Inactive'}
+                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeColor(course.status, course.isActive)}`}>
+                      {course.status || (course.isActive ? 'Active' : 'Inactive')}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">

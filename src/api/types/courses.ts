@@ -1,24 +1,84 @@
 export interface CourseData {
   _id: string;
   name: string;
+  title: string;
   code: string;
   description?: string;
-  credits: number;
-  department: string;
+  courseType?: string;
   program: string;
-  instructor?: string;
-  instructorName?: string;
+  department: string | {
+    _id: string;
+    name?: string;
+    fullName?: string;
+  };
   faculty?: {
+    _id: string;
     firstName?: string;
     lastName?: string;
     email?: string;
+    fullName?: string;
+    displayName?: string;
     department?: string;
   };
   semester: number;
-  year: string;
+  semesterTerm?: string;
+  year: number;
+  creditHours: number;
   maxStudents: number;
-  enrolledStudents: number;
-  isActive: boolean;
+  currentEnrollment?: number;
+  status: string;
+  isActive?: boolean;
+  isAvailable?: boolean;
+  enrollmentPercentage?: number;
+  availableSeats?: number;
+  fullName?: string;
+  fullLocation?: string;
+  
+  // Location information
+  location?: {
+    building: string;
+    room: string;
+    capacity: number;
+  };
+  
+  // Schedule information
+  schedule?: Array<{
+    _id: string;
+    day: string;
+    startTime: string;
+    endTime: string;
+    type: string;
+  }>;
+  
+  // Syllabus information
+  syllabus?: {
+    gradingPolicy: {
+      assignments: number;
+      midterm: number;
+      final: number;
+      participation: number;
+    };
+    objectives: string[];
+    topics: Array<{
+      _id: string;
+      week: number;
+      title: string;
+      description: string;
+    }>;
+    textbooks: Array<{
+      _id: string;
+      title: string;
+      author: string;
+      isbn: string;
+      isRequired: boolean;
+    }>;
+  };
+  
+  // Legacy fields for backward compatibility
+  credits?: number;
+  instructor?: string;
+  instructorName?: string;
+  enrolledStudents?: number;
   imageUrl?: string;
   images?: Array<{
     url: string;
@@ -28,7 +88,6 @@ export interface CourseData {
   createdAt: string;
   updatedAt: string;
   id: string;
-  creditHours?: number;
 }
 
 export interface CreateCourseRequest {
@@ -87,4 +146,26 @@ export interface CreateCourseResponse {
   message: string;
   data: CourseData;
   timestamp: string;
+}
+
+// Faculty assigned courses types
+export interface FacultyAssignedCoursesResponse {
+  success: boolean;
+  message: string;
+  timestamp: string;
+  data: CourseData[];
+  pagination: PaginationInfo;
+}
+
+export interface FacultyAssignedCoursesParams {
+  facultyId: string;
+  page?: number;
+  limit?: number;
+  search?: string;
+  filters?: {
+    status?: string;
+    department?: string;
+    semester?: string;
+    academicYear?: string;
+  };
 } 
