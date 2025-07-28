@@ -3,7 +3,7 @@ import { Plus, Search, Edit, Trash2, Eye, Filter, ChevronLeft, ChevronRight, Mor
 import { toast } from 'react-hot-toast';
 import Select, { StylesConfig } from 'react-select';
 import { useDebounce } from '@uidotdev/usehooks';
-import { useAssignments, useDeleteAssignment } from '../../api/hooks/useAssignmentsDev';
+import { useAssignments, useDeleteAssignment } from '../../api/hooks/useAssignments';
 import { AssignmentData } from '../../api/types/assignments';
 import LoadingSpinner from '../../components/Layout/LoadingSpinner';
 import {
@@ -109,7 +109,7 @@ const Assignments: React.FC = () => {
   const deleteAssignmentMutation = useDeleteAssignment();
 
   // Extract assignments and pagination from data
-  const assignments = data?.assignments || [];
+  const assignments = data?.data || [];
   const pagination = data?.pagination;
 
   // Use assignments directly since filtering is now handled by the API
@@ -302,13 +302,6 @@ const Assignments: React.FC = () => {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Assignments</h1>
           <p className="text-gray-600">Manage all assignments in the system</p>
-          {import.meta.env.DEV && (
-            <div className="mt-1">
-              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                🧪 Development Mode - Using Mock Data
-              </span>
-            </div>
-          )}
         </div>
         <button
           onClick={() => setIsAddAssignmentModalOpen(true)}

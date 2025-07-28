@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Plus, Trash2, Upload } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import Select from 'react-select';
-import { useCreateAssignment } from '../../../api/hooks/useAssignmentsDev';
+import { useCreateAssignment } from '../../../api/hooks/useAssignments';
 import { useCourses } from '../../../api/hooks/useCourses';
 import { useUsers } from '../../../api/hooks/useUsers';
 import { CreateAssignmentRequest, AssignmentFile, AssignmentRequirements, GradingCriterion } from '../../../api/types/assignments';

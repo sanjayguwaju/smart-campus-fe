@@ -85,12 +85,12 @@ export interface AssignmentsResponse {
   timestamp: string;
   data: {
     assignments: AssignmentData[];
-    pagination: {
-      page: number;
-      limit: number;
-      total: number;
-      pages: number;
-    };
+  };
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    pages: number;
   };
 }
 

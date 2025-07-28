@@ -3,7 +3,7 @@ import { Plus, Search, Edit, Trash2, Eye, Filter, ChevronLeft, ChevronRight, Mor
 import { toast } from 'react-hot-toast';
 import Select, { StylesConfig } from 'react-select';
 import { useDebounce } from '@uidotdev/usehooks';
-import { useAssignments, useDeleteAssignment } from '../../api/hooks/useAssignmentsDev';
+import { useAssignments, useDeleteAssignment } from '../../api/hooks/useAssignments';
 import { AssignmentData } from '../../api/types/assignments';
 import LoadingSpinner from '../../components/Layout/LoadingSpinner';
 import {

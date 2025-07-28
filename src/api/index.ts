@@ -18,7 +18,6 @@ export * from './hooks/useEvents';
 export * from './hooks/useUsers';
 export * from './hooks/useEnrollments';
 export * from './hooks/useAssignments';
-export * from './hooks/useAssignmentsDev';
 
 // Config
 export { apiClient } from './config/axios'; 

@@ -3,7 +3,7 @@ import { X, Plus, Trash2, Upload } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import Select from 'react-select';
 import AsyncSelect from 'react-select/async';
-import { useUpdateAssignment } from '../../../api/hooks/useAssignmentsDev';
+import { useUpdateAssignment } from '../../../api/hooks/useAssignments';
 import { useCourses } from '../../../api/hooks/useCourses';
 import { useUsers } from '../../../api/hooks/useUsers';
 import { AssignmentData, UpdateAssignmentRequest, AssignmentFile, AssignmentRequirements, GradingCriterion } from '../../../api/types/assignments';
