@@ -60,7 +60,6 @@ const Events: React.FC = () => {
     });
 
   const handleRSVP = (eventId: string) => {
-    console.log("eventId", eventId);
     if (!isAuthenticated || !user) {
       toast.error('Please login to RSVP for events');
       return;
@@ -329,7 +328,12 @@ const Events: React.FC = () => {
                   {/* Organizer */}
                   <div className="mb-4">
                     <p className="text-sm text-gray-500">
-                      Organized by <span className="font-medium text-gray-700">{event.organizer.firstName} {event.organizer.lastName}</span>
+                      Organized by <span className="font-medium text-gray-700">
+                        {event.organizer?.firstName && event.organizer?.lastName 
+                          ? `${event.organizer.firstName} ${event.organizer.lastName}`
+                          : event.organizer?.email || 'Unknown'
+                        }
+                      </span>
                     </p>
                   </div>
 

@@ -10,6 +10,7 @@ import {
   Award,
   Clock,
   LogOut,
+  User,
 } from 'lucide-react';
 
 const FacultyLayout: React.FC = () => {
@@ -18,12 +19,15 @@ const FacultyLayout: React.FC = () => {
 
   const navigation = [
     { name: 'Dashboard', href: '/faculty', icon: Home },
-    { name: 'My Courses', href: '/faculty/courses', icon: BookOpen },
-    { name: 'Students', href: '/faculty/students', icon: Users },
+    { name: 'Courses', href: '/faculty/courses', icon: BookOpen },
+    { name: 'Students', href: '/faculty/students', icon: Users, isChild: true },
+    { name: 'Assignments', href: '/faculty/assignments', icon: FileText },
+    // { name: 'Students', href: '/faculty/students', icon: Users },
     { name: 'Events', href: '/faculty/events', icon: Calendar },
     { name: 'Notices', href: '/faculty/notices', icon: FileText },
-    { name: 'Grades', href: '/faculty/grades', icon: Award },
+    // { name: 'Grades', href: '/faculty/grades', icon: Award },
     { name: 'Office Hours', href: '/faculty/office-hours', icon: Clock },
+    { name: 'Profile', href: '/faculty/profile', icon: User },
   ];
 
   const isActive = (path: string) => location.pathname === path;

@@ -61,7 +61,6 @@ export const courseService = {
     delete (mappedData as any).instructor;
     delete (mappedData as any).credits;
     delete (mappedData as any).academicYear;
-    delete (mappedData as any).semesterTerm;
     const response = await apiClient.post<CreateCourseResponse>(
       "/courses",
       mappedData
@@ -87,12 +86,10 @@ export const courseService = {
       instructorName,
       creditHours: courseData.credits,
       semester: Number(courseData.semester), // ensure number
-      semesterTerm: Number(courseData.semester), // ensure number
       year: courseData.academicYear ? parseInt(courseData.academicYear.split('-')[0], 10) : undefined,
     };
     delete (mappedData as any).instructor;
     delete (mappedData as any).credits;
-    delete (mappedData as any).semester;
     delete (mappedData as any).academicYear;
     const response = await apiClient.put<CourseResponse>(
       `/courses/${id}`,

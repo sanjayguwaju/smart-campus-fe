@@ -23,8 +23,6 @@ const Settings: React.FC = () => {
   };
 
   const handleSave = () => {
-    // In a real app, this would save to the backend
-    console.log('Saving settings:', settings);
     alert('Settings saved successfully!');
   };
 

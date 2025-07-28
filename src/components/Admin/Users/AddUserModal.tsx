@@ -3,6 +3,7 @@ import { useForm, Controller } from 'react-hook-form';
 import Select, { StylesConfig } from 'react-select';
 import { useCreateUser } from '../../../api/hooks/useUsers';
 import { CreateUserRequest } from '../../../api/types/users';
+import { Eye, EyeOff } from 'lucide-react'
 
 interface AddUserModalProps {
   isOpen: boolean;
@@ -16,7 +17,13 @@ interface SelectOption {
 
 const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose }) => {
   const createUserMutation = useCreateUser();
-  
+
+  const [showPassword, setShowPassword] = React.useState(false);
+
+  const togglePassword = () => {
+    setShowPassword(!showPassword);
+  }
+
   // Custom styles for react-select
   const selectStyles: StylesConfig<SelectOption> = {
     control: (provided, state) => ({
@@ -65,7 +72,6 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose }) => {
       email: '',
       password: '',
       role: 'student',
-      department: '',
       phone: ''
     }
   });
@@ -123,7 +129,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose }) => {
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900">Personal Information</h3>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -132,7 +138,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose }) => {
                   <Controller
                     name="firstName"
                     control={control}
-                    rules={{ 
+                    rules={{
                       required: 'First name is required',
                       minLength: { value: 2, message: 'First name must be at least 2 characters' }
                     }}
@@ -142,7 +148,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose }) => {
                         type="text"
                         className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 ${
                           errors.firstName ? 'border-red-300' : 'border-gray-200'
-                        }`}
+                          }`}
                         placeholder="Enter first name"
                       />
                     )}
@@ -159,7 +165,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose }) => {
                   <Controller
                     name="lastName"
                     control={control}
-                    rules={{ 
+                    rules={{
                       required: 'Last name is required',
                       minLength: { value: 2, message: 'Last name must be at least 2 characters' }
                     }}
@@ -169,7 +175,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose }) => {
                         type="text"
                         className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 ${
                           errors.lastName ? 'border-red-300' : 'border-gray-200'
-                        }`}
+                          }`}
                         placeholder="Enter last name"
                       />
                     )}
@@ -186,7 +192,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose }) => {
                   <Controller
                     name="email"
                     control={control}
-                    rules={{ 
+                    rules={{
                       required: 'Email is required',
                       pattern: {
                         value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
@@ -199,7 +205,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose }) => {
                         type="email"
                         className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 ${
                           errors.email ? 'border-red-300' : 'border-gray-200'
-                        }`}
+                          }`}
                         placeholder="Enter email address"
                       />
                     )}
@@ -228,7 +234,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose }) => {
                         type="tel"
                         className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 ${
                           errors.phone ? 'border-red-300' : 'border-gray-200'
-                        }`}
+                          }`}
                         placeholder="Enter phone number"
                       />
                     )}
@@ -250,7 +256,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose }) => {
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900">Account Settings</h3>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -259,19 +265,22 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose }) => {
                   <Controller
                     name="password"
                     control={control}
-                    rules={{ 
+                    rules={{
                       required: 'Password is required',
                       minLength: { value: 6, message: 'Password must be at least 6 characters' }
                     }}
                     render={({ field }) => (
-                      <input
-                        {...field}
-                        type="password"
-                        className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 ${
-                          errors.password ? 'border-red-300' : 'border-gray-200'
-                        }`}
-                        placeholder="Enter password"
-                      />
+                      <div className='relative'>
+                        <input
+                          {...field}
+                          type={showPassword ? 'text' : 'password'}
+                          className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 ${errors.password ? 'border-red-300' : 'border-gray-200'
+                            }`}
+                          placeholder="Enter password"
+                        />  <div onClick={togglePassword} className='absolute top-1/2 right-3 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 cursor-pointer ' >
+                          {showPassword ? <Eye size={16} /> : <EyeOff size={16} />}
+                        </div>
+                      </div>
                     )}
                   />
                   {errors.password && (
@@ -312,25 +321,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({ isOpen, onClose }) => {
                   )}
                 </div>
 
-                {(watchedRole === 'student' || watchedRole === 'faculty') && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Department
-                    </label>
-                    <Controller
-                      name="department"
-                      control={control}
-                      render={({ field }) => (
-                        <input
-                          {...field}
-                          type="text"
-                          className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
-                          placeholder="Enter department"
-                        />
-                      )}
-                    />
-                  </div>
-                )}
+
               </div>
             </div>
 

@@ -3,6 +3,7 @@ import { useForm, Controller } from 'react-hook-form';
 import Select, { StylesConfig } from 'react-select';
 import { useUpdateUser } from '../../../api/hooks/useUsers';
 import { UpdateUserRequest, UserData } from '../../../api/types/users';
+import toast from 'react-hot-toast';
 
 interface EditUserModalProps {
   isOpen: boolean;
@@ -17,7 +18,7 @@ interface SelectOption {
 
 const EditUserModal: React.FC<EditUserModalProps> = ({ isOpen, onClose, user }) => {
   const updateUserMutation = useUpdateUser();
-  
+
   // Custom styles for react-select
   const selectStyles: StylesConfig<SelectOption> = {
     control: (provided, state) => ({
@@ -66,7 +67,6 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ isOpen, onClose, user }) 
       lastName: '',
       email: '',
       role: 'student',
-      department: '',
       phone: '',
       isActive: true
     }
@@ -80,7 +80,6 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ isOpen, onClose, user }) 
       setValue('lastName', user.lastName || '');
       setValue('email', user.email || '');
       setValue('role', user.role || 'student');
-      setValue('department', user.department || '');
       setValue('phone', user.phone || '');
       setValue('isActive', user.isActive);
     }
@@ -90,9 +89,11 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ isOpen, onClose, user }) 
     if (!user) return;
     try {
       await updateUserMutation.mutateAsync({ id: user._id, userData: data });
+      toast.success('User updated successfully');
       reset();
       onClose();
     } catch (error) {
+      toast.error('Failed to update user');
       console.error('Failed to update user:', error);
     }
   };
@@ -138,7 +139,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ isOpen, onClose, user }) 
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900">Personal Information</h3>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -147,7 +148,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ isOpen, onClose, user }) 
                   <Controller
                     name="firstName"
                     control={control}
-                    rules={{ 
+                    rules={{
                       required: 'First name is required',
                       minLength: { value: 2, message: 'First name must be at least 2 characters' }
                     }}
@@ -157,7 +158,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ isOpen, onClose, user }) 
                         type="text"
                         className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 ${
                           errors.firstName ? 'border-red-300' : 'border-gray-200'
-                        }`}
+                          }`}
                         placeholder="Enter first name"
                       />
                     )}
@@ -174,7 +175,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ isOpen, onClose, user }) 
                   <Controller
                     name="lastName"
                     control={control}
-                    rules={{ 
+                    rules={{
                       required: 'Last name is required',
                       minLength: { value: 2, message: 'Last name must be at least 2 characters' }
                     }}
@@ -184,7 +185,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ isOpen, onClose, user }) 
                         type="text"
                         className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 ${
                           errors.lastName ? 'border-red-300' : 'border-gray-200'
-                        }`}
+                          }`}
                         placeholder="Enter last name"
                       />
                     )}
@@ -201,7 +202,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ isOpen, onClose, user }) 
                   <Controller
                     name="email"
                     control={control}
-                    rules={{ 
+                    rules={{
                       required: 'Email is required',
                       pattern: {
                         value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
@@ -214,7 +215,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ isOpen, onClose, user }) 
                         type="email"
                         className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 ${
                           errors.email ? 'border-red-300' : 'border-gray-200'
-                        }`}
+                          }`}
                         placeholder="Enter email address"
                       />
                     )}
@@ -243,7 +244,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ isOpen, onClose, user }) 
                         type="tel"
                         className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 ${
                           errors.phone ? 'border-red-300' : 'border-gray-200'
-                        }`}
+                          }`}
                         placeholder="Enter phone number"
                       />
                     )}
@@ -265,7 +266,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ isOpen, onClose, user }) 
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900">Account Settings</h3>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -300,25 +301,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ isOpen, onClose, user }) 
                   )}
                 </div>
 
-                {(watchedRole === 'student' || watchedRole === 'faculty') && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Department
-                    </label>
-                    <Controller
-                      name="department"
-                      control={control}
-                      render={({ field }) => (
-                        <input
-                          {...field}
-                          type="text"
-                          className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
-                          placeholder="Enter department"
-                        />
-                      )}
-                    />
-                  </div>
-                )}
+
               </div>
             </div>
 
@@ -332,7 +315,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({ isOpen, onClose, user }) 
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900">Status</h3>
               </div>
-              
+
               <div className="flex items-center space-x-4">
                 <Controller
                   name="isActive"

@@ -26,12 +26,6 @@ const Notices: React.FC = () => {
   const deleteNotice = useDeleteNotice();
 
   const notices: Notice[] = (data?.data?.notices || []).map((n) => {
-    // Debug: Log the notice data to see what properties are available
-    console.log('Notice data:', n);
-    console.log('noticeType:', n.noticeType);
-    console.log('status:', n.status);
-    console.log('isPublished:', n.isPublished);
-    console.log('All properties:', Object.keys(n));
     return {
       ...n,
       id: n.id || n._id || '',
@@ -87,11 +81,6 @@ const Notices: React.FC = () => {
     try {
       // Use either _id or id, whichever is available
       const noticeId = notice._id || notice.id;
-      console.log('=== PUBLISH DEBUG ===');
-      console.log('Notice ID:', noticeId);
-      console.log('Full notice object:', notice);
-      console.log('API Base URL:', import.meta.env.VITE_BACKEND_API_BASE_URL);
-
       if (!noticeId) {
         throw new Error('Notice ID is missing');
       }
@@ -332,8 +321,6 @@ const Notices: React.FC = () => {
                               (notice as any).eventType ||
                               (notice as any).typeOfNotice;
 
-                            console.log('Looking for notice type in:', notice.title);
-                            console.log('Found noticeType:', noticeType);
 
                             if (noticeType) {
                               const colorClass = noticeTypeColors[noticeType.toLowerCase()] || 'bg-gray-50 text-gray-700';
@@ -378,7 +365,6 @@ const Notices: React.FC = () => {
                         {!notice.isPublished ? (
                           <button
                             onClick={() => {
-                              console.log('Publishing notice:', notice.id, 'isPublished:', notice.isPublished);
                               handlePublish(notice);
                             }}
                             disabled={processingNotices.has(notice._id || notice.id)}
@@ -389,7 +375,6 @@ const Notices: React.FC = () => {
                         ) : notice.isPublished ? (
                           <button
                             onClick={() => {
-                              console.log('Unpublishing notice:', notice.id, 'isPublished:', notice.isPublished);
                               handleUnpublish(notice);
                             }}
                             disabled={processingNotices.has(notice._id || notice.id)}

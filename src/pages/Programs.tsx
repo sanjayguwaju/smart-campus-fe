@@ -33,6 +33,39 @@ const Programs: React.FC = () => {
     (program: Program) => program.isPublished === true && program.status === 'published'
   );
 
+  // Handle loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading programs...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Handle error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <GraduationCap className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-xl font-semibold text-gray-600 mb-2">Error loading programs</h3>
+          <p className="text-gray-500 mb-4">
+            {error.message || 'Something went wrong while loading programs.'}
+          </p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   const levels = [
     { value: 'all', label: 'All Levels' },
     { value: 'undergraduate', label: 'Undergraduate' },

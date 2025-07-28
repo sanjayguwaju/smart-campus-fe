@@ -54,8 +54,8 @@ const StudentDashboard: React.FC = () => {
           <div className="flex justify-between items-center py-6">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Student Dashboard</h1>
-              <p className="text-gray-600">Welcome back, {user?.name}!</p>
-              <p className="text-sm text-gray-500">Student ID: {user?.studentId} | Department: {user?.department}</p>
+              <p className="text-gray-600">Welcome back, {user?.firstName} {user?.lastName}!</p>
+              <p className="text-sm text-gray-500">Student ID: {user?.studentId}</p>
             </div>
             <div className="flex space-x-3">
               <Link

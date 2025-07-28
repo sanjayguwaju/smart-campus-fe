@@ -18,4 +18,7 @@ export * from './Programs';
 export * from './Blogs';
 
 // Shared Components
-export * from './Shared'; 
+export * from './Shared';
+
+// Assignment Components
+export * from './Assignments'; 
