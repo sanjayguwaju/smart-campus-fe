@@ -6,6 +6,8 @@ import {
   UserResponse,
   CreateUserResponse,
   ResetPasswordResponse,
+  StudentsByFacultyResponse,
+  StudentsByFacultyParams,
 } from "../types/users";
 
 export const userService = {
@@ -114,6 +116,33 @@ export const userService = {
         newPassword,
         confirmPassword,
       }
+    );
+    return response.data;
+  },
+
+  async getStudentsByFaculty({
+    facultyId,
+    page = 1,
+    limit = 10,
+    search,
+    filters,
+  }: StudentsByFacultyParams): Promise<StudentsByFacultyResponse> {
+    const params = new URLSearchParams();
+    params.append('page', page.toString());
+    params.append('limit', limit.toString());
+    
+    if (search) {
+      params.append('search', search);
+    }
+    
+    if (filters) {
+      if (filters.enrollmentStatus) params.append('enrollmentStatus', filters.enrollmentStatus);
+      if (filters.enrollmentType) params.append('enrollmentType', filters.enrollmentType);
+      if (filters.dateRange) params.append('dateRange', filters.dateRange);
+    }
+
+    const response = await apiClient.get<StudentsByFacultyResponse>(
+      `/courses/faculty/${facultyId}/students?${params.toString()}`
     );
     return response.data;
   },

@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { userService } from "../services/userService";
-import { CreateUserRequest, UpdateUserRequest } from "../types/users";
+import { CreateUserRequest, UpdateUserRequest, StudentsByFacultyParams } from "../types/users";
 
 export const useUsers = (
   page = 1,
@@ -68,10 +68,44 @@ export const useUnverifyUser = () => {
 
   return useMutation({
     mutationFn: (userId: string) => userService.unverifyUser(userId),
-    onSuccess: () => {
-      // Invalidate and refetch users list
+    onSuccess: (_, userId) => {
+      queryClient.invalidateQueries({ queryKey: ["users", userId] });
       queryClient.invalidateQueries({ queryKey: ["users"] });
     },
+  });
+};
+
+export const useStudentsByFaculty = (
+  facultyId: string,
+  page = 1,
+  limit = 10,
+  search?: string,
+  filters?: {
+    enrollmentStatus?: string;
+    enrollmentType?: string;
+    dateRange?: string;
+  }
+) => {
+  return useQuery({
+    queryKey: ["students-by-faculty", facultyId, page, limit, search, filters],
+    queryFn: () => userService.getStudentsByFaculty({
+      facultyId,
+      page,
+      limit,
+      search,
+      filters,
+    }),
+    select: (response) => {
+      return {
+        students: response.data,
+        pagination: response.pagination.pagination,
+        summary: response.pagination.summary,
+        success: response.success,
+        message: response.message,
+        timestamp: response.timestamp,
+      };
+    },
+    enabled: !!facultyId,
   });
 };
 

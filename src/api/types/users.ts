@@ -76,3 +76,56 @@ export interface ResetPasswordResponse {
   data: UserData;
   timestamp: string;
 }
+
+// Students by faculty types
+export interface StudentCourse {
+  _id: string;
+  title: string;
+  code: string;
+}
+
+export interface StudentByFaculty {
+  _id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  courses: StudentCourse[];
+  totalCredits: number;
+  gpa: number;
+  enrollmentStatus: string;
+  enrollmentType: string;
+}
+
+export interface StudentsByFacultyPagination {
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    pages: number;
+  };
+  summary: {
+    totalStudents: number;
+    totalCourses: number;
+    averageStudentsPerCourse: number;
+  };
+}
+
+export interface StudentsByFacultyResponse {
+  success: boolean;
+  message: string;
+  timestamp: string;
+  data: StudentByFaculty[];
+  pagination: StudentsByFacultyPagination;
+}
+
+export interface StudentsByFacultyParams {
+  facultyId: string;
+  page?: number;
+  limit?: number;
+  search?: string;
+  filters?: {
+    enrollmentStatus?: string;
+    enrollmentType?: string;
+    dateRange?: string;
+  };
+}
