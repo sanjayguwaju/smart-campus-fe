@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Search, Eye, Filter, ChevronLeft, ChevronRight, MoreHorizontal } from 'lucide-react';
 import Select, { StylesConfig } from 'react-select';
 import { useDebounce } from '@uidotdev/usehooks';
-import { useAssignedFacultyCourses } from '../../api/hooks/useCourses';
+import { useStudentCourses } from '../../api/hooks/useCourses';
 import { CourseData } from '../../api/types/courses';
 import LoadingSpinner from '../../components/Layout/LoadingSpinner';
 import { useAuthStore } from '../../store/authStore';
@@ -94,7 +94,7 @@ const Courses: React.FC = () => {
   }, [debouncedSearchTerm]);
 
   // TanStack Query hooks
-  const { data, isLoading, error } = useAssignedFacultyCourses(
+  const { data, isLoading, error } = useStudentCourses(
     user?._id || '',
     currentPage,
     pageSize,

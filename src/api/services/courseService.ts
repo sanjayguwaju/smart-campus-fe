@@ -7,6 +7,8 @@ import {
   CreateCourseResponse,
   FacultyAssignedCoursesResponse,
   FacultyAssignedCoursesParams,
+  StudentCoursesResponse,
+  StudentCoursesParams
 } from "../types/courses";
 
 export const courseService = {
@@ -155,4 +157,33 @@ export const courseService = {
     );
     return response.data;
   },
+
+async getStudentCourses({
+  studentId,
+  page = 1,
+  limit = 10,
+  filters,
+  sortBy,
+  sortOrder,
+}: StudentCoursesParams): Promise<StudentCoursesResponse> {
+  const params = new URLSearchParams();
+
+  params.append("page", page.toString());
+  params.append("limit", limit.toString());
+
+  if (filters?.status) params.append("status", filters.status);
+  if (filters?.semester) params.append("semester", filters.semester.toString());
+  if (filters?.year) params.append("year", filters.year.toString());
+
+  if (sortBy) params.append("sortBy", sortBy);
+  if (sortOrder) params.append("sortOrder", sortOrder);
+
+  const response = await apiClient.get<StudentCoursesResponse>(
+    `courses/student/${studentId}/courses?${params.toString()}`
+  );
+
+  return response.data;
+}
+
+  
 }; 

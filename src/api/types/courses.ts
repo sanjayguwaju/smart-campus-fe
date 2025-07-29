@@ -169,3 +169,26 @@ export interface FacultyAssignedCoursesParams {
     academicYear?: string;
   };
 } 
+
+
+export interface StudentCoursesParams {
+  studentId: string;
+  page?: number;
+  limit?: number;
+  filters?: {
+    status?: string;
+    semester?: number;
+    year?: number;
+  };
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
+}
+
+
+export interface StudentCoursesResponse {
+  success: boolean;
+  message: string;
+  timestamp: string;
+  data: CourseData[];
+  pagination: PaginationInfo;
+}

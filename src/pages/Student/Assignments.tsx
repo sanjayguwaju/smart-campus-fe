@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Search, Eye, Filter, ChevronLeft, ChevronRight, MoreHorizontal, Calendar, Award } from 'lucide-react';
 import Select, { StylesConfig } from 'react-select';
 import { useDebounce } from '@uidotdev/usehooks';
-import { useAssignments } from '../../api/hooks/useAssignments';
+import { useMyCourseAssignments } from '../../api/hooks/useAssignments';
 import { AssignmentData, AssignmentFilters } from '../../api/types/assignments';
 import LoadingSpinner from '../../components/Layout/LoadingSpinner';
 import {
@@ -100,7 +100,7 @@ const StudentAssignments: React.FC = () => {
   }, [debouncedSearchTerm]);
 
   // TanStack Query hooks
-  const { data, isLoading, error } = useAssignments(currentPage, pageSize, debouncedSearchTerm, filters);
+  const { data, isLoading, error } = useMyCourseAssignments(currentPage, pageSize, debouncedSearchTerm, filters);
 
   // Extract assignments and pagination from data
   const assignments = data?.data?.assignments || [];
