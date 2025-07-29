@@ -42,8 +42,20 @@ export const useMyCourseAssignments = (
     queryKey: ['my-course-assignments', studentId, page, limit, search, filters],
     queryFn: () => assignmentService.getMyCourseAssignments(studentId, page, limit, search, filters),
     enabled: !!studentId,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: 10 * 60 * 1000, // 10 minutes - data stays fresh for 10 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes - cache time (formerly cacheTime)
+    retry: (failureCount, error: unknown) => {
+      // Don't retry on 401 errors
+      if (error && typeof error === 'object' && 'response' in error) {
+        const apiError = error as { response?: { status?: number } };
+        if (apiError.response?.status === 401) {
+          return false;
+        }
+      }
+      // Only retry up to 2 times for other errors
+      return failureCount < 2;
+    },
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
   });
 };
 
@@ -59,8 +71,20 @@ export const useFacultyAssignments = (
     queryKey: ['faculty-assignments', facultyId, page, limit, search, filters],
     queryFn: () => assignmentService.getFacultyAssignments(facultyId, page, limit, search, filters),
     enabled: !!facultyId,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: 10 * 60 * 1000, // 10 minutes - data stays fresh for 10 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes - cache time (formerly cacheTime)
+    retry: (failureCount, error: unknown) => {
+      // Don't retry on 401 errors
+      if (error && typeof error === 'object' && 'response' in error) {
+        const apiError = error as { response?: { status?: number } };
+        if (apiError.response?.status === 401) {
+          return false;
+        }
+      }
+      // Only retry up to 2 times for other errors
+      return failureCount < 2;
+    },
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
   });
 };
 
@@ -69,8 +93,20 @@ export const useAssignment = (id: string) => {
     queryKey: ['assignment', id],
     queryFn: () => assignmentService.getAssignment(id),
     enabled: !!id,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: 10 * 60 * 1000, // 10 minutes - data stays fresh for 10 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes - cache time (formerly cacheTime)
+    retry: (failureCount, error: unknown) => {
+      // Don't retry on 401 errors
+      if (error && typeof error === 'object' && 'response' in error) {
+        const apiError = error as { response?: { status?: number } };
+        if (apiError.response?.status === 401) {
+          return false;
+        }
+      }
+      // Only retry up to 2 times for other errors
+      return failureCount < 2;
+    },
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
   });
 };
 

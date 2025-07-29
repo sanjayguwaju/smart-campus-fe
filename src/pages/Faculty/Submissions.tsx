@@ -129,7 +129,7 @@ const Submissions: React.FC = () => {
   const { data: studentsData } = useStudentsByFaculty(user?._id || '', 1, 1000);
 
   // Extract data for filter options
-  const assignments = assignmentsData?.data?.assignments || [];
+  const assignments = assignmentsData?.data || [];
   const courses = coursesData?.courses || [];
   const students = studentsData?.students || [];
 

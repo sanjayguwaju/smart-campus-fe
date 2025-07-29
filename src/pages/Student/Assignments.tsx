@@ -111,7 +111,7 @@ const StudentAssignments: React.FC = () => {
   );
 
   // Extract assignments and pagination from data
-  const assignments = data?.data?.assignments || [];
+  const assignments = data?.data || [];
   const pagination = data?.pagination;
 
   // Use assignments directly since filtering is now handled by the API

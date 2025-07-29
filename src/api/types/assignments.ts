@@ -83,9 +83,7 @@ export interface AssignmentsResponse {
   success: boolean;
   message: string;
   timestamp: string;
-  data: {
-    assignments: AssignmentData[];
-  };
+  data: AssignmentData[];
   pagination: {
     page: number;
     limit: number;
