@@ -22,24 +22,6 @@ const FacultyDashboard: React.FC = () => {
     { name: 'Department Events', value: '3', change: '+2', icon: Calendar },
   ];
 
-  const upcomingEvents = [
-    { title: 'Department Meeting', date: '2024-03-15', time: '14:00', type: 'meeting' },
-    { title: 'Student Consultation', date: '2024-03-16', time: '10:00', type: 'consultation' },
-    { title: 'Faculty Workshop', date: '2024-03-18', time: '15:30', type: 'workshop' },
-  ];
-
-  const recentStudents = [
-    { name: 'John Smith', course: 'CS101', grade: 'A', lastActivity: '2 hours ago' },
-    { name: 'Sarah Johnson', course: 'CS201', grade: 'B+', lastActivity: '1 day ago' },
-    { name: 'Mike Davis', course: 'CS101', grade: 'A-', lastActivity: '2 days ago' },
-  ];
-
-  const departmentNotices = [
-    { title: 'Faculty Meeting Schedule', priority: 'high', date: '2024-03-14' },
-    { title: 'Research Grant Deadline', priority: 'medium', date: '2024-03-12' },
-    { title: 'Department Newsletter', priority: 'low', date: '2024-03-10' },
-  ];
-
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -92,7 +74,7 @@ const FacultyDashboard: React.FC = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Quick Actions */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-5">
             <div className="bg-white rounded-lg shadow">
               <div className="px-6 py-4 border-b border-gray-200">
                 <h3 className="text-lg font-medium text-gray-900">Quick Actions</h3>
@@ -112,88 +94,6 @@ const FacultyDashboard: React.FC = () => {
                     </Link>
                   ))}
                 </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Upcoming Events */}
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <h3 className="text-lg font-medium text-gray-900">Upcoming Events</h3>
-              </div>
-              <div className="p-6">
-                <div className="space-y-4">
-                  {upcomingEvents.map((event, index) => (
-                    <div key={index} className="flex items-center space-x-3">
-                      <div className="flex-shrink-0">
-                        <Calendar className="h-5 w-5 text-blue-600" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900">{event.title}</p>
-                        <p className="text-sm text-gray-500">{event.date} at {event.time}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
-          {/* Recent Students */}
-          <div className="bg-white rounded-lg shadow">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-medium text-gray-900">Recent Students</h3>
-            </div>
-            <div className="p-6">
-              <div className="space-y-4">
-                {recentStudents.map((student, index) => (
-                  <div key={index} className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center">
-                        <span className="text-sm font-medium text-white">
-                          {student.name.charAt(0)}
-                        </span>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">{student.name}</p>
-                        <p className="text-sm text-gray-500">{student.course}</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-semibold text-gray-900">{student.grade}</p>
-                      <p className="text-xs text-gray-500">{student.lastActivity}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Department Notices */}
-          <div className="bg-white rounded-lg shadow">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-medium text-gray-900">Department Notices</h3>
-            </div>
-            <div className="p-6">
-              <div className="space-y-4">
-                {departmentNotices.map((notice, index) => (
-                  <div key={index} className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-900">{notice.title}</p>
-                      <p className="text-sm text-gray-500">{notice.date}</p>
-                    </div>
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                      notice.priority === 'high' ? 'bg-red-100 text-red-800' :
-                      notice.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-green-100 text-green-800'
-                    }`}>
-                      {notice.priority}
-                    </span>
-                  </div>
-                ))}
               </div>
             </div>
           </div>

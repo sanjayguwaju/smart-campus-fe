@@ -23,11 +23,6 @@ const FacultyLayout: React.FC = () => {
     { name: 'Students', href: '/faculty/students', icon: Users, isChild: true },
     { name: 'Assignments', href: '/faculty/assignments', icon: FileText },
     { name: 'Submissions', href: '/faculty/submissions', icon: FileText },
-    // { name: 'Students', href: '/faculty/students', icon: Users },
-    { name: 'Events', href: '/faculty/events', icon: Calendar },
-    { name: 'Notices', href: '/faculty/notices', icon: FileText },
-    // { name: 'Grades', href: '/faculty/grades', icon: Award },
-    { name: 'Office Hours', href: '/faculty/office-hours', icon: Clock },
     { name: 'Profile', href: '/faculty/profile', icon: User },
   ];
 
