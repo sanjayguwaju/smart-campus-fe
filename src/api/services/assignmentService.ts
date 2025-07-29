@@ -1,6 +1,5 @@
 import { apiClient } from '../config/axios';
 import {
-  AssignmentData,
   AssignmentResponse,
   AssignmentsResponse,
   CreateAssignmentRequest,
@@ -136,13 +135,13 @@ export const assignmentService = {
   },
 
   // Get assignment statistics
-  getAssignmentStatistics: async (id: string): Promise<{ success: boolean; data: any }> => {
+  getAssignmentStatistics: async (id: string): Promise<{ success: boolean; data: unknown }> => {
     const response = await apiClient.get(`${BASE_URL}/${id}/statistics`);
     return response.data;
   },
 
   // Upload assignment file
-  uploadFile: async (id: string, file: File): Promise<{ success: boolean; data: any }> => {
+  uploadFile: async (id: string, file: File): Promise<{ success: boolean; data: unknown }> => {
     const formData = new FormData();
     formData.append('file', file);
     

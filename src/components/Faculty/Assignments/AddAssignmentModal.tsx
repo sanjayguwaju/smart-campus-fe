@@ -4,10 +4,9 @@ import { toast } from 'react-hot-toast';
 import Select from 'react-select';
 import { useCreateFacultyAssignment } from '../../../api/hooks/useAssignments';
 import { useCourses } from '../../../api/hooks/useCourses';
-import { useUsers } from '../../../api/hooks/useUsers';
-import { CreateAssignmentRequest, AssignmentFile, AssignmentRequirements, GradingCriterion } from '../../../api/types/assignments';
+import { CreateAssignmentRequest, AssignmentFile } from '../../../api/types/assignments';
 import { CourseData } from '../../../api/types/courses';
-import { UserData } from '../../../api/types/users';
+import { useAuthStore } from '../../../store/authStore';
 import LoadingSpinner from '../../Layout/LoadingSpinner';
 
 interface AddAssignmentModalProps {
@@ -21,6 +20,7 @@ interface SelectOption {
 }
 
 const AddAssignmentModal: React.FC<AddAssignmentModalProps> = ({ isOpen, onClose }) => {
+  const { user } = useAuthStore();
   const [formData, setFormData] = useState<CreateAssignmentRequest>({
     title: '',
     description: '',
@@ -78,20 +78,13 @@ const AddAssignmentModal: React.FC<AddAssignmentModalProps> = ({ isOpen, onClose
   // Hooks
   const createFacultyAssignmentMutation = useCreateFacultyAssignment();
   const { data: coursesData } = useCourses(1, 100);
-  const { data: usersData } = useUsers(1, 100, '', { role: 'faculty' });
 
   const courses = coursesData?.courses || [];
-  const faculty = usersData?.users || [];
 
   // Select options
   const courseOptions: SelectOption[] = courses.map((course: CourseData) => ({
     value: course._id,
     label: `${course.code} - ${course.name}`
-  }));
-
-  const facultyOptions: SelectOption[] = faculty.map((user: UserData) => ({
-    value: user._id,
-    label: `${user.firstName} ${user.lastName}`
   }));
 
   const assignmentTypeOptions: SelectOption[] = [
@@ -114,17 +107,6 @@ const AddAssignmentModal: React.FC<AddAssignmentModalProps> = ({ isOpen, onClose
     { value: 'published', label: 'Published' }
   ];
 
-  const fileTypeOptions: SelectOption[] = [
-    { value: 'pdf', label: 'PDF' },
-    { value: 'doc', label: 'DOC' },
-    { value: 'docx', label: 'DOCX' },
-    { value: 'txt', label: 'TXT' },
-    { value: 'zip', label: 'ZIP' },
-    { value: 'rar', label: 'RAR' },
-    { value: 'jpg', label: 'JPG' },
-    { value: 'png', label: 'PNG' }
-  ];
-
   // Reset form when modal opens/closes
   useEffect(() => {
     if (isOpen) {
@@ -132,7 +114,7 @@ const AddAssignmentModal: React.FC<AddAssignmentModalProps> = ({ isOpen, onClose
         title: '',
         description: '',
         course: '',
-        faculty: '',
+        faculty: user?._id || '', // Auto-select current faculty user
         assignmentType: 'Project',
         dueDate: '',
         extendedDueDate: '',
@@ -181,16 +163,16 @@ const AddAssignmentModal: React.FC<AddAssignmentModalProps> = ({ isOpen, onClose
       setNewTag('');
       setUploadedFiles([]);
     }
-  }, [isOpen]);
+  }, [isOpen, user?._id]);
 
-  const handleInputChange = (field: string, value: any) => {
+  const handleInputChange = (field: string, value: string | number | boolean) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
     }));
   };
 
-  const handleRequirementsChange = (field: string, value: any) => {
+  const handleRequirementsChange = (field: string, value: string | number | boolean) => {
     setFormData(prev => ({
       ...prev,
       requirements: {
@@ -238,7 +220,7 @@ const AddAssignmentModal: React.FC<AddAssignmentModalProps> = ({ isOpen, onClose
     }));
   };
 
-  const handleGradingCriterionChange = (index: number, field: string, value: any) => {
+  const handleGradingCriterionChange = (index: number, field: string, value: string | number) => {
     setFormData(prev => ({
       ...prev,
       gradingCriteria: prev.gradingCriteria.map((criterion, i) =>
@@ -328,7 +310,7 @@ const AddAssignmentModal: React.FC<AddAssignmentModalProps> = ({ isOpen, onClose
               </label>
               <Select
                 value={assignmentTypeOptions.find(option => option.value === formData.assignmentType)}
-                onChange={(option) => handleInputChange('assignmentType', option?.value)}
+                onChange={(option) => handleInputChange('assignmentType', option?.value || 'Project')}
                 options={assignmentTypeOptions}
                 placeholder="Select assignment type"
               />
@@ -340,7 +322,7 @@ const AddAssignmentModal: React.FC<AddAssignmentModalProps> = ({ isOpen, onClose
               </label>
               <Select
                 value={courseOptions.find(option => option.value === formData.course)}
-                onChange={(option) => handleInputChange('course', option?.value)}
+                onChange={(option) => handleInputChange('course', option?.value || '')}
                 options={courseOptions}
                 placeholder="Select course"
               />
@@ -350,12 +332,12 @@ const AddAssignmentModal: React.FC<AddAssignmentModalProps> = ({ isOpen, onClose
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Faculty *
               </label>
-              <Select
-                value={facultyOptions.find(option => option.value === formData.faculty)}
-                onChange={(option) => handleInputChange('faculty', option?.value)}
-                options={facultyOptions}
-                placeholder="Select faculty"
-              />
+              <div className="px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-700">
+                {user ? `${user.firstName} ${user.lastName}` : 'Loading...'}
+              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                Assignment will be created under your faculty account
+              </p>
             </div>
 
             <div>
@@ -388,7 +370,7 @@ const AddAssignmentModal: React.FC<AddAssignmentModalProps> = ({ isOpen, onClose
               </label>
               <Select
                 value={difficultyOptions.find(option => option.value === formData.difficulty)}
-                onChange={(option) => handleInputChange('difficulty', option?.value)}
+                onChange={(option) => handleInputChange('difficulty', option?.value || 'Hard')}
                 options={difficultyOptions}
                 placeholder="Select difficulty"
               />
@@ -413,7 +395,7 @@ const AddAssignmentModal: React.FC<AddAssignmentModalProps> = ({ isOpen, onClose
               </label>
               <Select
                 value={statusOptions.find(option => option.value === formData.status)}
-                onChange={(option) => handleInputChange('status', option?.value)}
+                onChange={(option) => handleInputChange('status', option?.value || 'draft')}
                 options={statusOptions}
                 placeholder="Select status"
               />

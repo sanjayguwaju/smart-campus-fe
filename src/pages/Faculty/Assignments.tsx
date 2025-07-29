@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, Edit, Trash2, Eye, Filter, ChevronLeft, ChevronRight, MoreHorizontal, Calendar, Award } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Eye, Filter, ChevronLeft, ChevronRight, MoreHorizontal, Calendar, Award, Users, Clock, FileText, TrendingUp } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import Select, { StylesConfig } from 'react-select';
 import { useDebounce } from '@uidotdev/usehooks';
@@ -119,11 +119,28 @@ const FacultyAssignments: React.FC = () => {
   const deleteAssignmentMutation = useDeleteAssignment();
 
   // Extract assignments and pagination from data
-  const assignments = data?.data?.assignments || [];
+  const assignments = (data?.data || []) as AssignmentData[];
   const pagination = data?.pagination;
 
   // Use assignments directly since filtering is now handled by the API
-  const filteredAssignments = Array.isArray(assignments) ? assignments : [];
+  const filteredAssignments = assignments;
+
+  // Calculate summary statistics
+  const summaryStats = {
+    total: filteredAssignments.length,
+    draft: filteredAssignments.filter(a => a.status === 'draft').length,
+    published: filteredAssignments.filter(a => a.status === 'published').length,
+    grading: filteredAssignments.filter(a => a.status === 'grading').length,
+    completed: filteredAssignments.filter(a => a.status === 'completed').length,
+    overdue: filteredAssignments.filter(a => {
+      if (!a.dueDate) return false;
+      return new Date(a.dueDate) < new Date();
+    }).length,
+    totalSubmissions: filteredAssignments.reduce((sum, a) => sum + (a.statistics?.totalSubmissions || 0), 0),
+    averageScore: filteredAssignments.length > 0 
+      ? filteredAssignments.reduce((sum, a) => sum + (a.statistics?.averageScore || 0), 0) / filteredAssignments.length
+      : 0
+  };
 
   const handleSelectAssignment = (assignmentId: string) => {
     setSelectedAssignments(prev =>
@@ -247,11 +264,6 @@ const FacultyAssignments: React.FC = () => {
     return course?.name || course?.code || 'N/A';
   };
 
-  const getFacultyName = (faculty: string | { _id: string; firstName: string; lastName: string; fullName: string }) => {
-    if (typeof faculty === 'string') return faculty;
-    return faculty?.fullName || `${faculty?.firstName || ''} ${faculty?.lastName || ''}`.trim() || 'N/A';
-  };
-
   // Pagination handlers
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -270,7 +282,6 @@ const FacultyAssignments: React.FC = () => {
 
   if (error) {
     const errorMessage = error instanceof Error ? error.message : 'Failed to load assignments';
-    const isAuthError = false; // We'll handle this differently since we don't have response property
 
     return (
       <div className="text-center py-8">
@@ -279,27 +290,12 @@ const FacultyAssignments: React.FC = () => {
             <p className="font-semibold">Error Loading Assignments</p>
             <p className="text-sm mt-1">{errorMessage}</p>
           </div>
-          {isAuthError && (
-            <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <p className="text-sm text-yellow-800">
-                <strong>Authentication Required:</strong> Please log in to view assignments.
-              </p>
-              <a
-                href="/login"
-                className="inline-block mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
-              >
-                Go to Login
-              </a>
-            </div>
-          )}
-          {!isAuthError && (
-            <button
-              onClick={() => window.location.reload()}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            >
-              Try Again
-            </button>
-          )}
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            Try Again
+          </button>
         </div>
       </div>
     );
@@ -320,6 +316,57 @@ const FacultyAssignments: React.FC = () => {
           <Plus className="h-4 w-4 mr-2" />
           Add Assignment
         </button>
+      </div>
+
+      {/* Summary Statistics */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex items-center">
+            <div className="p-2 bg-blue-100 rounded-lg">
+              <FileText className="h-6 w-6 text-blue-600" />
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-600">Total Assignments</p>
+              <p className="text-2xl font-bold text-gray-900">{summaryStats.total}</p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex items-center">
+            <div className="p-2 bg-green-100 rounded-lg">
+              <Users className="h-6 w-6 text-green-600" />
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-600">Total Submissions</p>
+              <p className="text-2xl font-bold text-gray-900">{summaryStats.totalSubmissions}</p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex items-center">
+            <div className="p-2 bg-yellow-100 rounded-lg">
+              <TrendingUp className="h-6 w-6 text-yellow-600" />
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-600">Average Score</p>
+              <p className="text-2xl font-bold text-gray-900">{summaryStats.averageScore.toFixed(1)}%</p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex items-center">
+            <div className="p-2 bg-red-100 rounded-lg">
+              <Clock className="h-6 w-6 text-red-600" />
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-gray-600">Overdue</p>
+              <p className="text-2xl font-bold text-gray-900">{summaryStats.overdue}</p>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Filters and search */}
@@ -404,13 +451,13 @@ const FacultyAssignments: React.FC = () => {
                   Course
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Faculty
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Due Date
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Submissions
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Points
@@ -441,14 +488,14 @@ const FacultyAssignments: React.FC = () => {
                       <div className="ml-4">
                         <div className="text-sm font-medium text-gray-900">{assignment.title}</div>
                         <div className="text-sm text-gray-500">{assignment.assignmentType}</div>
+                        {assignment.dueDate && new Date(assignment.dueDate) < new Date() && (
+                          <div className="text-xs text-red-600 font-medium">Overdue</div>
+                        )}
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {getCourseName(assignment.course)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {getFacultyName(assignment.faculty)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
@@ -467,6 +514,17 @@ const FacultyAssignments: React.FC = () => {
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getDifficultyBadgeColor(assignment.difficulty)}`}>
                         {assignment.difficulty}
                       </span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center">
+                      <Users className="h-4 w-4 text-gray-400 mr-2" />
+                      <div>
+                        <div className="text-sm text-gray-900">{assignment.statistics?.totalSubmissions || 0}</div>
+                        <div className="text-xs text-gray-500">
+                          {assignment.statistics?.averageScore ? `${assignment.statistics.averageScore.toFixed(1)}% avg` : 'No submissions'}
+                        </div>
+                      </div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
