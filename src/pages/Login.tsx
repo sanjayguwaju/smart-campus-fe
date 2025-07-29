@@ -31,12 +31,13 @@ const Login: React.FC = () => {
       
       const success = await login(trimmedEmail, trimmedPassword);
       if (success) {
-        toast.success('Login successful!');
-        // Use a small delay to ensure the store is updated
+        const userInfo = useAuthStore.getState().user;
+        toast.success(`Welcome back, ${userInfo?.fullName}!`);
+        
+        // Navigate after showing the toast with delay
         setTimeout(() => {
           const currentUser = useAuthStore.getState().user;
           if (currentUser) {
-            // Redirect based on user role
             switch (currentUser.role) {
               case 'admin':
                 navigate('/admin');
@@ -51,7 +52,7 @@ const Login: React.FC = () => {
                 navigate('/dashboard');
             }
           }
-        }, 100);
+        }, 2000);
       } else {
         toast.error('Invalid email or password');
       }
