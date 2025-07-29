@@ -3,13 +3,11 @@ import { Search, Eye, Filter, ChevronLeft, ChevronRight, MoreHorizontal } from '
 import Select, { StylesConfig } from 'react-select';
 import { useDebounce } from '@uidotdev/usehooks';
 import { useStudentCourses } from '../../api/hooks/useCourses';
-import { CourseData } from '../../api/types/courses';
+import { StudentCourseData } from '../../api/types/courses';
 import LoadingSpinner from '../../components/Layout/LoadingSpinner';
 import { useAuthStore } from '../../store/authStore';
-import { 
-  ViewCourseModal, 
-  CoursesFilterDrawer 
-} from '../../components/Faculty/Courses';
+import { CoursesFilterDrawer } from '../../components/Faculty/Courses';
+import ViewCourseModal from '../../components/Student/Courses/ViewCourseModal';
 
 // Select option interface
 interface SelectOption {
@@ -24,7 +22,7 @@ const Courses: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [isViewCourseModalOpen, setIsViewCourseModalOpen] = useState(false);
-  const [selectedCourseForView, setSelectedCourseForView] = useState<CourseData | null>(null);
+  const [selectedCourseForView, setSelectedCourseForView] = useState<StudentCourseData | null>(null);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
   const [filters, setFilters] = useState({
@@ -98,28 +96,21 @@ const Courses: React.FC = () => {
     user?._id || '',
     currentPage,
     pageSize,
-    debouncedSearchTerm,
-    filters
+    {
+      status: statusFilter === 'all' ? undefined : statusFilter,
+      semester: undefined,
+      year: undefined
+    }
   );
 
   // Extract courses and pagination from data
   const courses = data?.courses || [];
   const pagination = data?.pagination;
 
-  // Get unique departments from courses
-  const departments = Array.from(new Set(courses.map((course: CourseData) => {
-    if (typeof course.department === 'string') {
-      return course.department;
-    }
-    // Handle case where department might be an object
-    const deptObj = course.department as { _id: string; name?: string; fullName?: string };
-    return deptObj?.name || deptObj?.fullName || '';
-  }).filter(Boolean))) as string[];
-
   // Use courses directly since filtering is now handled by the API
-  const filteredCourses = courses;
+  const filteredCourses = courses || [];
 
-  const handleViewCourse = (course: CourseData) => {
+  const handleViewCourse = (course: StudentCourseData) => {
     setSelectedCourseForView(course);
     setIsViewCourseModalOpen(true);
   };
@@ -142,24 +133,17 @@ const Courses: React.FC = () => {
     setCurrentPage(1);
   };
 
-  const getStatusBadgeColor = (status: string, isActive?: boolean) => {
-    // Handle new status field
-    if (status) {
-      switch (status.toLowerCase()) {
-        case 'active':
-          return 'bg-green-100 text-green-800';
-        case 'inactive':
-          return 'bg-red-100 text-red-800';
-        case 'pending':
-          return 'bg-yellow-100 text-yellow-800';
-        default:
-          return 'bg-gray-100 text-gray-800';
-      }
+  const getStatusBadgeColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'active':
+        return 'bg-green-100 text-green-800';
+      case 'inactive':
+        return 'bg-red-100 text-red-800';
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
     }
-    // Fallback to isActive for backward compatibility
-    return isActive 
-      ? 'bg-green-100 text-green-800' 
-      : 'bg-red-100 text-red-800';
   };
 
   // Pagination handlers
@@ -255,19 +239,10 @@ const Courses: React.FC = () => {
                   Course
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Department
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Instructor
+                  Semester
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Credits
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Location
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Enrollment
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
@@ -278,90 +253,43 @@ const Courses: React.FC = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {filteredCourses.map((course: CourseData) => (
-                <tr key={course._id} className="hover:bg-gray-50">
+              {filteredCourses.map((course: StudentCourseData) => (
+                <tr key={course.course_id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
-                      {course.imageUrl ? (
-                        <div className="h-10 w-10 rounded-lg overflow-hidden flex-shrink-0">
-                          <img
-                            src={course.imageUrl}
-                            alt={course.name}
-                            className="h-full w-full object-cover"
-                            onError={(e) => {
-                              // Fallback to avatar if image fails to load
-                              const target = e.target as HTMLImageElement;
-                              target.style.display = 'none';
-                              target.nextElementSibling?.classList.remove('hidden');
-                            }}
-                          />
-                          <div className="h-10 w-10 rounded-lg bg-blue-500 flex items-center justify-center hidden">
-                            <span className="text-sm font-medium text-white">
-                              {course.name.charAt(0).toUpperCase()}
-                            </span>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="h-10 w-10 rounded-lg bg-blue-500 flex items-center justify-center flex-shrink-0">
-                          <span className="text-sm font-medium text-white">
-                            {course.name.charAt(0).toUpperCase()}
-                          </span>
-                        </div>
-                      )}
+                      <div className="h-10 w-10 rounded-lg bg-blue-500 flex items-center justify-center flex-shrink-0">
+                        <span className="text-sm font-medium text-white">
+                          {course.course_name?.charAt(0)?.toUpperCase() || '?'}
+                        </span>
+                      </div>
                       <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">{course.name}</div>
-                        <div className="text-sm text-gray-500">{course.code}</div>
+                        <div className="text-sm font-medium text-gray-900">{course.course_name || 'Unnamed Course'}</div>
+                        <div className="text-sm text-gray-500">{course.code || 'No Code'}</div>
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {typeof course.department === 'string'
-                      ? course.department
-                      : (
-                        (() => {
-                          const deptObj = course.department as { _id: string; name?: string; fullName?: string };
-                          return deptObj?.name || deptObj?.fullName || '-';
-                        })()
-                      )
-                    }
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {course.faculty && typeof course.faculty === 'object' && 'firstName' in course.faculty
-                      ? course.faculty.fullName || `${course.faculty.firstName} ${course.faculty.lastName}`
-                      : course.instructorName
-                        ? course.instructorName
-                        : '-'}
+                    {course.semester}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {course.creditHours}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {course.fullLocation || (course.location ? `${course.location.building} - ${course.location.room}` : '-')}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {course.currentEnrollment !== undefined && course.maxStudents !== undefined
-                      ? `${course.currentEnrollment}/${course.maxStudents}`
-                      : course.enrolledStudents !== undefined && course.maxStudents !== undefined
-                        ? `${course.enrolledStudents}/${course.maxStudents}`
-                        : '-'
-                    }
-                  </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeColor(course.status, course.isActive)}`}>
-                      {course.status || (course.isActive ? 'Active' : 'Inactive')}
+                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeColor(course.status)}`}>
+                      {course.status || 'Unknown'}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
                     <div className="relative inline-block dropdown-container">
                       <button
-                        onClick={() => setOpenDropdown(openDropdown === course._id ? null : course._id)}
+                        onClick={() => setOpenDropdown(openDropdown === course.course_id ? null : course.course_id)}
                         className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100"
                         title="Actions"
                       >
                         <MoreHorizontal className="h-4 w-4" />
                       </button>
                       
-                      {openDropdown === course._id && (
+                      {openDropdown === course.course_id && (
                         <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50 border border-gray-200">
                           <div className="py-1">
                             <button
@@ -383,7 +311,7 @@ const Courses: React.FC = () => {
               ))}
               {filteredCourses.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="px-6 py-12 text-center">
+                  <td colSpan={5} className="px-6 py-12 text-center">
                     <div className="text-gray-500">
                       <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
@@ -449,17 +377,7 @@ const Courses: React.FC = () => {
                   
                   {/* Page numbers */}
                   {Array.from({ length: Math.min(5, pagination.pages) }, (_, i) => {
-                    let pageNum;
-                    if (pagination.pages <= 5) {
-                      pageNum = i + 1;
-                    } else if (currentPage <= 3) {
-                      pageNum = i + 1;
-                    } else if (currentPage >= pagination.pages - 2) {
-                      pageNum = pagination.pages - 4 + i;
-                    } else {
-                      pageNum = currentPage - 2 + i;
-                    }
-                    
+                    const pageNum = i + 1;
                     return (
                       <button
                         key={pageNum}
@@ -513,14 +431,16 @@ const Courses: React.FC = () => {
       </div>
 
       {/* View Course Modal */}
-      <ViewCourseModal 
-        isOpen={isViewCourseModalOpen}
-        onClose={() => {
-          setIsViewCourseModalOpen(false);
-          setSelectedCourseForView(null);
-        }}
-        course={selectedCourseForView}
-      />
+      {selectedCourseForView && (
+        <ViewCourseModal
+          isOpen={isViewCourseModalOpen}
+          onClose={() => {
+            setIsViewCourseModalOpen(false);
+            setSelectedCourseForView(null);
+          }}
+          course={selectedCourseForView}
+        />
+      )}
 
       {/* Filter Drawer */}
       <CoursesFilterDrawer
@@ -529,7 +449,7 @@ const Courses: React.FC = () => {
         filters={filters}
         onApplyFilters={handleApplyFilters}
         onClearFilters={handleClearFilters}
-        departments={departments}
+        departments={[]}
       />
     </div>
   );

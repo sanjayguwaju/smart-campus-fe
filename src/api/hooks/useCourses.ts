@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { courseService } from "../services/courseService";
-import { CreateCourseRequest, UpdateCourseRequest,  StudentCoursesParams } from "../types/courses";
+import { CreateCourseRequest, UpdateCourseRequest, StudentCoursesParams, ActualStudentCoursesResponse } from "../types/courses";
 
 export const useCourses = (
   page = 1,
@@ -136,7 +136,7 @@ export const useAssignedFacultyCourses = (
     },
     enabled: !!facultyId,
   });
-}; 
+};
 
 
 export const useStudentCourses = (
@@ -158,7 +158,7 @@ export const useStudentCourses = (
         sortBy,
         sortOrder,
       }),
-    select: (response) => ({
+    select: (response: ActualStudentCoursesResponse) => ({
       courses: response.data,
       pagination: response.pagination,
       success: response.success,

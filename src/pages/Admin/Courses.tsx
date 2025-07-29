@@ -369,20 +369,20 @@ const Courses: React.FC = () => {
                           />
                           <div className="h-10 w-10 rounded-lg bg-blue-500 flex items-center justify-center hidden">
                             <span className="text-sm font-medium text-white">
-                              {course.name.charAt(0).toUpperCase()}
+                              {course.name?.charAt(0)?.toUpperCase() || '?'}
                             </span>
                           </div>
                         </div>
                       ) : (
                         <div className="h-10 w-10 rounded-lg bg-blue-500 flex items-center justify-center flex-shrink-0">
                           <span className="text-sm font-medium text-white">
-                            {course.name.charAt(0).toUpperCase()}
+                            {course.name?.charAt(0)?.toUpperCase() || '?'}
                           </span>
                         </div>
                       )}
                       <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">{course.name}</div>
-                        <div className="text-sm text-gray-500">{course.code}</div>
+                        <div className="text-sm font-medium text-gray-900">{course.name || 'Unnamed Course'}</div>
+                        <div className="text-sm text-gray-500">{course.code || 'No Code'}</div>
                       </div>
                     </div>
                   </td>

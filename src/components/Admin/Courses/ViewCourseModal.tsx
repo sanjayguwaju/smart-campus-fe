@@ -38,12 +38,12 @@ const ViewCourseModal: React.FC<ViewCourseModalProps> = ({ isOpen, onClose, cour
           <div className="flex items-start space-x-4">
             <div className="h-16 w-16 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0">
               <span className="text-2xl font-medium text-white">
-                {course.name.charAt(0).toUpperCase()}
+                {course.name?.charAt(0)?.toUpperCase() || '?'}
               </span>
             </div>
             <div className="flex-1">
-              <h2 className="text-xl font-semibold text-gray-900">{course.name}</h2>
-              <p className="text-gray-500">{course.code}</p>
+              <h2 className="text-xl font-semibold text-gray-900">{course.name || 'Unnamed Course'}</h2>
+              <p className="text-gray-500">{course.code || 'No Code'}</p>
               <div className="mt-2 text-gray-700 text-sm">
                 {course.description || 'No description provided.'}
               </div>

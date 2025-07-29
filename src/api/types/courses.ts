@@ -192,3 +192,23 @@ export interface StudentCoursesResponse {
   data: CourseData[];
   pagination: PaginationInfo;
 }
+
+// New interface for the actual student courses API response
+export interface StudentCourseData {
+  course_id: string;
+  course_name: string;
+  semester: string;
+  code: string;
+  creditHours: number;
+  year: number;
+  status: string;
+  faculty: any | null;
+}
+
+export interface ActualStudentCoursesResponse {
+  success: boolean;
+  message: string;
+  timestamp: string;
+  data: StudentCourseData[];
+  pagination: PaginationInfo;
+}
