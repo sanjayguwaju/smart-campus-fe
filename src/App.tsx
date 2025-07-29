@@ -50,6 +50,7 @@ import FacultyStudents from './pages/Faculty/Users';
 import FacultyAssignments from './pages/Faculty/Assignments';
 import StudentAssignments from './pages/Student/Assignments';
 import FacultySubmissions from './pages/Faculty/Submissions';
+import StudentSubmissions from './pages/Student/Submissions';
 
 
 function App() {
@@ -147,6 +148,7 @@ function App() {
           <Route path="events" element={<StudentEvents />} />
           <Route path="notices" element={<StudentNotices />} />
           <Route path="assignments" element={<StudentAssignments />} />
+          <Route path="submissions" element={<StudentSubmissions />} />
           <Route path="programs" element={<StudentPrograms />} />
           <Route path="profile" element={<StudentProfile />} />
           <Route path="mock-students" element={<StudentMockDemo />} />

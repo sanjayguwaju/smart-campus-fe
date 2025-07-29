@@ -78,6 +78,39 @@ export const submissionService = {
     return response.data;
   },
 
+  async getStudentSubmissions(
+    studentId: string,
+    page = 1, 
+    limit = 10, 
+    search?: string, 
+    filters?: {
+      status?: string;
+      assignment?: string;
+      course?: string;
+      isLate?: boolean;
+      isGraded?: boolean;
+    }
+  ): Promise<SubmissionsResponse> {
+    const params = new URLSearchParams();
+    params.append('page', page.toString());
+    params.append('limit', limit.toString());
+    
+    if (search) {
+      params.append('search', search);
+    }
+    
+    if (filters) {
+      if (filters.status) params.append('status', filters.status);
+      if (filters.assignment) params.append('assignment', filters.assignment);
+      if (filters.course) params.append('course', filters.course);
+      if (filters.isLate !== undefined) params.append('isLate', filters.isLate.toString());
+      if (filters.isGraded !== undefined) params.append('isGraded', filters.isGraded.toString());
+    }
+
+    const response = await apiClient.get<SubmissionsResponse>(`/submissions/student/${studentId}?${params.toString()}`);
+    return response.data;
+  },
+
   async getSubmission(id: string): Promise<SubmissionResponse> {
     const response = await apiClient.get<SubmissionResponse>(`/submissions/${id}`);
     return response.data;

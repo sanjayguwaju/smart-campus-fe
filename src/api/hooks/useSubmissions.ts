@@ -160,3 +160,32 @@ export const useDownloadFile = () => {
       submissionService.downloadFile(submissionId, fileId),
   });
 }; 
+
+export const useStudentSubmissions = (
+  studentId: string,
+  page = 1,
+  limit = 10,
+  search?: string,
+  filters?: {
+    status?: string;
+    assignment?: string;
+    course?: string;
+    isLate?: boolean;
+    isGraded?: boolean;
+  }
+) => {
+  return useQuery({
+    queryKey: ["student-submissions", studentId, page, limit, search, filters],
+    queryFn: () => submissionService.getStudentSubmissions(studentId, page, limit, search, filters),
+    select: (response) => {
+      return {
+        submissions: response.data.submissions,
+        pagination: response.data.pagination,
+        success: response.success,
+        message: response.message,
+        timestamp: response.timestamp,
+      };
+    },
+    enabled: !!studentId,
+  });
+}; 
