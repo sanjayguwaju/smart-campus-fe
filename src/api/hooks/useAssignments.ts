@@ -7,13 +7,27 @@ export const useAssignments = (
   page: number = 1,
   limit: number = 10,
   search?: string,
-  filters?: AssignmentFilters
+  filters?: AssignmentFilters,
+  enabled = true
 ) => {
   return useQuery({
     queryKey: ['assignments', page, limit, search, filters],
     queryFn: () => assignmentService.getAssignments(page, limit, search, filters),
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
+    enabled,
+    staleTime: 10 * 60 * 1000, // 10 minutes - data stays fresh for 10 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes - cache time (formerly cacheTime)
+    retry: (failureCount, error: unknown) => {
+      // Don't retry on 401 errors
+      if (error && typeof error === 'object' && 'response' in error) {
+        const apiError = error as { response?: { status?: number } };
+        if (apiError.response?.status === 401) {
+          return false;
+        }
+      }
+      // Only retry up to 2 times for other errors
+      return failureCount < 2;
+    },
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
   });
 };
 

@@ -67,8 +67,8 @@ const AddAssignmentModal: React.FC<AddAssignmentModalProps> = ({ isOpen, onClose
 
   // Hooks
   const createAssignmentMutation = useCreateAssignment();
-  const { data: coursesData } = useCourses(1, 100);
-  const { data: usersData } = useUsers(1, 100, '', { role: 'faculty' });
+  const { data: coursesData } = useCourses(1, 100, undefined, undefined, isOpen);
+  const { data: usersData } = useUsers(1, 100, '', { role: 'faculty' }, isOpen);
 
   const courses = coursesData?.courses || [];
   const faculty = usersData?.users || [];

@@ -70,8 +70,8 @@ const EditAssignmentModal: React.FC<EditAssignmentModalProps> = ({ isOpen, onClo
 
   // Hooks
   const updateAssignmentMutation = useUpdateAssignment();
-  const { data: coursesData } = useCourses(1, 100);
-  const { data: usersData } = useUsers(1, 100, '', { role: 'faculty' });
+  const { data: coursesData } = useCourses(1, 100, undefined, undefined, isOpen);
+  const { data: usersData } = useUsers(1, 100, '', { role: 'faculty' }, isOpen);
 
   const courses = coursesData?.courses || [];
   const faculty = usersData?.users || [];

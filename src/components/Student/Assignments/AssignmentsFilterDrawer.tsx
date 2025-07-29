@@ -32,8 +32,8 @@ const AssignmentsFilterDrawer: React.FC<AssignmentsFilterDrawerProps> = ({
   const [localFilters, setLocalFilters] = useState<AssignmentFilters>(filters);
 
   // Hooks
-  const { data: coursesData } = useCourses(1, 100);
-  const { data: usersData } = useUsers(1, 100, '', { role: 'faculty' });
+  const { data: coursesData } = useCourses(1, 100, undefined, undefined, isOpen);
+  const { data: usersData } = useUsers(1, 100, '', { role: 'faculty' }, isOpen);
 
   const courses = coursesData?.courses || [];
   const faculty = usersData?.users || [];

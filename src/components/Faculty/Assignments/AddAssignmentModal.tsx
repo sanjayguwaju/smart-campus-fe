@@ -77,9 +77,10 @@ const AddAssignmentModal: React.FC<AddAssignmentModalProps> = ({ isOpen, onClose
 
   // Hooks
   const createFacultyAssignmentMutation = useCreateFacultyAssignment();
-  const { data: coursesData } = useCourses(1, 100);
+  const { data: coursesData } = useCourses(1, 100, undefined, undefined, isOpen);
 
   const courses = coursesData?.courses || [];
+  const users = []; // No longer needed
 
   // Select options
   const courseOptions: SelectOption[] = courses.map((course: CourseData) => ({

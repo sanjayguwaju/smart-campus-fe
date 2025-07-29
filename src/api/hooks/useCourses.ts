@@ -12,7 +12,8 @@ export const useCourses = (
     instructor?: string;
     semester?: string;
     academicYear?: string;
-  }
+  },
+  enabled = true
 ) => {
   return useQuery({
     queryKey: ["courses", page, limit, search, filters],
@@ -26,6 +27,21 @@ export const useCourses = (
         timestamp: response.timestamp,
       };
     },
+    enabled,
+    staleTime: 10 * 60 * 1000, // 10 minutes - data stays fresh for 10 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes - cache time (formerly cacheTime)
+    retry: (failureCount, error: unknown) => {
+      // Don't retry on 401 errors
+      if (error && typeof error === 'object' && 'response' in error) {
+        const apiError = error as { response?: { status?: number } };
+        if (apiError.response?.status === 401) {
+          return false;
+        }
+      }
+      // Only retry up to 2 times for other errors
+      return failureCount < 2;
+    },
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
   });
 };
 
@@ -35,6 +51,20 @@ export const useCourseData = (id: string) => {
     queryFn: () => courseService.getCourse(id),
     select: (data) => data.data,
     enabled: !!id,
+    staleTime: 10 * 60 * 1000, // 10 minutes - data stays fresh for 10 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes - cache time (formerly cacheTime)
+    retry: (failureCount, error: unknown) => {
+      // Don't retry on 401 errors
+      if (error && typeof error === 'object' && 'response' in error) {
+        const apiError = error as { response?: { status?: number } };
+        if (apiError.response?.status === 401) {
+          return false;
+        }
+      }
+      // Only retry up to 2 times for other errors
+      return failureCount < 2;
+    },
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
   });
 };
 

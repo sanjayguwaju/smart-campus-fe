@@ -22,10 +22,10 @@ const EditSubmissionModal: React.FC<EditSubmissionModalProps> = ({ isOpen, onClo
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   
   // Fetch data for dropdowns
-  const { data: assignmentsData, isLoading: assignmentsLoading } = useAssignments(1, 100);
+  const { data: assignmentsData, isLoading: assignmentsLoading } = useAssignments(1, 100, undefined, undefined, isOpen);
   const assignmentOptions = assignmentsData?.data?.assignments?.map((a: { _id: string; title: string }) => ({ value: a._id, label: a.title })) || [];
   
-  const { data: usersData, isLoading: usersLoading } = useUsers(1, 100, '', { role: 'student' });
+  const { data: usersData, isLoading: usersLoading } = useUsers(1, 100, '', { role: 'student' }, isOpen);
   const studentOptions = (usersData?.users?.map((u: { _id: string; fullName: string }) => ({ value: u._id, label: u.fullName })) || []).sort((a, b) => a.label.localeCompare(b.label));
   
   // Custom styles for react-select
