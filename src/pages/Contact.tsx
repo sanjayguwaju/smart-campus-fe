@@ -32,43 +32,43 @@ const Contact: React.FC = () => {
       title: 'General Inquiries',
       description: 'For general questions about Smart Campus',
       icon: MessageSquare,
-      details: ['info@smartcampus.edu', '+1 (555) 123-4567'],
+      details: ['info@smartcampus.edu.np', '+977-1-4412345'],
     },
     {
       title: 'Student Support',
       description: 'Academic and student life assistance',
       icon: Users,
-      details: ['studentsupport@smartcampus.edu', '+1 (555) 123-4568'],
+      details: ['studentsupport@smartcampus.edu.np', '+977-1-4412346'],
     },
     {
       title: 'Technical Support',
       description: 'Platform and technical assistance',
       icon: Building,
-      details: ['techsupport@smartcampus.edu', '+1 (555) 123-4569'],
+      details: ['techsupport@smartcampus.edu.np', '+977-1-4412347'],
     },
   ];
 
   const officeLocations: OfficeLocation[] = [
     {
       name: 'Main Campus',
-      address: '123 University Drive, City, State 12345',
-      phone: '+1 (555) 123-4567',
-      email: 'main@smartcampus.edu',
-      hours: 'Monday - Friday: 8:00 AM - 6:00 PM',
+      address: 'Kirtipur, Kathmandu, Nepal',
+      phone: '+977-1-4412345',
+      email: 'main@smartcampus.edu.np',
+      hours: 'Sunday - Friday: 9:00 AM - 5:00 PM',
     },
     {
       name: 'Student Center',
-      address: '456 Student Union Blvd, City, State 12345',
-      phone: '+1 (555) 123-4568',
-      email: 'studentcenter@smartcampus.edu',
-      hours: 'Monday - Sunday: 7:00 AM - 11:00 PM',
+      address: 'Pulchowk, Lalitpur, Nepal',
+      phone: '+977-1-4412346',
+      email: 'studentcenter@smartcampus.edu.np',
+      hours: 'Sunday - Friday: 8:00 AM - 8:00 PM',
     },
     {
       name: 'Technology Hub',
-      address: '789 Innovation Way, City, State 12345',
-      phone: '+1 (555) 123-4569',
-      email: 'techhub@smartcampus.edu',
-      hours: 'Monday - Friday: 9:00 AM - 5:00 PM',
+      address: 'Baneshwor, Kathmandu, Nepal',
+      phone: '+977-1-4412347',
+      email: 'techhub@smartcampus.edu.np',
+      hours: 'Sunday - Friday: 10:00 AM - 6:00 PM',
     },
   ];
 
