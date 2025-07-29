@@ -22,6 +22,7 @@ const FacultyLayout: React.FC = () => {
     { name: 'Courses', href: '/faculty/courses', icon: BookOpen },
     { name: 'Students', href: '/faculty/students', icon: Users, isChild: true },
     { name: 'Assignments', href: '/faculty/assignments', icon: FileText },
+    { name: 'Submissions', href: '/faculty/submissions', icon: FileText },
     // { name: 'Students', href: '/faculty/students', icon: Users },
     { name: 'Events', href: '/faculty/events', icon: Calendar },
     { name: 'Notices', href: '/faculty/notices', icon: FileText },
@@ -75,12 +76,12 @@ const FacultyLayout: React.FC = () => {
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-3">
                 <div className="text-right">
-                  <p className="text-sm font-medium text-gray-900">{user?.name}</p>
+                  <p className="text-sm font-medium text-gray-900">{user?.firstName} {user?.lastName}</p>
                   <p className="text-xs text-gray-500 capitalize">{user?.role}</p>
                 </div>
                 <div className="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center">
                   <span className="text-sm font-medium text-white">
-                    {user?.name?.charAt(0)}
+                    {user?.firstName?.charAt(0)}
                   </span>
                 </div>
                 <button

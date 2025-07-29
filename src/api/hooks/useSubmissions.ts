@@ -30,6 +30,36 @@ export const useSubmissions = (
   });
 };
 
+export const useFacultySubmissions = (
+  facultyId: string,
+  page = 1,
+  limit = 10,
+  search?: string,
+  filters?: {
+    status?: string;
+    assignment?: string;
+    student?: string;
+    course?: string;
+    isLate?: boolean;
+    isGraded?: boolean;
+  }
+) => {
+  return useQuery({
+    queryKey: ["faculty-submissions", facultyId, page, limit, search, filters],
+    queryFn: () => submissionService.getFacultySubmissions(facultyId, page, limit, search, filters),
+    select: (response) => {
+      return {
+        submissions: response.data.submissions,
+        pagination: response.data.pagination,
+        success: response.success,
+        message: response.message,
+        timestamp: response.timestamp,
+      };
+    },
+    enabled: !!facultyId,
+  });
+};
+
 export const useSubmissionData = (id: string) => {
   return useQuery({
     queryKey: ["submissions", id],

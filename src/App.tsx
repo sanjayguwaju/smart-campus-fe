@@ -49,6 +49,7 @@ import StudentMockDemo from './pages/StudentMockDemo';
 import FacultyStudents from './pages/Faculty/Users';
 import FacultyAssignments from './pages/Faculty/Assignments';
 import StudentAssignments from './pages/Student/Assignments';
+import FacultySubmissions from './pages/Faculty/Submissions';
 
 
 function App() {
@@ -122,6 +123,7 @@ function App() {
           <Route path="courses" element={<FacultyCourses />} />
           <Route path="students" element={<FacultyStudents />} />
           <Route path="assignments" element={<FacultyAssignments />} />
+          <Route path="submissions" element={<FacultySubmissions />} />
           <Route path="events" element={<FacultyEvents />} />
           <Route path="notices" element={<FacultyNotices />} />
           <Route path="grades" element={<Grades />} />
