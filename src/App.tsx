@@ -31,7 +31,7 @@ import StudentCourses from './pages/Student/Courses';
 import StudentGrades from './pages/Student/Grades';
 import StudentEvents from './pages/Student/Events';
 import StudentNotices from './pages/Student/Notices';
-import StudentCalendar from './pages/Student/Calendar';
+import StudentCalendar from './pages/Student/Assignments';
 import StudentPrograms from './pages/Student/Programs';
 import FacultyEvents from './pages/Faculty/Events';
 import FacultyNotices from './pages/Faculty/Notices';
@@ -47,6 +47,7 @@ import FacultyCourses from './pages/Faculty/Courses';
 import StudentMockDemo from './pages/StudentMockDemo';
 import FacultyStudents from './pages/Faculty/Users';
 import FacultyAssignments from './pages/Faculty/Assignments';
+import StudentAssignments from './pages/Student/Assignments';
 
 
 function App() {
@@ -141,7 +142,7 @@ function App() {
           <Route path="grades" element={<StudentGrades />} />
           <Route path="events" element={<StudentEvents />} />
           <Route path="notices" element={<StudentNotices />} />
-          <Route path="calendar" element={<StudentCalendar />} />
+          <Route path="assignments" element={<StudentAssignments />} />
           <Route path="programs" element={<StudentPrograms />} />
           <Route path="profile" element={<StudentProfile />} />
           <Route path="mock-students" element={<StudentMockDemo />} />

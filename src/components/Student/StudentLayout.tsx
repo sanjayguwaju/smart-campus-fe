@@ -22,7 +22,7 @@ const StudentLayout: React.FC = () => {
   const navigation = [
     { name: 'Dashboard', href: '/student', icon: Home },
     { name: 'My Courses', href: '/student/courses', icon: BookOpen },
-    { name: 'Assignments', href: '/student/calendar', icon: Clock },
+    { name: 'Assignments', href: '/student/assignments', icon: BookOpen },
     { name: 'Events', href: '/student/events', icon: Calendar },
     { name: 'Notices', href: '/student/notices', icon: FileText },
     { name: 'Profile', href: '/student/profile', icon: User },
