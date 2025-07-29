@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Plus, Trash2, Upload } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import Select from 'react-select';
-import { useCreateAssignment } from '../../../api/hooks/useAssignments';
+import { useCreateFacultyAssignment } from '../../../api/hooks/useAssignments';
 import { useCourses } from '../../../api/hooks/useCourses';
 import { useUsers } from '../../../api/hooks/useUsers';
 import { CreateAssignmentRequest, AssignmentFile, AssignmentRequirements, GradingCriterion } from '../../../api/types/assignments';
@@ -26,47 +26,57 @@ const AddAssignmentModal: React.FC<AddAssignmentModalProps> = ({ isOpen, onClose
     description: '',
     course: '',
     faculty: '',
-    assignmentType: 'Homework',
+    assignmentType: 'Project',
     dueDate: '',
     extendedDueDate: '',
     files: [],
     requirements: {
-      maxFileSize: 10,
-      allowedFileTypes: ['pdf', 'docx', 'txt'],
+      maxFileSize: 50,
+      allowedFileTypes: ['pdf', 'doc', 'docx', 'zip', 'rar'],
       maxSubmissions: 3,
       allowLateSubmission: true,
       latePenalty: 10
     },
     gradingCriteria: [
       {
-        criterion: 'Correctness',
-        maxPoints: 50,
-        description: 'The assignment meets all requirements and produces correct results.'
+        criterion: 'Functionality',
+        maxPoints: 30,
+        description: 'All features work as specified and the application is fully functional'
       },
       {
         criterion: 'Code Quality',
-        maxPoints: 30,
-        description: 'The code is well-organized, efficient, and follows best practices.'
+        maxPoints: 25,
+        description: 'Clean, well-documented, and maintainable code following best practices'
+      },
+      {
+        criterion: 'User Interface',
+        maxPoints: 20,
+        description: 'Intuitive and responsive user interface with good UX design'
+      },
+      {
+        criterion: 'Database Design',
+        maxPoints: 15,
+        description: 'Proper database schema design and efficient queries'
       },
       {
         criterion: 'Documentation',
-        maxPoints: 20,
-        description: 'The code is properly documented with comments and explanations.'
+        maxPoints: 10,
+        description: 'Comprehensive README and technical documentation'
       }
     ],
     totalPoints: 100,
     status: 'draft',
     isVisible: false,
-    tags: [],
-    difficulty: 'Medium',
-    estimatedTime: 10
+    tags: ['web-development', 'full-stack', 'project'],
+    difficulty: 'Hard',
+    estimatedTime: 40
   });
 
   const [newTag, setNewTag] = useState('');
   const [uploadedFiles, setUploadedFiles] = useState<AssignmentFile[]>([]);
 
   // Hooks
-  const createAssignmentMutation = useCreateAssignment();
+  const createFacultyAssignmentMutation = useCreateFacultyAssignment();
   const { data: coursesData } = useCourses(1, 100);
   const { data: usersData } = useUsers(1, 100, '', { role: 'faculty' });
 
@@ -106,9 +116,11 @@ const AddAssignmentModal: React.FC<AddAssignmentModalProps> = ({ isOpen, onClose
 
   const fileTypeOptions: SelectOption[] = [
     { value: 'pdf', label: 'PDF' },
+    { value: 'doc', label: 'DOC' },
     { value: 'docx', label: 'DOCX' },
     { value: 'txt', label: 'TXT' },
     { value: 'zip', label: 'ZIP' },
+    { value: 'rar', label: 'RAR' },
     { value: 'jpg', label: 'JPG' },
     { value: 'png', label: 'PNG' }
   ];
@@ -121,40 +133,50 @@ const AddAssignmentModal: React.FC<AddAssignmentModalProps> = ({ isOpen, onClose
         description: '',
         course: '',
         faculty: '',
-        assignmentType: 'Homework',
+        assignmentType: 'Project',
         dueDate: '',
         extendedDueDate: '',
         files: [],
         requirements: {
-          maxFileSize: 10,
-          allowedFileTypes: ['pdf', 'docx', 'txt'],
+          maxFileSize: 50,
+          allowedFileTypes: ['pdf', 'doc', 'docx', 'zip', 'rar'],
           maxSubmissions: 3,
           allowLateSubmission: true,
           latePenalty: 10
         },
         gradingCriteria: [
           {
-            criterion: 'Correctness',
-            maxPoints: 50,
-            description: 'The assignment meets all requirements and produces correct results.'
+            criterion: 'Functionality',
+            maxPoints: 30,
+            description: 'All features work as specified and the application is fully functional'
           },
           {
             criterion: 'Code Quality',
-            maxPoints: 30,
-            description: 'The code is well-organized, efficient, and follows best practices.'
+            maxPoints: 25,
+            description: 'Clean, well-documented, and maintainable code following best practices'
+          },
+          {
+            criterion: 'User Interface',
+            maxPoints: 20,
+            description: 'Intuitive and responsive user interface with good UX design'
+          },
+          {
+            criterion: 'Database Design',
+            maxPoints: 15,
+            description: 'Proper database schema design and efficient queries'
           },
           {
             criterion: 'Documentation',
-            maxPoints: 20,
-            description: 'The code is properly documented with comments and explanations.'
+            maxPoints: 10,
+            description: 'Comprehensive README and technical documentation'
           }
         ],
         totalPoints: 100,
         status: 'draft',
         isVisible: false,
-        tags: [],
-        difficulty: 'Medium',
-        estimatedTime: 10
+        tags: ['web-development', 'full-stack', 'project'],
+        difficulty: 'Hard',
+        estimatedTime: 40
       });
       setNewTag('');
       setUploadedFiles([]);
@@ -251,8 +273,15 @@ const AddAssignmentModal: React.FC<AddAssignmentModalProps> = ({ isOpen, onClose
       return;
     }
 
+    // Validate grading criteria points sum
+    const totalGradingPoints = formData.gradingCriteria.reduce((sum, criterion) => sum + criterion.maxPoints, 0);
+    if (totalGradingPoints !== formData.totalPoints) {
+      toast.error(`Total grading criteria points (${totalGradingPoints}) must equal total points (${formData.totalPoints})`);
+      return;
+    }
+
     try {
-      await createAssignmentMutation.mutateAsync({
+      await createFacultyAssignmentMutation.mutateAsync({
         ...formData,
         files: uploadedFiles
       });
@@ -578,6 +607,11 @@ const AddAssignmentModal: React.FC<AddAssignmentModalProps> = ({ isOpen, onClose
                 </div>
               </div>
             ))}
+            <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+              <p className="text-sm text-gray-600">
+                <strong>Total Grading Points:</strong> {formData.gradingCriteria.reduce((sum, criterion) => sum + criterion.maxPoints, 0)} / {formData.totalPoints}
+              </p>
+            </div>
           </div>
 
           {/* Files */}
@@ -591,7 +625,7 @@ const AddAssignmentModal: React.FC<AddAssignmentModalProps> = ({ isOpen, onClose
                     Upload files
                   </span>
                   <span className="mt-1 block text-sm text-gray-500">
-                    PDF, DOCX, TXT, ZIP, JPG, PNG up to 10MB
+                    PDF, DOC, DOCX, TXT, ZIP, RAR, JPG, PNG up to 50MB
                   </span>
                 </label>
                 <input
@@ -600,7 +634,7 @@ const AddAssignmentModal: React.FC<AddAssignmentModalProps> = ({ isOpen, onClose
                   multiple
                   onChange={handleFileUpload}
                   className="sr-only"
-                  accept=".pdf,.docx,.txt,.zip,.jpg,.jpeg,.png"
+                  accept=".pdf,.doc,.docx,.txt,.zip,.rar,.jpg,.jpeg,.png"
                 />
               </div>
             </div>
@@ -650,10 +684,10 @@ const AddAssignmentModal: React.FC<AddAssignmentModalProps> = ({ isOpen, onClose
             </button>
             <button
               type="submit"
-              disabled={createAssignmentMutation.isPending}
+              disabled={createFacultyAssignmentMutation.isPending}
               className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {createAssignmentMutation.isPending ? (
+              {createFacultyAssignmentMutation.isPending ? (
                 <div className="flex items-center">
                   <LoadingSpinner size="sm" className="mr-2" />
                   Creating...

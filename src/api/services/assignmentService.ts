@@ -36,6 +36,31 @@ export const assignmentService = {
     return response.data;
   },
 
+  // Get assignments for a specific faculty
+  getFacultyAssignments: async (
+    facultyId: string,
+    page: number = 1,
+    limit: number = 10,
+    search?: string,
+    filters?: AssignmentFilters
+  ): Promise<AssignmentsResponse> => {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+      ...(search && { search }),
+      ...(filters?.title && { title: filters.title }),
+      ...(filters?.course && { course: filters.course }),
+      ...(filters?.assignmentType && { assignmentType: filters.assignmentType }),
+      ...(filters?.status && { status: filters.status }),
+      ...(filters?.difficulty && { difficulty: filters.difficulty }),
+      ...(filters?.dueDateRange && { dueDateRange: filters.dueDateRange }),
+      ...(filters?.tags && { tags: filters.tags })
+    });
+
+    const response = await apiClient.get(`${BASE_URL}/faculty/${facultyId}?${params}`);
+    return response.data;
+  },
+
   // Get assignment by ID
   getAssignment: async (id: string): Promise<AssignmentResponse> => {
     const response = await apiClient.get(`${BASE_URL}/${id}`);
@@ -45,6 +70,12 @@ export const assignmentService = {
   // Create new assignment
   createAssignment: async (data: CreateAssignmentRequest): Promise<AssignmentResponse> => {
     const response = await apiClient.post(BASE_URL, data);
+    return response.data;
+  },
+
+  // Create faculty assignment (faculty-course endpoint)
+  createFacultyAssignment: async (data: CreateAssignmentRequest): Promise<AssignmentResponse> => {
+    const response = await apiClient.post(`${BASE_URL}/faculty-course`, data);
     return response.data;
   },
 

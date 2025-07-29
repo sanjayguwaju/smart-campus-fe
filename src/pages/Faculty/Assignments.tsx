@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, Edit, Trash2, Eye, Filter, ChevronLeft, ChevronRight, MoreHorizontal, Calendar, Clock, Award } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Eye, Filter, ChevronLeft, ChevronRight, MoreHorizontal, Calendar, Award } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import Select, { StylesConfig } from 'react-select';
 import { useDebounce } from '@uidotdev/usehooks';
-import { useAssignments, useDeleteAssignment } from '../../api/hooks/useAssignments';
-import { AssignmentData } from '../../api/types/assignments';
+import { useFacultyAssignments, useDeleteAssignment } from '../../api/hooks/useAssignments';
+import { AssignmentData, AssignmentFilters } from '../../api/types/assignments';
+import { useAuthStore } from '../../store/authStore';
 import LoadingSpinner from '../../components/Layout/LoadingSpinner';
 import {
-  AddAssignmentModal,
+  AddAssignmentModal
+} from '../../components/Faculty/Assignments';
+import {
   EditAssignmentModal,
   ViewAssignmentModal,
   AssignmentsFilterDrawer
@@ -20,6 +23,7 @@ interface SelectOption {
 }
 
 const FacultyAssignments: React.FC = () => {
+  const { user } = useAuthStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedAssignments, setSelectedAssignments] = useState<string[]>([]);
@@ -34,7 +38,7 @@ const FacultyAssignments: React.FC = () => {
   const [selectedAssignmentForView, setSelectedAssignmentForView] = useState<AssignmentData | null>(null);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<AssignmentFilters>({
     title: '',
     course: '',
     faculty: '',
@@ -104,12 +108,18 @@ const FacultyAssignments: React.FC = () => {
     setCurrentPage(1);
   }, [debouncedSearchTerm]);
 
-  // TanStack Query hooks
-  const { data, isLoading, error } = useAssignments(currentPage, pageSize, debouncedSearchTerm, filters);
+  // TanStack Query hooks - using faculty-specific endpoint
+  const { data, isLoading, error } = useFacultyAssignments(
+    user?._id || '',
+    currentPage,
+    pageSize,
+    debouncedSearchTerm,
+    filters
+  );
   const deleteAssignmentMutation = useDeleteAssignment();
 
   // Extract assignments and pagination from data
-  const assignments = data?.assignments || [];
+  const assignments = data?.data?.assignments || [];
   const pagination = data?.pagination;
 
   // Use assignments directly since filtering is now handled by the API
@@ -175,7 +185,7 @@ const FacultyAssignments: React.FC = () => {
     setIsViewAssignmentModalOpen(true);
   };
 
-  const handleApplyFilters = (newFilters: typeof filters) => {
+  const handleApplyFilters = (newFilters: AssignmentFilters) => {
     setFilters(newFilters);
     setCurrentPage(1); // Reset to first page when applying filters
   };
@@ -232,12 +242,12 @@ const FacultyAssignments: React.FC = () => {
     });
   };
 
-  const getCourseName = (course: any) => {
+  const getCourseName = (course: string | { _id: string; name: string; code: string }) => {
     if (typeof course === 'string') return course;
     return course?.name || course?.code || 'N/A';
   };
 
-  const getFacultyName = (faculty: any) => {
+  const getFacultyName = (faculty: string | { _id: string; firstName: string; lastName: string; fullName: string }) => {
     if (typeof faculty === 'string') return faculty;
     return faculty?.fullName || `${faculty?.firstName || ''} ${faculty?.lastName || ''}`.trim() || 'N/A';
   };
@@ -259,8 +269,8 @@ const FacultyAssignments: React.FC = () => {
   }
 
   if (error) {
-    const errorMessage = error?.response?.data?.message || error?.message || 'Failed to load assignments';
-    const isAuthError = error?.response?.status === 401;
+    const errorMessage = error instanceof Error ? error.message : 'Failed to load assignments';
+    const isAuthError = false; // We'll handle this differently since we don't have response property
 
     return (
       <div className="text-center py-8">
@@ -300,15 +310,8 @@ const FacultyAssignments: React.FC = () => {
       {/* Page header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Assignments</h1>
-          <p className="text-gray-600">Manage all assignments in the system</p>
-          {import.meta.env.DEV && (
-            <div className="mt-1">
-              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                🧪 Development Mode - Using Mock Data
-              </span>
-            </div>
-          )}
+          <h1 className="text-2xl font-bold text-gray-900">My Assignments</h1>
+          <p className="text-gray-600">Manage your assignments and track student submissions</p>
         </div>
         <button
           onClick={() => setIsAddAssignmentModalOpen(true)}

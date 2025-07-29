@@ -17,6 +17,22 @@ export const useAssignments = (
   });
 };
 
+export const useFacultyAssignments = (
+  facultyId: string,
+  page: number = 1,
+  limit: number = 10,
+  search?: string,
+  filters?: AssignmentFilters
+) => {
+  return useQuery({
+    queryKey: ['faculty-assignments', facultyId, page, limit, search, filters],
+    queryFn: () => assignmentService.getFacultyAssignments(facultyId, page, limit, search, filters),
+    enabled: !!facultyId,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+  });
+};
+
 export const useAssignment = (id: string) => {
   return useQuery({
     queryKey: ['assignment', id],
@@ -32,6 +48,22 @@ export const useCreateAssignment = () => {
 
   return useMutation({
     mutationFn: (data: CreateAssignmentRequest) => assignmentService.createAssignment(data),
+    onSuccess: (data) => {
+      toast.success('Assignment created successfully');
+      queryClient.invalidateQueries({ queryKey: ['assignments'] });
+    },
+    onError: (error: any) => {
+      console.error('Failed to create assignment:', error);
+      toast.error(error.response?.data?.message || 'Failed to create assignment');
+    },
+  });
+};
+
+export const useCreateFacultyAssignment = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: CreateAssignmentRequest) => assignmentService.createFacultyAssignment(data),
     onSuccess: (data) => {
       toast.success('Assignment created successfully');
       queryClient.invalidateQueries({ queryKey: ['assignments'] });
