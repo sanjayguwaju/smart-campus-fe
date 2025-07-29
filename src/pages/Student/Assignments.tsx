@@ -5,6 +5,7 @@ import { useDebounce } from '@uidotdev/usehooks';
 import { useMyCourseAssignments } from '../../api/hooks/useAssignments';
 import { AssignmentData, AssignmentFilters } from '../../api/types/assignments';
 import LoadingSpinner from '../../components/Layout/LoadingSpinner';
+import { useAuthStore } from '../../store/authStore';
 import {
   ViewAssignmentModal,
   AssignmentsFilterDrawer
@@ -20,6 +21,7 @@ interface SelectOption {
 }
 
 const StudentAssignments: React.FC = () => {
+  const { user } = useAuthStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(1);
@@ -100,7 +102,13 @@ const StudentAssignments: React.FC = () => {
   }, [debouncedSearchTerm]);
 
   // TanStack Query hooks
-  const { data, isLoading, error } = useMyCourseAssignments(currentPage, pageSize, debouncedSearchTerm, filters);
+  const { data, isLoading, error } = useMyCourseAssignments(
+    user?._id || '',
+    currentPage,
+    pageSize,
+    debouncedSearchTerm,
+    filters
+  );
 
   // Extract assignments and pagination from data
   const assignments = data?.data?.assignments || [];
@@ -172,12 +180,12 @@ const StudentAssignments: React.FC = () => {
   };
 
   const getCourseName = (course: string | { _id: string; name: string; code: string }) => {
-    if (typeof course === 'string') return course;
+    if (typeof course === 'string') return course || 'N/A';
     return course?.name || course?.code || 'N/A';
   };
 
   const getFacultyName = (faculty: string | { _id: string; firstName: string; lastName: string; fullName: string }) => {
-    if (typeof faculty === 'string') return faculty;
+    if (typeof faculty === 'string') return faculty || 'N/A';
     return faculty?.fullName || `${faculty?.firstName || ''} ${faculty?.lastName || ''}`.trim() || 'N/A';
   };
 
@@ -336,12 +344,12 @@ const StudentAssignments: React.FC = () => {
                     <div className="flex items-center">
                       <div className="h-10 w-10 rounded-lg bg-blue-500 flex items-center justify-center flex-shrink-0">
                         <span className="text-sm font-medium text-white">
-                          {assignment.title.charAt(0).toUpperCase()}
+                          {assignment.title?.charAt(0)?.toUpperCase() || '?'}
                         </span>
                       </div>
                       <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">{assignment.title}</div>
-                        <div className="text-sm text-gray-500">{assignment.assignmentType}</div>
+                        <div className="text-sm font-medium text-gray-900">{assignment.title || 'Untitled Assignment'}</div>
+                        <div className="text-sm text-gray-500">{assignment.assignmentType || 'No Type'}</div>
                       </div>
                     </div>
                   </td>
@@ -355,7 +363,7 @@ const StudentAssignments: React.FC = () => {
                     <div className="flex items-center">
                       <Calendar className="h-4 w-4 text-gray-400 mr-2" />
                       <div>
-                        <div className="text-sm text-gray-900">{formatDate(assignment.dueDate)}</div>
+                        <div className="text-sm text-gray-900">{assignment.dueDate ? formatDate(assignment.dueDate) : 'N/A'}</div>
                         <div className="text-sm text-gray-500">{assignment.timeRemaining || 'N/A'}</div>
                       </div>
                     </div>
@@ -363,17 +371,17 @@ const StudentAssignments: React.FC = () => {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex flex-col space-y-1">
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeColor(assignment.status)}`}>
-                        {assignment.status.charAt(0).toUpperCase() + assignment.status.slice(1)}
+                        {assignment.status?.charAt(0)?.toUpperCase() + assignment.status?.slice(1) || 'Unknown'}
                       </span>
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getDifficultyBadgeColor(assignment.difficulty)}`}>
-                        {assignment.difficulty}
+                        {assignment.difficulty || 'Unknown'}
                       </span>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     <div className="flex items-center">
                       <Award className="h-4 w-4 text-gray-400 mr-1" />
-                      {assignment.totalPoints} pts
+                      {assignment.totalPoints || 0} pts
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">

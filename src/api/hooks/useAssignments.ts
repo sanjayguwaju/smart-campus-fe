@@ -18,14 +18,16 @@ export const useAssignments = (
 };
 
 export const useMyCourseAssignments = (
+  studentId: string,
   page: number = 1,
   limit: number = 10,
   search?: string,
   filters?: AssignmentFilters
 ) => {
   return useQuery({
-    queryKey: ['my-course-assignments', page, limit, search, filters],
-    queryFn: () => assignmentService.getMyCourseAssignments(page, limit, search, filters),
+    queryKey: ['my-course-assignments', studentId, page, limit, search, filters],
+    queryFn: () => assignmentService.getMyCourseAssignments(studentId, page, limit, search, filters),
+    enabled: !!studentId,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
   });
