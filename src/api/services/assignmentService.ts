@@ -35,6 +35,32 @@ export const assignmentService = {
     const response = await apiClient.get(`${BASE_URL}?${params}`);
     return response.data;
   },
+   
+  // Get assignments for logged-in student’s courses
+  getMyCourseAssignments: async (
+    studentId: string,
+    page: number = 1,
+    limit: number = 10,
+    search?: string,
+    filters?: AssignmentFilters
+  ): Promise<AssignmentsResponse> => {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+      ...(search && { search }),
+      ...(filters?.title && { title: filters.title }),
+      ...(filters?.course && { course: filters.course }),
+      ...(filters?.faculty && { faculty: filters.faculty }),
+      ...(filters?.assignmentType && { assignmentType: filters.assignmentType }),
+      ...(filters?.status && { status: filters.status }),
+      ...(filters?.difficulty && { difficulty: filters.difficulty }),
+      ...(filters?.dueDateRange && { dueDateRange: filters.dueDateRange }),
+      ...(filters?.tags && { tags: filters.tags })
+    });
+
+    const response = await apiClient.get(`${BASE_URL}/student/${studentId}/my-courses-assignments?${params.toString()}`);
+    return response.data;
+  },
 
   // Get assignments for a specific faculty
   getFacultyAssignments: async (
