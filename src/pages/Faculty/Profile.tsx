@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { User, Mail, Phone, Calendar, Shield, Edit, Save, X, Camera, Key, Eye, EyeOff, GraduationCap, BookOpen, Award } from 'lucide-react';
+import { User, Mail, Phone, Calendar, Shield, Edit, Save, X, Camera, Key, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useAuthStore } from '../../store/authStore';
 import { useUpdateUser, useResetPassword } from '../../api/hooks/useUsers';
 import { UpdateUserRequest } from '../../api/types/users';
 import LoadingSpinner from '../../components/Layout/LoadingSpinner';
 
-const StudentProfile: React.FC = () => {
+const FacultyProfile: React.FC = () => {
   const { user } = useAuthStore();
   const updateUserMutation = useUpdateUser();
   const resetPasswordMutation = useResetPassword();
@@ -14,9 +14,9 @@ const StudentProfile: React.FC = () => {
   // Profile form state
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [profileForm, setProfileForm] = useState({
-      firstName: user?.firstName || '',
-      lastName: user?.lastName || '',
-      email: user?.email || '',
+    firstName: user?.firstName || '',
+    lastName: user?.lastName || '',
+    email: user?.email || '',
     phone: user?.phone || ''
   });
 
@@ -151,7 +151,7 @@ const StudentProfile: React.FC = () => {
     <div className="space-y-6">
       {/* Page header */}
       <div className="flex justify-between items-center">
-              <div>
+        <div>
           <h1 className="text-2xl font-bold text-gray-900">Profile</h1>
           <p className="text-gray-600">Manage your personal information and account settings</p>
         </div>
@@ -159,11 +159,11 @@ const StudentProfile: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Profile Overview Card */}
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow p-6">
-              <div className="text-center">
+        <div className="lg:col-span-1">
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="text-center">
               {/* Avatar Section */}
-                <div className="relative inline-block">
+              <div className="relative inline-block">
                 <div className="h-24 w-24 rounded-full bg-blue-500 flex items-center justify-center mx-auto mb-4">
                   {avatarPreview ? (
                     <img
@@ -172,14 +172,14 @@ const StudentProfile: React.FC = () => {
                       className="h-24 w-24 rounded-full object-cover"
                     />
                   ) : user.avatar ? (
-                      <img
-                        src={user.avatar}
-                        alt="Profile"
+                    <img
+                      src={user.avatar}
+                      alt="Profile"
                       className="h-24 w-24 rounded-full object-cover"
-                      />
-                    ) : (
+                    />
+                  ) : (
                     <span className="text-2xl font-bold text-white">
-                      {user.firstName?.charAt(0) || user.name?.charAt(0) || 'S'}
+                      {user.firstName?.charAt(0) || user.name?.charAt(0) || 'F'}
                     </span>
                   )}
                 </div>
@@ -202,23 +202,23 @@ const StudentProfile: React.FC = () => {
               {/* Quick Stats */}
               <div className="grid grid-cols-2 gap-4 text-center">
                 <div className="bg-gray-50 rounded-lg p-3">
-                  <p className="text-2xl font-bold text-blue-600">8</p>
+                  <p className="text-2xl font-bold text-blue-600">12</p>
                   <p className="text-sm text-gray-600">Courses</p>
                 </div>
                 <div className="bg-gray-50 rounded-lg p-3">
-                  <p className="text-2xl font-bold text-green-600">3.8</p>
-                  <p className="text-sm text-gray-600">GPA</p>
+                  <p className="text-2xl font-bold text-green-600">156</p>
+                  <p className="text-sm text-gray-600">Students</p>
                 </div>
-              </div>
               </div>
             </div>
           </div>
+        </div>
 
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
           {/* Personal Information */}
-            <div className="bg-white rounded-lg shadow">
-              <div className="px-6 py-4 border-b border-gray-200">
+          <div className="bg-white rounded-lg shadow">
+            <div className="px-6 py-4 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-medium text-gray-900">Personal Information</h3>
                 {!isEditingProfile ? (
@@ -251,11 +251,11 @@ const StudentProfile: React.FC = () => {
               </div>
             </div>
             <div className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      First Name
-                    </label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    First Name
+                  </label>
                   {isEditingProfile ? (
                     <input
                       type="text"
@@ -265,12 +265,12 @@ const StudentProfile: React.FC = () => {
                     />
                   ) : (
                     <p className="text-gray-900">{user.firstName || 'Not provided'}</p>
-                    )}
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Last Name
-                    </label>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Last Name
+                  </label>
                   {isEditingProfile ? (
                     <input
                       type="text"
@@ -280,12 +280,12 @@ const StudentProfile: React.FC = () => {
                     />
                   ) : (
                     <p className="text-gray-900">{user.lastName || 'Not provided'}</p>
-                    )}
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Email Address
-                    </label>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Email Address
+                  </label>
                   {isEditingProfile ? (
                     <input
                       type="email"
@@ -303,12 +303,12 @@ const StudentProfile: React.FC = () => {
                         </span>
                       )}
                     </div>
-                    )}
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Phone Number
-                    </label>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Phone Number
+                  </label>
                   {isEditingProfile ? (
                     <input
                       type="tel"
@@ -327,55 +327,6 @@ const StudentProfile: React.FC = () => {
             </div>
           </div>
 
-          {/* Academic Information */}
-          <div className="bg-white rounded-lg shadow">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-medium text-gray-900">Academic Information</h3>
-              </div>
-            </div>
-            <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Student ID
-                  </label>
-                  <div className="flex items-center">
-                    <GraduationCap className="h-4 w-4 text-gray-400 mr-2" />
-                    <p className="text-gray-900">{user.studentId || user.id || 'Not assigned'}</p>
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Current GPA
-                  </label>
-                  <div className="flex items-center">
-                    <Award className="h-4 w-4 text-gray-400 mr-2" />
-                    <p className="text-gray-900">3.8 / 4.0</p>
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Credits Completed
-                  </label>
-                  <div className="flex items-center">
-                    <BookOpen className="h-4 w-4 text-gray-400 mr-2" />
-                    <p className="text-gray-900">96 / 120</p>
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Enrollment Status
-                  </label>
-                  <div className="flex items-center">
-                    <div className="h-2 w-2 rounded-full mr-2 bg-green-400"></div>
-                    <span className="text-sm font-medium text-green-600">Full-time</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-                </div>
-
           {/* Account Information */}
           <div className="bg-white rounded-lg shadow">
             <div className="px-6 py-4 border-b border-gray-200">
@@ -384,9 +335,15 @@ const StudentProfile: React.FC = () => {
               </div>
             </div>
             <div className="p-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Employee ID
+                  </label>
+                  <p className="text-gray-900">{user.employeeId || user.facultyId || 'Not assigned'}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Account Status
                   </label>
                   <div className="flex items-center">
@@ -427,17 +384,6 @@ const StudentProfile: React.FC = () => {
                         : 'Never'
                       }
                     </p>
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Verification Status
-                  </label>
-                  <div className="flex items-center">
-                    <div className={`h-2 w-2 rounded-full mr-2 ${user.isVerified ? 'bg-green-400' : 'bg-yellow-400'}`}></div>
-                    <span className={`text-sm font-medium ${user.isVerified ? 'text-green-600' : 'text-yellow-600'}`}>
-                      {user.isVerified ? 'Verified' : 'Pending Verification'}
-                    </span>
                   </div>
                 </div>
               </div>
@@ -505,7 +451,7 @@ const StudentProfile: React.FC = () => {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       New Password
-                      </label>
+                    </label>
                     <div className="relative">
                       <input
                         type={showNewPassword ? 'text' : 'password'}
@@ -522,11 +468,11 @@ const StudentProfile: React.FC = () => {
                         {showNewPassword ? <EyeOff className="h-4 w-4 text-gray-400" /> : <Eye className="h-4 w-4 text-gray-400" />}
                       </button>
                     </div>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
                       Confirm New Password
-                      </label>
+                    </label>
                     <div className="relative">
                       <input
                         type={showConfirmPassword ? 'text' : 'password'}
@@ -562,4 +508,4 @@ const StudentProfile: React.FC = () => {
   );
 };
 
-export default StudentProfile; 
+export default FacultyProfile;

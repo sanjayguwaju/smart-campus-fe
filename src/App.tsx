@@ -35,6 +35,7 @@ import StudentCalendar from './pages/Student/Assignments';
 import StudentPrograms from './pages/Student/Programs';
 import FacultyEvents from './pages/Faculty/Events';
 import FacultyNotices from './pages/Faculty/Notices';
+import FacultyProfile from './pages/Faculty/Profile';
 import Grades from './pages/Faculty/Grades';
 import OfficeHours from './pages/Faculty/OfficeHours';
 import FacultyBlog from './pages/Faculty/Blog';
@@ -126,6 +127,7 @@ function App() {
           <Route path="grades" element={<Grades />} />
           <Route path="office-hours" element={<OfficeHours />} />
           <Route path="blog" element={<FacultyBlog />} />
+          <Route path="profile" element={<FacultyProfile />} />
         </Route>
 
         {/* Student routes with role-based protection */}
