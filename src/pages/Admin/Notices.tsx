@@ -34,6 +34,13 @@ const Notices: React.FC = () => {
     };
   });
 
+  // Debug logging to understand the data
+  console.log('=== DEBUG NOTICES ===');
+  console.log('Raw notices data:', data?.data?.notices);
+  console.log('Processed notices:', notices);
+  console.log('Current filters:', filters);
+  console.log('Notices count:', notices.length);
+
   const filteredNotices = notices.filter((notice) => {
     const matchesSearch = !filters.searchTerm ||
       notice.title.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
@@ -52,8 +59,21 @@ const Notices: React.FC = () => {
       (filters.status === 'published' && notice.isPublished) ||
       (filters.status === 'draft' && !notice.isPublished);
 
+    // Debug individual notice filtering
+    console.log(`Notice "${notice.title}":`, {
+      matchesSearch,
+      matchesCategory,
+      matchesPriority,
+      matchesStatus,
+      status: notice.status,
+      isPublished: notice.isPublished,
+      filters: filters
+    });
+
     return matchesSearch && matchesCategory && matchesPriority && matchesStatus;
   });
+
+  console.log('Filtered notices count:', filteredNotices.length);
 
   // Sort notices so pinned are at the top
   const sortedNotices = [...filteredNotices].sort((a, b) => {
