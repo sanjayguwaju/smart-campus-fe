@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, Edit, Trash2, Eye, Filter, ChevronLeft, ChevronRight, MoreHorizontal } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Eye, Filter, ChevronLeft, ChevronRight, MoreHorizontal, Users } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import Select, { StylesConfig } from 'react-select';
 import { useDebounce } from '@uidotdev/usehooks';
@@ -10,7 +10,8 @@ import {
   AddEnrollmentModal, 
   EditEnrollmentModal, 
   ViewEnrollmentModal, 
-  EnrollmentsFilterDrawer 
+  EnrollmentsFilterDrawer,
+  BulkEnrollmentModal
 } from '../../components/Admin/Enrollments';
 
 // Select option interface
@@ -34,6 +35,7 @@ const Enrollments: React.FC = () => {
   const [selectedEnrollmentForView, setSelectedEnrollmentForView] = useState<EnrollmentData | null>(null);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
+  const [isBulkEnrollmentModalOpen, setIsBulkEnrollmentModalOpen] = useState(false);
   const [filters, setFilters] = useState({
     status: '',
     enrollmentType: '',
@@ -240,13 +242,22 @@ const Enrollments: React.FC = () => {
           <h1 className="text-2xl font-bold text-gray-900">Enrollments</h1>
           <p className="text-gray-600">Manage all student enrollments in the system</p>
         </div>
-        <button 
-          onClick={() => setIsAddEnrollmentModalOpen(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Add Enrollment
-        </button>
+        <div className="flex space-x-3">
+          <button 
+            onClick={() => setIsBulkEnrollmentModalOpen(true)}
+            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center"
+          >
+            <Users className="h-4 w-4 mr-2" />
+            Bulk Enrollment
+          </button>
+          <button 
+            onClick={() => setIsAddEnrollmentModalOpen(true)}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Enrollment
+          </button>
+        </div>
       </div>
 
       {/* Filters and search */}
@@ -641,14 +652,20 @@ const Enrollments: React.FC = () => {
         enrollment={selectedEnrollmentForView}
       />
 
-      {/* Filter Drawer */}
-      <EnrollmentsFilterDrawer
-        isOpen={isFilterDrawerOpen}
-        onClose={() => setIsFilterDrawerOpen(false)}
-        filters={filters}
-        onApplyFilters={handleApplyFilters}
-        onClearFilters={handleClearFilters}
-      />
+             {/* Filter Drawer */}
+       <EnrollmentsFilterDrawer
+         isOpen={isFilterDrawerOpen}
+         onClose={() => setIsFilterDrawerOpen(false)}
+         filters={filters}
+         onApplyFilters={handleApplyFilters}
+         onClearFilters={handleClearFilters}
+       />
+
+       {/* Bulk Enrollment Modal */}
+       <BulkEnrollmentModal
+         isOpen={isBulkEnrollmentModalOpen}
+         onClose={() => setIsBulkEnrollmentModalOpen(false)}
+       />
     </div>
   );
 };

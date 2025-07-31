@@ -129,16 +129,21 @@ const AddEnrollmentModal: React.FC<AddEnrollmentModalProps> = ({ isOpen, onClose
 
   const loadDepartmentOptions = async (inputValue: string) => {
     try {
+      console.log('AddEnrollmentModal: Loading departments with inputValue:', inputValue);
       const response = await departmentService.getDepartments(1, 100, inputValue);
+      console.log('AddEnrollmentModal: Department response:', response);
       const options = response?.data?.map((d: { _id: string; name: string }) => ({ 
         value: d._id, 
         label: d.name 
       })) || [];
-      return options.filter((option: SelectOption) =>
+      console.log('AddEnrollmentModal: Department options:', options);
+      const filteredOptions = options.filter((option: SelectOption) =>
         option.label.toLowerCase().includes(inputValue.toLowerCase())
       );
+      console.log('AddEnrollmentModal: Filtered options:', filteredOptions);
+      return filteredOptions;
     } catch (error) {
-      console.error('Error loading departments:', error);
+      console.error('AddEnrollmentModal: Error loading departments:', error);
       return [];
     }
   };
