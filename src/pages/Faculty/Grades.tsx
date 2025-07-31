@@ -8,81 +8,45 @@ import {
   CheckCircle, 
   Clock,
   BarChart3,
-  Calculator
+  Calculator,
+  Filter,
+  Download,
+  Upload
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
-
-// Mock data - replace with actual API calls
-const mockCourses = [
-  {
-    _id: 'course1',
-    name: 'Physics 101',
-    code: 'PHY101',
-    creditHours: 3,
-    enrolledStudents: 45,
-    semester: 1,
-    academicYear: '2024-2025'
-  },
-  {
-    _id: 'course2',
-    name: 'Advanced Physics',
-    code: 'PHY201',
-    creditHours: 4,
-    enrolledStudents: 32,
-    semester: 1,
-    academicYear: '2024-2025'
-  }
-];
-
-const mockGrades = [
-  {
-    _id: 'grade1',
-    student: {
-      _id: 'student1',
-      firstName: 'Ali',
-      lastName: 'Raza',
-      studentId: 'STU001'
-    },
-    course: {
-      _id: 'course1',
-      name: 'Physics 101',
-      code: 'PHY101'
-    },
-    finalGrade: 'A-',
-    numericalGrade: 87,
-    credits: 3,
-    status: 'draft',
-    submittedAt: '2024-01-15T10:30:00Z'
-  },
-  {
-    _id: 'grade2',
-    student: {
-      _id: 'student2',
-      firstName: 'Fatima',
-      lastName: 'Noor',
-      studentId: 'STU002'
-    },
-    course: {
-      _id: 'course1',
-      name: 'Physics 101',
-      code: 'PHY101'
-    },
-    finalGrade: 'B+',
-    numericalGrade: 83,
-    credits: 3,
-    status: 'submitted',
-    submittedAt: '2024-01-15T11:00:00Z'
-  }
-];
+import { useFacultyCourseGrades, useAutoCalculateGrades, useBulkSubmitGrades } from '../../api/hooks/useCourseGrades';
+import { useAssignedFacultyCourses } from '../../api/hooks/useCourses';
+import { toast } from 'react-hot-toast';
 
 const Grades: React.FC = () => {
   const { user } = useAuthStore();
   const [selectedCourse, setSelectedCourse] = useState<string>('');
-  const [grades, setGrades] = useState(mockGrades);
-  const [courses, setCourses] = useState(mockCourses);
+  const [filters, setFilters] = useState<{
+    semester?: number;
+    academicYear?: string;
+    status?: 'draft' | 'submitted' | 'approved' | 'disputed' | 'final';
+  }>({
+    semester: undefined,
+    academicYear: undefined,
+    status: undefined
+  });
   const [isGradeModalOpen, setIsGradeModalOpen] = useState(false);
   const [selectedGrade, setSelectedGrade] = useState<any>(null);
   const [isAutoCalculateModalOpen, setIsAutoCalculateModalOpen] = useState(false);
+  const [selectedGradesForBulk, setSelectedGradesForBulk] = useState<string[]>([]);
+
+  // API hooks
+  const { data: gradesData, isLoading: gradesLoading, refetch: refetchGrades } = useFacultyCourseGrades(1, 100, filters);
+  const { data: coursesData, isLoading: coursesLoading } = useAssignedFacultyCourses(
+    user?._id || '', 
+    1, 
+    100
+  );
+  const autoCalculateGradesMutation = useAutoCalculateGrades();
+  const bulkSubmitGradesMutation = useBulkSubmitGrades();
+
+  const grades = gradesData?.grades || [];
+  const courses = coursesData?.courses || [];
 
   const getGradeColor = (grade: string) => {
     if (grade.startsWith('A')) return 'text-green-600 bg-green-50';
@@ -116,13 +80,47 @@ const Grades: React.FC = () => {
     setIsGradeModalOpen(true);
   };
 
-  const handleAutoCalculate = () => {
-    setIsAutoCalculateModalOpen(true);
+  const handleAutoCalculate = async (courseId: string) => {
+    try {
+      await autoCalculateGradesMutation.mutateAsync({
+        courseId,
+        data: {
+          semester: filters.semester || 1,
+          academicYear: filters.academicYear || '2024-2025'
+        }
+      });
+      refetchGrades();
+    } catch (error) {
+      console.error('Auto calculate error:', error);
+    }
   };
 
-  const handleBulkSubmit = () => {
-    // Implement bulk submit functionality
-    console.log('Bulk submit grades');
+  const handleBulkSubmit = async () => {
+    if (selectedGradesForBulk.length === 0) {
+      toast.error('Please select grades to submit');
+      return;
+    }
+
+    try {
+      await bulkSubmitGradesMutation.mutateAsync({
+        courseId: selectedCourse,
+        data: {
+          gradeIds: selectedGradesForBulk
+        }
+      });
+      setSelectedGradesForBulk([]);
+      refetchGrades();
+    } catch (error) {
+      console.error('Bulk submit error:', error);
+    }
+  };
+
+  const handleGradeSelection = (gradeId: string) => {
+    setSelectedGradesForBulk(prev => 
+      prev.includes(gradeId) 
+        ? prev.filter(id => id !== gradeId)
+        : [...prev, gradeId]
+    );
   };
 
   const filteredGrades = selectedCourse 
@@ -131,107 +129,228 @@ const Grades: React.FC = () => {
 
   const courseStats = courses.map(course => {
     const courseGrades = grades.filter(grade => grade.course._id === course._id);
-    const submittedGrades = courseGrades.filter(grade => grade.status === 'submitted').length;
-    const draftGrades = courseGrades.filter(grade => grade.status === 'draft').length;
+    const gradedCount = courseGrades.filter(grade => grade.status === 'final').length;
+    const totalCount = courseGrades.length;
     
     return {
       ...course,
-      submittedGrades,
-      draftGrades,
-      totalGrades: courseGrades.length
+      gradedCount,
+      totalCount,
+      percentage: totalCount > 0 ? Math.round((gradedCount / totalCount) * 100) : 0
     };
   });
 
+  if (gradesLoading || coursesLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Course Grades</h1>
-          <p className="text-gray-600 mt-2">Manage and submit final grades for your courses</p>
+          <h1 className="text-2xl font-bold text-gray-900">Course Grades</h1>
+          <p className="text-gray-600">Manage and submit student grades for your assigned courses</p>
+          {courses.length === 0 && !coursesLoading && (
+            <p className="text-sm text-blue-600 mt-1">
+              You don't have any courses assigned yet. Contact your administrator to get courses assigned.
+            </p>
+          )}
         </div>
         <div className="flex space-x-3">
           <button
-            onClick={handleAutoCalculate}
-            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            onClick={() => setIsAutoCalculateModalOpen(true)}
+            className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
           >
-            <Calculator className="h-4 w-4 mr-2" />
-            Auto Calculate
+            <Calculator className="h-4 w-4" />
+            <span>Auto Calculate</span>
           </button>
           <button
             onClick={handleBulkSubmit}
-            className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+            disabled={selectedGradesForBulk.length === 0}
+            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
           >
-            <CheckCircle className="h-4 w-4 mr-2" />
-            Bulk Submit
+            <Upload className="h-4 w-4" />
+            <span>Bulk Submit ({selectedGradesForBulk.length})</span>
           </button>
         </div>
       </div>
 
-      {/* Course Selection */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Select Course</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {courseStats.map((course) => (
-            <div
-              key={course._id}
-              onClick={() => setSelectedCourse(course._id)}
-              className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                selectedCourse === course._id
-                  ? 'border-blue-500 bg-blue-50'
-                  : 'border-gray-200 hover:border-gray-300'
-              }`}
-            >
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="font-semibold text-gray-900">{course.name}</h3>
-                <span className="text-sm text-gray-500">{course.code}</span>
-              </div>
-              <div className="text-sm text-gray-600 mb-3">
-                <p>Credits: {course.creditHours}</p>
-                <p>Students: {course.enrolledStudents}</p>
-              </div>
-              <div className="flex justify-between text-xs">
-                <span className="text-green-600">Submitted: {course.submittedGrades}</span>
-                <span className="text-yellow-600">Draft: {course.draftGrades}</span>
-              </div>
-            </div>
-          ))}
+      {/* Filters */}
+      <div className="bg-white rounded-lg border border-gray-200 p-4">
+        <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2">
+            <Filter className="h-4 w-4 text-gray-500" />
+            <span className="text-sm font-medium text-gray-700">Filters:</span>
+          </div>
+          
+          <select
+            value={selectedCourse}
+            onChange={(e) => setSelectedCourse(e.target.value)}
+            className="px-3 py-1 border border-gray-300 rounded-md text-sm"
+          >
+            <option value="">All Assigned Courses</option>
+            {courses.map(course => (
+              <option key={course._id} value={course._id}>
+                {course.name} ({course.code})
+              </option>
+            ))}
+          </select>
+
+                     <select
+             value={filters.semester || ''}
+             onChange={(e) => setFilters(prev => ({ 
+               ...prev, 
+               semester: e.target.value ? parseInt(e.target.value) : undefined 
+             }))}
+             className="px-3 py-1 border border-gray-300 rounded-md text-sm"
+           >
+             <option value="">All Semesters</option>
+             {[1, 2, 3, 4, 5, 6, 7, 8].map(sem => (
+               <option key={sem} value={sem}>Semester {sem}</option>
+             ))}
+           </select>
+
+           <select
+             value={filters.academicYear || ''}
+             onChange={(e) => setFilters(prev => ({ 
+               ...prev, 
+               academicYear: e.target.value || undefined 
+             }))}
+             className="px-3 py-1 border border-gray-300 rounded-md text-sm"
+           >
+             <option value="">All Years</option>
+             <option value="2024-2025">2024-2025</option>
+             <option value="2023-2024">2023-2024</option>
+             <option value="2022-2023">2022-2023</option>
+           </select>
+
+           <select
+             value={filters.status || ''}
+             onChange={(e) => setFilters(prev => ({ 
+               ...prev, 
+               status: e.target.value as 'draft' | 'submitted' | 'approved' | 'disputed' | 'final' | undefined 
+             }))}
+             className="px-3 py-1 border border-gray-300 rounded-md text-sm"
+           >
+             <option value="">All Status</option>
+             <option value="draft">Draft</option>
+             <option value="submitted">Submitted</option>
+             <option value="approved">Approved</option>
+             <option value="final">Final</option>
+           </select>
         </div>
       </div>
 
-      {/* Grades Table */}
-      {selectedCourse && (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-          <div className="p-6 border-b border-gray-200">
-            <div className="flex justify-between items-center">
-              <h2 className="text-lg font-semibold text-gray-900">
-                Grades for {courses.find(c => c._id === selectedCourse)?.name}
-              </h2>
+      {/* Course Statistics */}
+      {courses.length === 0 && !coursesLoading ? (
+        <div className="col-span-full">
+          <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
+            <div className="h-16 w-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Award className="h-8 w-8 text-blue-600" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">No Courses Assigned</h3>
+            <p className="text-gray-600 mb-4">
+              You don't have any courses assigned to you yet. Once courses are assigned by an administrator, 
+              you'll be able to manage grades for those courses here.
+            </p>
+            <div className="text-sm text-gray-500">
+              Contact your department administrator to get courses assigned.
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {courseStats.map(course => (
+          <div key={course._id} className="bg-white rounded-lg border border-gray-200 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">{course.name}</h3>
+              <span className="text-sm text-gray-500">{course.code}</span>
+            </div>
+            
+            <div className="space-y-3">
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">Graded:</span>
+                <span className="font-medium">{course.gradedCount}/{course.totalCount}</span>
+              </div>
+              
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div 
+                  className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${course.percentage}%` }}
+                ></div>
+              </div>
+              
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">Progress:</span>
+                <span className="font-medium">{course.percentage}%</span>
+              </div>
+            </div>
+
+            <div className="mt-4 flex space-x-2">
               <button
-                onClick={() => setIsGradeModalOpen(true)}
-                className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                onClick={() => handleAutoCalculate(course._id)}
+                className="flex-1 px-3 py-2 bg-green-100 text-green-700 rounded-md text-sm hover:bg-green-200"
               >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Grade
+                Auto Calculate
+              </button>
+              <button
+                onClick={() => setSelectedCourse(course._id)}
+                className="flex-1 px-3 py-2 bg-blue-100 text-blue-700 rounded-md text-sm hover:bg-blue-200"
+              >
+                View Grades
               </button>
             </div>
           </div>
-          
-    <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
+        ))}
+        </div>
+      )}
+
+      {/* Grades Table */}
+      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h2 className="text-lg font-semibold text-gray-900">
+            {selectedCourse ? 'Course Grades' : 'All Grades'} 
+            {filteredGrades.length > 0 && ` (${filteredGrades.length})`}
+          </h2>
+        </div>
+
+        {filteredGrades.length === 0 ? (
+          <div className="p-8 text-center">
+            <Award className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <p className="text-gray-500">No grades found for the selected filters</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <input
+                      type="checkbox"
+                      checked={selectedGradesForBulk.length === filteredGrades.length}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedGradesForBulk(filteredGrades.map(grade => grade._id));
+                        } else {
+                          setSelectedGradesForBulk([]);
+                        }
+                      }}
+                      className="rounded border-gray-300"
+                    />
+                  </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Student
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Student ID
+                    Course
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Final Grade
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Numerical
+                    Grade
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Status
@@ -242,136 +361,65 @@ const Grades: React.FC = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Actions
                   </th>
-          </tr>
-        </thead>
+                </tr>
+              </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredGrades.map((grade) => (
+                {filteredGrades.map(grade => (
                   <tr key={grade._id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">
-                          <span className="text-sm font-medium text-gray-700">
-                            {grade.student.firstName[0]}{grade.student.lastName[0]}
-                          </span>
+                      <input
+                        type="checkbox"
+                        checked={selectedGradesForBulk.includes(grade._id)}
+                        onChange={() => handleGradeSelection(grade._id)}
+                        className="rounded border-gray-300"
+                      />
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div>
+                        <div className="text-sm font-medium text-gray-900">
+                          {grade.student.firstName} {grade.student.lastName}
                         </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">
-                            {grade.student.firstName} {grade.student.lastName}
-                          </div>
-                        </div>
+                        <div className="text-sm text-gray-500">{grade.student.studentId}</div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {grade.student.studentId}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div>
+                        <div className="text-sm font-medium text-gray-900">{grade.course.name}</div>
+                        <div className="text-sm text-gray-500">{grade.course.code}</div>
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getGradeColor(grade.finalGrade)}`}>
-                        {grade.finalGrade}
+                        {grade.finalGrade} ({grade.numericalGrade}%)
                       </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {grade.numericalGrade}%
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(grade.status)}`}>
                         {getStatusIcon(grade.status)}
-                        <span className="ml-1 capitalize">{grade.status}</span>
+                        <span className="ml-1">{grade.status}</span>
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {new Date(grade.submittedAt).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => handleEditGrade(grade)}
-                          className="text-blue-600 hover:text-blue-900"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </button>
-                        {grade.status === 'draft' && (
-                          <button className="text-red-600 hover:text-red-900">
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        )}
-                      </div>
+                      <button
+                        onClick={() => handleEditGrade(grade)}
+                        className="text-blue-600 hover:text-blue-900 mr-3"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </button>
+                      <button className="text-red-600 hover:text-red-900">
+                        <Trash2 className="h-4 w-4" />
+                      </button>
                     </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        </div>
-      )}
-
-      {/* Grade Statistics */}
-      {selectedCourse && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Total Students</p>
-                <p className="text-2xl font-bold text-blue-600">
-                  {filteredGrades.length}
-                </p>
-              </div>
-              <Users className="h-8 w-8 text-blue-500" />
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Submitted</p>
-                <p className="text-2xl font-bold text-green-600">
-                  {filteredGrades.filter(g => g.status === 'submitted').length}
-                </p>
-              </div>
-              <CheckCircle className="h-8 w-8 text-green-500" />
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Draft</p>
-                <p className="text-2xl font-bold text-yellow-600">
-                  {filteredGrades.filter(g => g.status === 'draft').length}
-                </p>
-              </div>
-              <Clock className="h-8 w-8 text-yellow-500" />
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Average Grade</p>
-                <p className="text-2xl font-bold text-purple-600">
-                  {filteredGrades.length > 0 
-                    ? (filteredGrades.reduce((sum, g) => sum + g.numericalGrade, 0) / filteredGrades.length).toFixed(1)
-                    : '0.0'
-                  }%
-                </p>
-              </div>
-              <BarChart3 className="h-8 w-8 text-purple-500" />
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Grade Entry Modal */}
-      {isGradeModalOpen && (
-        <GradeEntryModal
-          isOpen={isGradeModalOpen}
-          onClose={() => {
-            setIsGradeModalOpen(false);
-            setSelectedGrade(null);
-          }}
-          grade={selectedGrade}
-          course={courses.find(c => c._id === selectedCourse)}
-        />
-      )}
+        )}
+      </div>
 
       {/* Auto Calculate Modal */}
       {isAutoCalculateModalOpen && (
@@ -379,172 +427,38 @@ const Grades: React.FC = () => {
           isOpen={isAutoCalculateModalOpen}
           onClose={() => setIsAutoCalculateModalOpen(false)}
           courses={courses}
+          onCalculate={handleAutoCalculate}
         />
       )}
     </div>
   );
 };
 
-// Grade Entry Modal Component
-const GradeEntryModal: React.FC<{
-  isOpen: boolean;
-  onClose: () => void;
-  grade?: any;
-  course?: any;
-}> = ({ isOpen, onClose, grade, course }) => {
-  if (!isOpen) return null;
-
-  const [formData, setFormData] = useState({
-    finalGrade: grade?.finalGrade || '',
-    numericalGrade: grade?.numericalGrade || '',
-    attendance: grade?.attendance || '',
-    participation: grade?.participation || '',
-    facultyComments: grade?.facultyComments || ''
-  });
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Implement grade submission
-    console.log('Submit grade:', formData);
-    onClose();
-  };
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">
-            {grade ? 'Edit Grade' : 'Add Grade'}
-          </h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-            ×
-          </button>
-        </div>
-        
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Final Grade
-            </label>
-            <select
-              value={formData.finalGrade}
-              onChange={(e) => setFormData({...formData, finalGrade: e.target.value})}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            >
-              <option value="">Select Grade</option>
-              <option value="A+">A+</option>
-              <option value="A">A</option>
-              <option value="A-">A-</option>
-              <option value="B+">B+</option>
-              <option value="B">B</option>
-              <option value="B-">B-</option>
-              <option value="C+">C+</option>
-              <option value="C">C</option>
-              <option value="C-">C-</option>
-              <option value="D+">D+</option>
-              <option value="D">D</option>
-              <option value="D-">D-</option>
-              <option value="F">F</option>
-            </select>
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Numerical Grade (%)
-            </label>
-            <input
-              type="number"
-              min="0"
-              max="100"
-              value={formData.numericalGrade}
-              onChange={(e) => setFormData({...formData, numericalGrade: e.target.value})}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
-          </div>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Attendance (%)
-              </label>
-              <input
-                type="number"
-                min="0"
-                max="100"
-                value={formData.attendance}
-                onChange={(e) => setFormData({...formData, attendance: e.target.value})}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Participation (%)
-              </label>
-              <input
-                type="number"
-                min="0"
-                max="100"
-                value={formData.participation}
-                onChange={(e) => setFormData({...formData, participation: e.target.value})}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Comments
-            </label>
-            <textarea
-              value={formData.facultyComments}
-              onChange={(e) => setFormData({...formData, facultyComments: e.target.value})}
-              rows={3}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Add any comments about the student's performance..."
-            />
-          </div>
-          
-          <div className="flex justify-end space-x-3 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              {grade ? 'Update Grade' : 'Add Grade'}
-            </button>
-          </div>
-        </form>
-    </div>
-  </div>
-);
-};
-
 // Auto Calculate Modal Component
 const AutoCalculateModal: React.FC<{
   isOpen: boolean;
   onClose: () => void;
-  courses: any[];
-}> = ({ isOpen, onClose, courses }) => {
-  if (!isOpen) return null;
-
+  courses: Array<{
+    _id: string;
+    name: string;
+    code: string;
+  }>;
+  onCalculate: (courseId: string) => void;
+}> = ({ isOpen, onClose, courses, onCalculate }) => {
   const [selectedCourse, setSelectedCourse] = useState('');
-  const [semester, setSemester] = useState('');
-  const [academicYear, setAcademicYear] = useState('');
+  const [semester, setSemester] = useState('1');
+  const [academicYear, setAcademicYear] = useState('2024-2025');
 
-  const handleAutoCalculate = () => {
-    // Implement auto-calculate functionality
-    console.log('Auto calculate grades for:', { selectedCourse, semester, academicYear });
+  const handleCalculate = () => {
+    if (!selectedCourse) {
+      toast.error('Please select a course');
+      return;
+    }
+    onCalculate(selectedCourse);
     onClose();
   };
+
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -558,14 +472,11 @@ const AutoCalculateModal: React.FC<{
         
         <div className="p-6 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Select Course
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Course</label>
             <select
               value={selectedCourse}
               onChange={(e) => setSelectedCourse(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
             >
               <option value="">Select a course</option>
               {courses.map(course => (
@@ -575,53 +486,61 @@ const AutoCalculateModal: React.FC<{
               ))}
             </select>
           </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Semester
-            </label>
-            <select
-              value={semester}
-              onChange={(e) => setSemester(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            >
-              <option value="">Select semester</option>
-              <option value="1">Semester 1</option>
-              <option value="2">Semester 2</option>
-              <option value="3">Semester 3</option>
-              <option value="4">Semester 4</option>
-            </select>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Semester</label>
+              <select
+                value={semester}
+                onChange={(e) => setSemester(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              >
+                {[1, 2, 3, 4, 5, 6, 7, 8].map(sem => (
+                  <option key={sem} value={sem}>Semester {sem}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Academic Year</label>
+              <select
+                value={academicYear}
+                onChange={(e) => setAcademicYear(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="2024-2025">2024-2025</option>
+                <option value="2023-2024">2023-2024</option>
+                <option value="2022-2023">2022-2023</option>
+              </select>
+            </div>
           </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Academic Year
-            </label>
-            <input
-              type="text"
-              value={academicYear}
-              onChange={(e) => setAcademicYear(e.target.value)}
-              placeholder="2024-2025"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
+
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex items-start">
+              <Calculator className="h-5 w-5 text-blue-600 mt-0.5 mr-3" />
+              <div>
+                <h4 className="text-sm font-medium text-blue-900">Auto Calculation</h4>
+                <p className="text-sm text-blue-700 mt-1">
+                  This will automatically calculate grades based on assignment submissions and weights.
+                </p>
+              </div>
+            </div>
           </div>
-          
-          <div className="flex justify-end space-x-3 pt-4">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleAutoCalculate}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Calculate Grades
-            </button>
-          </div>
+        </div>
+
+        <div className="flex justify-end space-x-3 p-6 border-t border-gray-200">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleCalculate}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            Calculate Grades
+          </button>
         </div>
       </div>
     </div>
