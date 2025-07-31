@@ -375,7 +375,9 @@ const Enrollments: React.FC = () => {
                     {enrollment.program?.name || 'N/A'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {enrollment.academicPeriod || 'N/A'}
+                    {enrollment.academicPeriod && enrollment.academicPeriod !== 'undefined' 
+                      ? enrollment.academicPeriod.replace(' - undefined', '') 
+                      : enrollment.academicYear || 'N/A'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeColor(enrollment.status)}`}>
