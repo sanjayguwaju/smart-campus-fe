@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Award, TrendingUp, BookOpen, User, Calendar, Filter, Eye, EyeOff, ChevronDown, ChevronUp } from 'lucide-react';
+import { Award, TrendingUp, BookOpen, User, Calendar, Filter, Eye, EyeOff, ChevronDown, ChevronUp, RefreshCw } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { useStudentGrades } from '../../api/hooks/useCourseGrades';
+import { toast } from 'react-hot-toast';
 
 const Grades: React.FC = () => {
   const { user } = useAuthStore();
@@ -12,10 +13,25 @@ const Grades: React.FC = () => {
     status?: 'draft' | 'submitted' | 'approved' | 'disputed' | 'final';
   }>({});
   const [expandedGrades, setExpandedGrades] = useState<Set<string>>(new Set());
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Fetch real grades from API
-  const { data: gradesData, isLoading, error } = useStudentGrades(1, 100, filters);
+  const { data: gradesData, isLoading, error, refetch } = useStudentGrades(1, 100, filters);
   const grades = gradesData?.grades || [];
+
+  // Handle refresh with loading state and feedback
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await refetch();
+      toast.success('Grades refreshed successfully!');
+    } catch (error) {
+      console.error('Refresh error:', error);
+      toast.error('Failed to refresh grades. Please try again.');
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   const toggleGradeExpansion = (gradeId: string) => {
     const newExpanded = new Set(expandedGrades);
@@ -86,6 +102,21 @@ const Grades: React.FC = () => {
             <h1 className="text-3xl font-bold text-gray-900">My Grades</h1>
             <p className="text-gray-600 mt-2">No grades available yet</p>
           </div>
+          <button
+            onClick={handleRefresh}
+            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 shadow-sm"
+            title="Refresh grades"
+            disabled={isRefreshing}
+          >
+            {isRefreshing ? (
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+            ) : (
+              <RefreshCw className="h-4 w-4" />
+            )}
+            <span className="font-medium">
+              {isRefreshing ? 'Refreshing...' : 'Refresh Grades'}
+            </span>
+          </button>
         </div>
         
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
@@ -169,8 +200,22 @@ const Grades: React.FC = () => {
 
       {/* Grades Table */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200">
+        <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
           <h3 className="text-lg font-semibold text-gray-900">Course Grades</h3>
+          <button
+            onClick={handleRefresh}
+            className="flex items-center text-blue-600 hover:text-blue-800 transition-colors"
+            disabled={isRefreshing}
+          >
+            {isRefreshing ? (
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-1"></div>
+            ) : (
+              <RefreshCw className="h-4 w-4 mr-1" />
+            )}
+            <span className="text-sm">
+              {isRefreshing ? 'Refreshing...' : 'Refresh Grades'}
+            </span>
+          </button>
         </div>
         
         <div className="overflow-x-auto">

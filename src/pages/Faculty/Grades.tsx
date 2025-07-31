@@ -10,7 +10,9 @@ import {
   Upload,
   User,
   BookOpen,
-  GraduationCap
+  GraduationCap,
+  Pencil,
+  RefreshCw
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { useFacultyCourseGrades, useBulkSubmitGrades } from '../../api/hooks/useCourseGrades';
@@ -19,6 +21,7 @@ import { useStudentsByFaculty } from '../../api/hooks/useUsers';
 import { useCreateCourseGrade, useUpdateCourseGrade } from '../../api/hooks/useCourseGrades';
 import { CourseGradeData } from '../../api/types/courseGrades';
 import { toast } from 'react-hot-toast';
+import { debugFacultyData } from '../../utils/debugFacultyData';
 
 const Grades: React.FC = () => {
   const { user } = useAuthStore();
@@ -40,6 +43,7 @@ const Grades: React.FC = () => {
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
   const [selectedGradeForEdit, setSelectedGradeForEdit] = useState<CourseGradeData | null>(null);
   const [recentlySubmittedCount, setRecentlySubmittedCount] = useState<number>(0);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // API hooks
   const { data: gradesData, isLoading: gradesLoading, refetch: refetchGrades } = useFacultyCourseGrades(1, 100, filters);
@@ -48,12 +52,30 @@ const Grades: React.FC = () => {
   const handleRefetchGrades = () => {
     refetchGrades();
   };
-  const { data: coursesData, isLoading: coursesLoading } = useAssignedFacultyCourses(
+
+  // Comprehensive refresh function
+  const handleRefreshAll = async () => {
+    setIsRefreshing(true);
+    try {
+      await Promise.all([
+        refetchGrades(),
+        refetchCourses(),
+        refetchStudents()
+      ]);
+      toast.success('Data refreshed successfully!');
+    } catch (error) {
+      console.error('Refresh error:', error);
+      toast.error('Failed to refresh data. Please try again.');
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+  const { data: coursesData, isLoading: coursesLoading, refetch: refetchCourses } = useAssignedFacultyCourses(
     user?._id || '', 
     1, 
     100
   );
-  const { data: studentsData, isLoading: studentsLoading } = useStudentsByFaculty(
+  const { data: studentsData, isLoading: studentsLoading, refetch: refetchStudents } = useStudentsByFaculty(
     user?._id || '',
     1,
     100
@@ -65,6 +87,40 @@ const Grades: React.FC = () => {
   const grades: CourseGradeData[] = gradesData?.grades || [];
   const courses = coursesData?.courses || [];
   const students = studentsData?.students || [];
+
+  // Debug logging
+  console.log('🔍 Faculty Grades Debug:', {
+    facultyId: user?._id,
+    coursesCount: courses.length,
+    studentsCount: students.length,
+    courses: courses.map(c => ({ id: c._id, name: c.name, code: c.code })),
+    students: students.map(s => ({ id: s._id, name: `${s.firstName} ${s.lastName}`, courses: s.courses?.length || 0 }))
+  });
+
+  // Error handling for missing data
+  if (studentsLoading) {
+    console.log('🔄 Loading students data...');
+  }
+  
+  if (studentsData && !studentsData.success) {
+    console.error('❌ Students API Error:', studentsData.message);
+  }
+  
+  if (coursesLoading) {
+    console.log('🔄 Loading courses data...');
+  }
+  
+  if (coursesData && !coursesData.success) {
+    console.error('❌ Courses API Error:', coursesData.message);
+  }
+
+  // Comprehensive debugging
+  React.useEffect(() => {
+    if (user?._id && !studentsLoading && !coursesLoading) {
+      debugFacultyData.logFacultyData(user._id, courses, students);
+      debugFacultyData.verifyDataRelationships(user._id, courses, students);
+    }
+  }, [user?._id, courses, students, studentsLoading, coursesLoading]);
 
   // Filter students by selected course
   const courseStudents = selectedCourse 
@@ -162,15 +218,28 @@ const Grades: React.FC = () => {
         if (studentGrade.status === 'submitted' || studentGrade.status === 'approved' || studentGrade.status === 'final') {
           toast.success(`Editing submitted grade for ${student.firstName} ${student.lastName}. Changes will update the existing grade.`);
         }
+        
+        // Set the existing grade for editing
+        setSelectedStudent(student);
+        setSelectedGradeForEdit(studentGrade);
+        setIsStudentGradeModalOpen(true);
+        return; // Exit early since we're editing an existing grade
       }
     }
     
+    // If no existing grade found, create a new one
     setSelectedStudent(student);
     setSelectedGradeForEdit(null);
     setIsStudentGradeModalOpen(true);
   };
 
   const handleEditGrade = (grade: CourseGradeData) => {
+    // Check if grade is already submitted/finalized
+    if (grade.status !== 'draft') {
+      toast.error(`Cannot edit grade that is already ${grade.status}. Only draft grades can be edited.`);
+      return;
+    }
+    
     setSelectedStudent(grade.student);
     setSelectedGradeForEdit(grade);
     setIsStudentGradeModalOpen(true);
@@ -249,22 +318,26 @@ const Grades: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Course Management</h1>
-          <p className="text-gray-600">Manage grades and students for your assigned courses</p>
-          {courses.length === 0 && !coursesLoading && (
-            <p className="text-sm text-blue-600 mt-1">
-              You don't have any courses assigned yet. Contact your administrator to get courses assigned.
-            </p>
-          )}
+          <h1 className="text-2xl font-bold text-gray-900">Grades Management</h1>
+          <p className="text-gray-600">Manage student grades and view academic progress</p>
         </div>
-        <div className="flex space-x-3">
-          {activeTab === 'grades' && (
+        <div className="flex items-center space-x-3">
+          <button
+            onClick={handleRefreshAll}
+            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 shadow-sm"
+            title="Refresh all data"
+            disabled={isRefreshing}
+          >
+            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            <span className="font-medium">{isRefreshing ? 'Refreshing...' : 'Refresh All'}</span>
+          </button>
+          {activeTab === 'grades' && selectedGradesForBulk.length > 0 && (
           <button
             onClick={handleBulkSubmit}
-              disabled={selectedGradesForBulk.length === 0}
-              className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+              disabled={bulkSubmitGradesMutation.isPending}
+              className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
             >
               <Upload className="h-4 w-4" />
               <span>Bulk Submit ({selectedGradesForBulk.length})</span>
@@ -354,7 +427,7 @@ const Grades: React.FC = () => {
 
       {/* Tab Navigation */}
       <div className="border-b border-gray-200">
-        <nav className="-mb-px flex space-x-8">
+        <nav className="flex space-x-8 border-b border-gray-200">
           <button
             onClick={() => setActiveTab('grades')}
             className={`py-2 px-1 border-b-2 font-medium text-sm ${
@@ -366,6 +439,17 @@ const Grades: React.FC = () => {
             <div className="flex items-center space-x-2">
               <Award className="h-4 w-4" />
               <span>Grades (View/Edit)</span>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  refetchGrades();
+                  toast.success('Grades refreshed!');
+                }}
+                className="ml-2 p-2 hover:bg-blue-100 rounded-full text-blue-600 transition-colors border border-blue-200 bg-blue-50"
+                title="Refresh grades"
+              >
+                <RefreshCw className="h-4 w-4" />
+              </button>
             </div>
           </button>
           <button
@@ -379,6 +463,17 @@ const Grades: React.FC = () => {
             <div className="flex items-center space-x-2">
               <Users className="h-4 w-4" />
               <span>Students (Assign New)</span>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  Promise.all([refetchStudents(), refetchCourses()]);
+                  toast.success('Students and courses refreshed!');
+                }}
+                className="ml-2 p-2 hover:bg-blue-100 rounded-full text-blue-600 transition-colors border border-blue-200 bg-blue-50"
+                title="Refresh students and courses"
+              >
+                <RefreshCw className="h-4 w-4" />
+              </button>
             </div>
           </button>
         </nav>
@@ -454,6 +549,11 @@ const Grades: React.FC = () => {
               <p className="text-sm text-gray-600 mt-1">
                 View and edit existing grades. Use the edit button to modify grades if needed.
               </p>
+              <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-md">
+                <p className="text-xs text-blue-700">
+                  💡 <strong>Note:</strong> Only <strong>draft</strong> grades can be edited. Once a grade is submitted, it cannot be modified.
+                </p>
+              </div>
               {recentlySubmittedCount > 0 && (
                 <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded-md">
                   <p className="text-xs text-green-700">
@@ -466,7 +566,22 @@ const Grades: React.FC = () => {
             {filteredGrades.length === 0 ? (
               <div className="p-8 text-center">
                 <Award className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500">No grades found for the selected filters</p>
+                <p className="text-gray-500 mb-2">No grades found for the selected filters</p>
+                {grades.length === 0 && (
+                  <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-md">
+                    <p className="text-sm text-blue-700">
+                      💡 <strong>No grades visible?</strong> This could be because:
+                    </p>
+                    <ul className="text-sm text-blue-600 mt-2 list-disc list-inside space-y-1">
+                      <li>No courses are assigned to you yet</li>
+                      <li>No grades have been submitted for your courses</li>
+                      <li>Students haven't been enrolled in your courses</li>
+                    </ul>
+                    <p className="text-sm text-blue-600 mt-2">
+                      Use the "Students" tab to assign grades to enrolled students.
+                    </p>
+                  </div>
+                )}
           </div>
             ) : (
     <div className="overflow-x-auto">
@@ -548,18 +663,23 @@ const Grades: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <button
-                            onClick={() => handleEditGrade(grade)}
-                            className="text-blue-600 hover:text-blue-900 mr-3"
-                            title="Edit Grade"
+                          onClick={() => handleEditGrade(grade)}
+                          disabled={grade.status !== 'draft'}
+                          title={grade.status !== 'draft' ? `Cannot edit ${grade.status} grade` : 'Edit grade'}
+                          className={`p-2 rounded-lg transition-colors ${
+                            grade.status === 'draft' 
+                              ? 'text-blue-600 hover:bg-blue-50' 
+                              : 'text-gray-400 cursor-not-allowed'
+                          }`}
                         >
-                          <Edit className="h-4 w-4" />
+                          <Pencil className="h-4 w-4" />
                         </button>
                         <button
                             className="text-red-600 hover:text-red-900"
                             title="Delete Grade"
                         >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
+                            <Trash2 className="h-4 w-4" />
+                          </button>
                     </td>
             </tr>
           ))}
@@ -609,12 +729,27 @@ const Grades: React.FC = () => {
           {filteredStudents.length === 0 ? (
             <div className="p-8 text-center">
               <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500">
+              <p className="text-gray-500 mb-2">
                 {selectedCourse 
                   ? 'No students enrolled in this course' 
                   : 'No students found. Select a course to view enrolled students.'
                 }
               </p>
+              {!selectedCourse && students.length === 0 && (
+                <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-md">
+                  <p className="text-sm text-blue-700">
+                    💡 <strong>No students visible?</strong> This could be because:
+                  </p>
+                  <ul className="text-sm text-blue-600 mt-2 list-disc list-inside space-y-1">
+                    <li>No courses are assigned to you yet</li>
+                    <li>Students haven't been enrolled in your courses</li>
+                    <li>Enrollments are not active for the current semester</li>
+                  </ul>
+                  <p className="text-sm text-blue-600 mt-2">
+                    Contact your department administrator to get courses assigned or check enrollment status.
+                  </p>
+                </div>
+              )}
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -776,8 +911,8 @@ const Grades: React.FC = () => {
                                       <span className={`text-xs font-medium ${isSubmitted ? 'text-green-600' : 'text-blue-600'}`}>
                                         {isSubmitted ? 'Submitted' : 'Draft'}
                                       </span>
-                                      <button
-                                        onClick={() => handleStudentGrade(student)}
+                        <button
+                          onClick={() => handleStudentGrade(student)}
                                         className="text-blue-600 hover:text-blue-900"
                                         title={isSubmitted ? "Edit Submitted Grade" : "View/Edit Grade"}
                                       >
@@ -790,10 +925,10 @@ const Grades: React.FC = () => {
                                 <button
                                   onClick={() => handleStudentGrade(student)}
                                   className="text-blue-600 hover:text-blue-900"
-                                  title="Manage Grades"
-                                >
-                                  <GraduationCap className="h-4 w-4" />
-                                </button>
+                          title="Manage Grades"
+                        >
+                          <GraduationCap className="h-4 w-4" />
+                        </button>
                               )}
                             </>
                           );
@@ -917,9 +1052,10 @@ const StudentGradeModal: React.FC<{
         facultyComments: selectedGradeForEdit.facultyComments || ''
       });
     } else {
-      // Reset form data for new grade
+      // Reset form data for new grade - course is automatically set from context
+      const courseId = selectedCourse || (student.courses && student.courses.length > 0 ? student.courses[0]._id : '');
       setFormData({
-        course: selectedCourse || '',
+        course: courseId,
         semester: getCurrentSemesterInfo().semester,
         academicYear: getCurrentSemesterInfo().academicYear,
         finalGrade: '',
@@ -930,7 +1066,7 @@ const StudentGradeModal: React.FC<{
         facultyComments: ''
       });
     }
-  }, [selectedGradeForEdit, selectedCourse]);
+  }, [selectedGradeForEdit, selectedCourse, student]);
 
   // Update form data when course changes
   const handleCourseChange = (courseId: string) => {
@@ -948,7 +1084,7 @@ const StudentGradeModal: React.FC<{
   // Filter courses to only show courses the student is enrolled in
   const enrolledCourses = student.courses && student.courses.length > 0 
     ? validCourses.filter(course => 
-        student.courses.some((studentCourse: any) => studentCourse._id === course._id)
+    student.courses.some((studentCourse: any) => studentCourse._id === course._id)
       )
     : validCourses; // Show all courses if student.courses is not available
 
@@ -970,74 +1106,82 @@ const StudentGradeModal: React.FC<{
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    console.log('Form submitted:', { selectedGradeForEdit, formData });
+    if (!student || !student._id) return null;
     
-    // Enhanced validation
-    if (!selectedGradeForEdit && !formData.course) {
-      toast.error('Please select a course');
-      return;
-    }
-    
+    // Validation
     if (!formData.finalGrade) {
       toast.error('Please select a final grade');
       return;
     }
-    
-    if (!formData.credits || formData.credits <= 0) {
-      toast.error('Course credits are required');
+
+    if (formData.numericalGrade < 0 || formData.numericalGrade > 100) {
+      toast.error('Numerical grade must be between 0 and 100');
       return;
     }
-    
-    if (!formData.semester || !formData.academicYear) {
-      toast.error('Semester information is required');
+
+    if (formData.attendance < 0 || formData.attendance > 100) {
+      toast.error('Attendance must be between 0 and 100');
+      return;
+    }
+
+    if (formData.participation < 0 || formData.participation > 100) {
+      toast.error('Participation must be between 0 and 100');
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      const gradeData = {
-        student: student._id,
-        course: formData.course,
-        semester: formData.semester,
-        academicYear: formData.academicYear,
+      if (selectedGradeForEdit) {
+        // Update existing grade
+        const updateData = {
         finalGrade: formData.finalGrade,
         numericalGrade: formData.numericalGrade,
-        credits: formData.credits,
         attendance: formData.attendance,
         participation: formData.participation,
         facultyComments: formData.facultyComments
       };
 
-      if (selectedGradeForEdit) {
-        console.log('Updating grade:', selectedGradeForEdit._id);
-        // For update, only pass the fields that are allowed to be updated
-        const updateData = {
-          finalGrade: formData.finalGrade,
-          numericalGrade: formData.numericalGrade,
-          attendance: formData.attendance,
-          participation: formData.participation,
-          facultyComments: formData.facultyComments
-        };
-        
-        console.log('Update data:', updateData);
-        
         await onUpdateGrade.mutateAsync({
           gradeId: selectedGradeForEdit._id,
-          data: updateData
+          gradeData: updateData
         });
-        toast.success('Grade updated successfully');
+
+        toast.success('Grade updated successfully!');
       } else {
-        console.log('Creating new grade');
-        await onCreateGrade.mutateAsync(gradeData);
-        toast.success('Grade submitted successfully');
+        // Create new grade
+        const gradeData = {
+          ...formData,
+          student: student._id,
+          faculty: student.faculty || '', // Use student's faculty or empty string
+          semester: getCurrentSemesterInfo().semester,
+          academicYear: getCurrentSemesterInfo().academicYear,
+          credits: 3 // Default credits
+        };
+
+      await onCreateGrade.mutateAsync(gradeData);
+        toast.success('Grade submitted successfully!');
       }
-      onClose();
+
       onGradeSubmitted();
+      onClose();
     } catch (error: any) {
       console.error('Grade submission error:', error);
-      console.error('Error response:', error.response?.data);
-      toast.error(error.response?.data?.message || 'Failed to submit grade');
+      
+      // Handle specific error messages
+      if (error?.response?.data?.message) {
+        const errorMessage = error.response.data.message;
+        
+        if (errorMessage.includes('Cannot update grade that is already submitted or finalized')) {
+          toast.error('This grade has already been submitted and cannot be edited. Only draft grades can be modified.');
+        } else if (errorMessage.includes('Grade already exists')) {
+          toast.error('A grade already exists for this student in this course.');
+        } else {
+          toast.error(errorMessage);
+        }
+      } else {
+        toast.error('Failed to save grade. Please try again.');
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -1080,38 +1224,28 @@ const StudentGradeModal: React.FC<{
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Course</label>
-                  {selectedGradeForEdit ? (
-                    // Read-only display for edit mode
-                    <div className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-700">
-                      {selectedGradeForEdit.course.name} ({selectedGradeForEdit.course.code})
-                    </div>
-                  ) : (
-                    // Dropdown for create mode
-                    <select
-                      value={formData.course}
-                      onChange={(e) => handleCourseChange(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                      required
-                      disabled={enrolledCourses.length === 0}
-                    >
-                      <option value="">
-                        {enrolledCourses.length === 0 
-                          ? 'No enrolled courses found' 
-                          : 'Select a course'
+                  {/* Always read-only since course is assigned by admin during enrollment */}
+                  <div className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-700">
+                    {selectedCourse ? (
+                      // Show selected course name if available
+                      (() => {
+                        const course = validCourses.find(c => c._id === selectedCourse);
+                        return course ? `${course.name} (${course.code})` : 'Course not found';
+                      })()
+                    ) : (
+                      // Show student's enrolled courses
+                      (() => {
+                        if (student.courses && student.courses.length > 0) {
+                          const courseNames = student.courses
+                            .map((course: any) => `${course.name || course.title} (${course.code})`)
+                            .join(', ');
+                          return courseNames;
                         }
-                      </option>
-                      {enrolledCourses.map(course => (
-                        <option key={course._id} value={course._id}>
-                          {course.name} ({course.code})
-                        </option>
-                      ))}
-                    </select>
-                  )}
-                  {!selectedGradeForEdit && enrolledCourses.length === 0 && (
-                    <p className="text-sm text-red-600 mt-1">
-                      This student is not enrolled in any of your assigned courses.
-                    </p>
-                  )}
+                        return 'No courses assigned';
+                      })()
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">Course assigned by admin during enrollment</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Credits</label>
@@ -1248,12 +1382,10 @@ const StudentGradeModal: React.FC<{
               <div className="text-xs text-gray-500 mt-1">
                 {formData.facultyComments.length}/1000 characters
               </div>
-            </div>
-          </form>
         </div>
 
-        {/* Footer */}
-        <div className="flex justify-end space-x-3 p-6 border-t border-gray-100 bg-gray-50">
+            {/* Action Buttons */}
+            <div className="flex justify-end space-x-3 pt-6">
           <button
             type="button"
             onClick={onClose}
@@ -1264,17 +1396,19 @@ const StudentGradeModal: React.FC<{
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
           >
             {isSubmitting ? (
-              <span className="flex items-center justify-center">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                {selectedGradeForEdit ? 'Updating...' : 'Submitting...'}
-              </span>
-            ) : (
-              selectedGradeForEdit ? 'Update Grade' : 'Submit Grade'
+                  <span className="flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    {selectedGradeForEdit ? 'Updating...' : 'Submitting...'}
+                  </span>
+                ) : (
+                  selectedGradeForEdit ? 'Update Grade' : 'Submit Grade'
             )}
           </button>
+            </div>
+          </form>
         </div>
       </div>
     </div>
