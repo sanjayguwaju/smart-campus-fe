@@ -39,13 +39,21 @@ const AdminDashboard: React.FC = () => {
               <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
               <p className="text-gray-600">Welcome back, {user?.name}!</p>
             </div>
-            <Link
-              to="/admin"
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Admin Panel
-            </Link>
+            <div className="flex space-x-3">
+              <Link
+                to="/"
+                className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 flex items-center"
+              >
+                ← Back to Main Page
+              </Link>
+              <Link
+                to="/admin"
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Admin Panel
+              </Link>
+            </div>
           </div>
         </div>
       </div>

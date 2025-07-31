@@ -59,8 +59,14 @@ const StudentDashboard: React.FC = () => {
             </div>
             <div className="flex space-x-3">
               <Link
-                to="/student/profile"
+                to="/"
                 className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700"
+              >
+                ← Back to Main Page
+              </Link>
+              <Link
+                to="/student/profile"
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
               >
                 My Profile
               </Link>
