@@ -172,17 +172,17 @@ const ViewEnrollmentModal: React.FC<ViewEnrollmentModalProps> = ({ isOpen, onClo
                 <div className="bg-gray-50 rounded-lg p-4 space-y-3">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="text-sm font-medium text-gray-500">GPA</label>
-                      <p className="text-sm text-gray-900">{enrollment.gpa.toFixed(2)}</p>
+                      <label className="text-sm font-medium text-gray-500">Semester</label>
+                      <p className="text-sm text-gray-900">{enrollment.semester}</p>
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-500">CGPA</label>
-                      <p className="text-sm text-gray-900">{enrollment.cgpa.toFixed(2)}</p>
+                      <label className="text-sm font-medium text-gray-500">Total Credits</label>
+                      <p className="text-sm text-gray-900">{enrollment.totalCredits}</p>
                     </div>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-gray-500">Total Credits</label>
-                    <p className="text-sm text-gray-900">{enrollment.totalCredits}</p>
+                    <label className="text-sm font-medium text-gray-500">Courses Enrolled</label>
+                    <p className="text-sm text-gray-900">{enrollment.courses.length} courses</p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-500">Academic Standing</label>

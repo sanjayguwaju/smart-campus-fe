@@ -113,16 +113,10 @@ const ViewStudentModal: React.FC<ViewStudentModalProps> = ({
               <Award className="h-4 w-4 mr-2" />
               Academic Summary
             </h4>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="bg-white rounded-lg p-4 text-center">
                 <div className="text-2xl font-bold text-blue-600">{student.totalCredits}</div>
                 <div className="text-xs text-gray-500 mt-1">Total Credits</div>
-              </div>
-              <div className="bg-white rounded-lg p-4 text-center">
-                <div className="text-2xl font-bold text-green-600">
-                  {student.gpa > 0 ? student.gpa.toFixed(2) : 'N/A'}
-                </div>
-                <div className="text-xs text-gray-500 mt-1">GPA</div>
               </div>
               <div className="bg-white rounded-lg p-4 text-center">
                 <div className="text-2xl font-bold text-purple-600">{student.courses.length}</div>
