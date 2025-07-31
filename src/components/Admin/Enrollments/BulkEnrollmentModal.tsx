@@ -6,7 +6,7 @@ import AsyncSelect from 'react-select/async';
 import { X, Users, Search, Filter, Check, AlertCircle } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useUsers } from '../../../api/hooks/useUsers';
-import { useCreateEnrollment } from '../../../api/hooks/useEnrollments';
+import { useCreateEnrollment, useEnrollments } from '../../../api/hooks/useEnrollments';
 import { UserData } from '../../../api/types/users';
 import { userService } from '../../../api/services/userService';
 import { programService } from '../../../api/services/programService';
@@ -37,9 +37,25 @@ const BulkEnrollmentModal: React.FC<BulkEnrollmentModalProps> = ({ isOpen, onClo
 
   // API hooks
   const { data: usersData } = useUsers(1, 100, '', { role: 'student' });
+  const { data: enrollmentsData } = useEnrollments(1, 100, '', {});
   const createEnrollmentMutation = useCreateEnrollment();
 
   const students = usersData?.users || [];
+
+  // Validation function to check existing enrollments
+  const validateStudentEnrollment = (studentId: string, programId: string) => {
+    const existingEnrollments = enrollmentsData?.enrollments || [];
+    const studentEnrollments = existingEnrollments.filter(
+      (enrollment: any) => enrollment.student._id === studentId
+    );
+
+    // Check if student has ANY enrollment in the same program (regardless of status)
+    const enrollmentInSameProgram = studentEnrollments.find(
+      (enrollment: any) => enrollment.program._id === programId
+    );
+
+    return enrollmentInSameProgram;
+  };
 
   // Form setup
   const {
@@ -261,12 +277,49 @@ const BulkEnrollmentModal: React.FC<BulkEnrollmentModalProps> = ({ isOpen, onClo
       return;
     }
 
+    // Pre-validate all students before starting enrollment
+    const validationErrors: string[] = [];
+    const validStudents: UserData[] = [];
+
+    for (const student of selectedStudents) {
+      const existingEnrollment = validateStudentEnrollment(student._id, data.program);
+      
+      if (existingEnrollment) {
+        validationErrors.push(
+          `${student.fullName}: Already has ${existingEnrollment.status} enrollment ` +
+          `(${existingEnrollment.academicYear}, Semester ${existingEnrollment.semester})`
+        );
+      } else {
+        validStudents.push(student);
+      }
+    }
+
+    // Show validation errors if any
+    if (validationErrors.length > 0) {
+      const errorMessage = `Cannot enroll ${validationErrors.length} student(s):\n${validationErrors.slice(0, 3).join('\n')}${validationErrors.length > 3 ? `\n...and ${validationErrors.length - 3} more` : ''}`;
+      toast.error(errorMessage);
+      
+      if (validStudents.length === 0) {
+        return; // No valid students to enroll
+      }
+      
+      // Ask user if they want to proceed with valid students only
+      const proceed = window.confirm(
+        `${validationErrors.length} students cannot be enrolled due to existing enrollments.\n` +
+        `Proceed with enrolling ${validStudents.length} valid students?`
+      );
+      
+      if (!proceed) {
+        return;
+      }
+    }
+
     setIsEnrolling(true);
     let successCount = 0;
     let errorCount = 0;
 
     try {
-      for (const student of selectedStudents) {
+      for (const student of validStudents) {
         try {
           await createEnrollmentMutation.mutateAsync({
             student: student._id,
@@ -279,8 +332,20 @@ const BulkEnrollmentModal: React.FC<BulkEnrollmentModalProps> = ({ isOpen, onClo
             notes: data.notes
           });
           successCount++;
-        } catch (error) {
+        } catch (error: any) {
           console.error(`Failed to enroll ${student.fullName}:`, error);
+          
+          // Handle specific backend error messages
+          if (error?.response?.data?.message) {
+            const errorMessage = error.response.data.message;
+            if (errorMessage.includes('already enrolled in this program')) {
+              toast.error(`${student.fullName}: Already enrolled in this program`);
+            } else {
+              toast.error(`${student.fullName}: ${errorMessage}`);
+            }
+          } else {
+            toast.error(`${student.fullName}: Failed to enroll`);
+          }
           errorCount++;
         }
       }
@@ -516,6 +581,20 @@ const BulkEnrollmentModal: React.FC<BulkEnrollmentModalProps> = ({ isOpen, onClo
 
           {step === 'enroll' && (
             <form onSubmit={handleSubmit(handleBulkEnroll)} className="space-y-6">
+              {/* Validation Warning */}
+              <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                <div className="flex items-start space-x-3">
+                  <AlertCircle className="h-5 w-5 text-orange-600 mt-0.5" />
+                  <div>
+                    <h3 className="text-sm font-medium text-orange-900">Enrollment Rule</h3>
+                    <p className="text-sm text-orange-700 mt-1">
+                      Only one enrollment per student per program is allowed. Students with existing enrollments 
+                      in the selected program will be automatically excluded from this bulk enrollment.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               {/* Enrollment Details */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                {/* Program Selection */}
