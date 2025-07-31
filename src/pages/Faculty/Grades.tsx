@@ -218,6 +218,19 @@ const Grades: React.FC = () => {
     setIsStudentGradeModalOpen(true);
   };
 
+  const handleEditExistingGrade = (grade: CourseGradeData) => {
+    // Find the student for this grade
+    const student = students.find(s => s._id === grade.student._id);
+    if (!student) {
+      toast.error('Student not found');
+      return;
+    }
+    
+    setSelectedStudent(student);
+    setSelectedGradeForEdit(grade);
+    setIsStudentGradeModalOpen(true);
+  };
+
   const handleEditGrade = (grade: CourseGradeData) => {
     // Remove edit functionality - faculty should delete and recreate
     toast.error('Edit functionality disabled. Please delete and recreate the grade if needed.');
@@ -695,7 +708,7 @@ const Grades: React.FC = () => {
             {selectedCourse && gradeStatusCounts.assigned > 0 && (
               <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-md">
                 <p className="text-xs text-blue-700">
-                  💡 <strong>Tip:</strong> Grade details are now visible here. Use the <strong>Grades tab</strong> to edit existing grades or perform bulk operations.
+                  💡 <strong>Tip:</strong> Grade details are now visible here. Use the <strong>Grades tab</strong> to view existing grades or perform bulk operations.
                 </p>
               </div>
             )}
@@ -877,35 +890,27 @@ const Grades: React.FC = () => {
                           return (
                             <>
                               {hasGrade ? (
-                                (() => {
-                                  const studentGrade = studentGrades[0];
-                                  const isSubmitted = studentGrade.status === 'submitted' || studentGrade.status === 'approved' || studentGrade.status === 'final';
-                                  
-                                  return (
-                                    <div className="flex items-center space-x-2">
-                                      <span className={`text-xs font-medium ${isSubmitted ? 'text-green-600' : 'text-blue-600'}`}>
-                                        {isSubmitted ? 'Submitted' : 'Draft'}
-                                      </span>
-                                      {!isSubmitted && (
-                                        <button
-                                          onClick={() => handleStudentGrade(student)}
-                                          className="text-blue-600 hover:text-blue-900"
-                                          title="View/Edit Grade"
-                                        >
-                                          <GraduationCap className="h-4 w-4" />
-                                        </button>
-                                      )}
-                                    </div>
-                                  );
-                                })()
+                                <div className="flex items-center space-x-2">
+                                  <span className={`text-xs font-medium ${(() => {
+                                    const studentGrade = studentGrades[0];
+                                    const isSubmitted = studentGrade.status === 'submitted' || studentGrade.status === 'approved' || studentGrade.status === 'final';
+                                    return isSubmitted ? 'text-green-600' : 'text-blue-600';
+                                  })()}`}>
+                                    {(() => {
+                                      const studentGrade = studentGrades[0];
+                                      const isSubmitted = studentGrade.status === 'submitted' || studentGrade.status === 'approved' || studentGrade.status === 'final';
+                                      return isSubmitted ? 'Submitted' : 'Draft';
+                                    })()}
+                                  </span>
+                                </div>
                               ) : (
                                 <button
                                   onClick={() => handleStudentGrade(student)}
                                   className="text-blue-600 hover:text-blue-900"
-                          title="Manage Grades"
-                        >
-                          <GraduationCap className="h-4 w-4" />
-                        </button>
+                                  title="Manage Grade"
+                                >
+                                  <GraduationCap className="h-4 w-4" />
+                                </button>
                               )}
                             </>
                           );
@@ -1065,10 +1070,10 @@ const StudentGradeModal: React.FC<{
       )
     : validCourses; // Show all courses if student.courses is not available
 
-  // Initialize credits when component mounts or selectedCourse changes
+  // Initialize credits when component mounts or selectedCourse changes (only for new grades)
   React.useEffect(() => {
-    
-    if (selectedCourse) {
+    // Only update credits if we're not editing an existing grade
+    if (selectedCourse && !selectedGradeForEdit) {
       const selectedCourseData = validCourses.find(course => course._id === selectedCourse);
       
       if (selectedCourseData) {
@@ -1078,7 +1083,7 @@ const StudentGradeModal: React.FC<{
         }));
       }
     }
-  }, [selectedCourse, validCourses]);
+  }, [selectedCourse, validCourses, selectedGradeForEdit]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1111,6 +1116,7 @@ const StudentGradeModal: React.FC<{
     try {
       if (selectedGradeForEdit) {
         // Update existing grade
+        console.log('🔄 Updating existing grade:', selectedGradeForEdit._id);
         const updateData = {
           finalGrade: formData.finalGrade,
           numericalGrade: formData.numericalGrade,
@@ -1119,6 +1125,7 @@ const StudentGradeModal: React.FC<{
           facultyComments: formData.facultyComments
         };
 
+        console.log('📝 Update data:', updateData);
         await onUpdateGrade.mutateAsync({
           gradeId: selectedGradeForEdit._id,
           gradeData: updateData
@@ -1127,6 +1134,7 @@ const StudentGradeModal: React.FC<{
         toast.success('Grade updated successfully!');
       } else {
         // Create new grade
+        console.log('🆕 Creating new grade for student:', student._id);
         const gradeData = {
           ...formData,
           student: student._id,
@@ -1136,7 +1144,8 @@ const StudentGradeModal: React.FC<{
           credits: 3 // Default credits
         };
 
-      await onCreateGrade.mutateAsync(gradeData);
+        console.log('📝 Create data:', gradeData);
+        await onCreateGrade.mutateAsync(gradeData);
         toast.success('Grade submitted successfully!');
       }
 
