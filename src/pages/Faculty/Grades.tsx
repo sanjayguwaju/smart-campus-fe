@@ -897,8 +897,8 @@ const StudentGradeModal: React.FC<{
     finalGrade: '',
     numericalGrade: 0,
     credits: 3,
-    attendance: undefined as number | undefined,
-    participation: undefined as number | undefined,
+    attendance: 0,
+    participation: 0,
     facultyComments: ''
   });
 
@@ -912,8 +912,8 @@ const StudentGradeModal: React.FC<{
         finalGrade: selectedGradeForEdit.finalGrade,
         numericalGrade: selectedGradeForEdit.numericalGrade,
         credits: selectedGradeForEdit.credits,
-        attendance: selectedGradeForEdit.attendance,
-        participation: selectedGradeForEdit.participation,
+        attendance: selectedGradeForEdit.attendance || 0,
+        participation: selectedGradeForEdit.participation || 0,
         facultyComments: selectedGradeForEdit.facultyComments || ''
       });
     } else {
@@ -925,8 +925,8 @@ const StudentGradeModal: React.FC<{
         finalGrade: '',
         numericalGrade: 0,
         credits: 3,
-        attendance: undefined,
-        participation: undefined,
+        attendance: 0,
+        participation: 0,
         facultyComments: ''
       });
     }
@@ -1181,7 +1181,10 @@ const StudentGradeModal: React.FC<{
                     min="0"
                     max="100"
                     value={formData.attendance}
-                    onChange={(e) => setFormData(prev => ({ ...prev, attendance: parseFloat(e.target.value) }))}
+                    onChange={(e) => setFormData(prev => ({ 
+                      ...prev, 
+                      attendance: e.target.value === '' ? 0 : parseFloat(e.target.value) || 0 
+                    }))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
@@ -1193,7 +1196,10 @@ const StudentGradeModal: React.FC<{
                     min="0"
                     max="100"
                     value={formData.participation}
-                    onChange={(e) => setFormData(prev => ({ ...prev, participation: parseFloat(e.target.value) }))}
+                    onChange={(e) => setFormData(prev => ({ 
+                      ...prev, 
+                      participation: e.target.value === '' ? 0 : parseFloat(e.target.value) || 0 
+                    }))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
