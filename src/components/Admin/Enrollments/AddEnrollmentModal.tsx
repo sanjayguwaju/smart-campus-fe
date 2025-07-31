@@ -77,7 +77,6 @@ const AddEnrollmentModal: React.FC<AddEnrollmentModalProps> = ({ isOpen, onClose
       courses: [],
       status: 'active',
       enrollmentType: 'full_time',
-
       notes: ''
     }
   });
@@ -133,6 +132,8 @@ const AddEnrollmentModal: React.FC<AddEnrollmentModalProps> = ({ isOpen, onClose
       return [];
     }
   };
+
+
 
   const onSubmit = async (data: CreateEnrollmentRequest) => {
     try {
@@ -356,6 +357,8 @@ const AddEnrollmentModal: React.FC<AddEnrollmentModalProps> = ({ isOpen, onClose
                 <p className="mt-1 text-sm text-red-600">{errors.status.message}</p>
               )}
             </div>
+
+
 
             {/* Courses Selection */}
             <div className="md:col-span-2">
