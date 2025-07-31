@@ -24,6 +24,7 @@ const StudentLayout: React.FC = () => {
     { name: 'My Courses', href: '/student/courses', icon: BookOpen },
     { name: 'Assignments', href: '/student/assignments', icon: BookOpen },
     { name: 'Submissions', href: '/student/submissions', icon: FileText },
+    { name: 'Grades', href: '/student/grades', icon: Award },
     { name: 'Profile', href: '/student/profile', icon: User },
   ];
 

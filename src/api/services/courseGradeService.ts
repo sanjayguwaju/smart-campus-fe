@@ -32,6 +32,25 @@ export const courseGradeService = {
     return response.data;
   },
 
+  // Get student grades
+  getStudentGrades: async (
+    page = 1,
+    limit = 10,
+    filters?: CourseGradeFilters
+  ): Promise<CourseGradesResponse> => {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+      ...(filters?.semester && { semester: filters.semester.toString() }),
+      ...(filters?.academicYear && { academicYear: filters.academicYear }),
+      ...(filters?.course && { course: filters.course }),
+      ...(filters?.status && { status: filters.status })
+    });
+
+    const response = await apiClient.get(`${BASE_URL}/student?${params}`);
+    return response.data;
+  },
+
   // Get course grades by course
   getCourseGradesByCourse: async (
     courseId: string,
@@ -83,7 +102,7 @@ export const courseGradeService = {
     courseId: string,
     data: BulkGradeSubmissionRequest
   ): Promise<{ success: boolean; message: string; data: CourseGradeData[] }> => {
-    const response = await apiClient.post(`${BASE_URL}/bulk-submit/${courseId}`, data);
+    const response = await apiClient.post(`${BASE_URL}/course/${courseId}/bulk-submit`, data);
     return response.data;
   },
 
@@ -92,7 +111,7 @@ export const courseGradeService = {
     courseId: string,
     data: AutoCalculateGradesRequest
   ): Promise<{ success: boolean; message: string; data: CourseGradeData[] }> => {
-    const response = await apiClient.post(`${BASE_URL}/auto-calculate/${courseId}`, data);
+    const response = await apiClient.post(`${BASE_URL}/course/${courseId}/auto-calculate`, data);
     return response.data;
   },
 
@@ -108,7 +127,7 @@ export const courseGradeService = {
       gradeDistribution: Record<string, number>;
     };
   }> => {
-    const response = await apiClient.get(`${BASE_URL}/stats/${courseId}`);
+    const response = await apiClient.get(`${BASE_URL}/course/${courseId}/statistics`);
     return response.data;
   }
 }; 

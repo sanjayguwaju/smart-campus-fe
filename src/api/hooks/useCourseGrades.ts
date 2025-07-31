@@ -22,6 +22,25 @@ export const useFacultyCourseGrades = (
   });
 };
 
+// Get student grades
+export const useStudentGrades = (
+  page = 1,
+  limit = 10,
+  filters?: CourseGradeFilters
+) => {
+  return useQuery({
+    queryKey: ['student-grades', page, limit, filters],
+    queryFn: () => courseGradeService.getStudentGrades(page, limit, filters),
+    select: (response) => ({
+      grades: response.data,
+      pagination: response.pagination,
+      success: response.success,
+      message: response.message,
+      timestamp: response.timestamp,
+    }),
+  });
+};
+
 // Get course grades by course
 export const useCourseGradesByCourse = (
   courseId: string,

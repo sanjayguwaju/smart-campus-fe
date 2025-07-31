@@ -39,9 +39,15 @@ const Grades: React.FC = () => {
   const [selectedGradesForBulk, setSelectedGradesForBulk] = useState<string[]>([]);
   const [isStudentGradeModalOpen, setIsStudentGradeModalOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
+  const [recentlySubmittedCount, setRecentlySubmittedCount] = useState<number>(0);
 
   // API hooks
   const { data: gradesData, isLoading: gradesLoading, refetch: refetchGrades } = useFacultyCourseGrades(1, 100, filters);
+  
+  // Wrap refetchGrades to add logging
+  const handleRefetchGrades = () => {
+    refetchGrades();
+  };
   const { data: coursesData, isLoading: coursesLoading } = useAssignedFacultyCourses(
     user?._id || '', 
     1, 
@@ -169,17 +175,34 @@ const Grades: React.FC = () => {
       return;
     }
 
+    // Determine courseId from selected grades if no course is selected
+    let courseId = selectedCourse;
+    if (!courseId) {
+      const selectedGrade = grades.find(grade => selectedGradesForBulk.includes(grade._id));
+      if (selectedGrade) {
+        courseId = selectedGrade.course._id;
+      } else {
+        toast.error('Please select a course first');
+        return;
+      }
+    }
+
     try {
       await bulkSubmitGradesMutation.mutateAsync({
-        courseId: selectedCourse,
+        courseId: courseId,
         data: {
           gradeIds: selectedGradesForBulk
         }
       });
       setSelectedGradesForBulk([]);
-      refetchGrades();
+      handleRefetchGrades();
+      setRecentlySubmittedCount(selectedGradesForBulk.length);
+      // Clear the count after 5 seconds
+      setTimeout(() => setRecentlySubmittedCount(0), 5000);
+      toast.success(`Successfully submitted ${selectedGradesForBulk.length} grades. Check the Grades tab to view them.`);
     } catch (error) {
       console.error('Bulk submit error:', error);
+      toast.error('Failed to submit grades');
     }
   };
 
@@ -437,6 +460,13 @@ const Grades: React.FC = () => {
               <p className="text-sm text-gray-600 mt-1">
                 View and edit existing grades. Use the edit button to modify grades if needed.
               </p>
+              {recentlySubmittedCount > 0 && (
+                <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded-md">
+                  <p className="text-xs text-green-700">
+                    ✅ <strong>Success!</strong> {recentlySubmittedCount} grade(s) were recently submitted and are now visible here.
+                  </p>
+                </div>
+              )}
             </div>
 
             {filteredGrades.length === 0 ? (
@@ -573,7 +603,7 @@ const Grades: React.FC = () => {
             {selectedCourse && gradeStatusCounts.assigned > 0 && (
               <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-md">
                 <p className="text-xs text-blue-700">
-                  💡 <strong>Tip:</strong> Students with assigned grades are disabled here. Use the <strong>Grades tab</strong> to edit existing grades.
+                  💡 <strong>Tip:</strong> Grade details are now visible here. Use the <strong>Grades tab</strong> to edit existing grades or perform bulk operations.
                 </p>
               </div>
             )}
@@ -614,6 +644,9 @@ const Grades: React.FC = () => {
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Grade Status
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Grade Details
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Actions
@@ -691,6 +724,37 @@ const Grades: React.FC = () => {
                           })()}
                         </span>
                       </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {(() => {
+                          const studentGrades = selectedCourse 
+                            ? grades.filter(grade => 
+                                grade.student._id === student._id && 
+                                grade.course._id === selectedCourse
+                              )
+                            : grades.filter(grade => 
+                                grade.student._id === student._id
+                              );
+                          
+                          if (studentGrades.length === 0) {
+                            return <span className="text-sm text-gray-500">No grade assigned</span>;
+                          }
+                          
+                          const grade = studentGrades[0]; // Show the first grade
+                          return (
+                            <div className="text-sm">
+                              <div className="flex items-center space-x-2">
+                                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getGradeColor(grade.finalGrade)}`}>
+                                  {grade.finalGrade}
+                                </span>
+                                <span className="text-gray-600">({grade.numericalGrade})</span>
+                              </div>
+                              <div className="text-xs text-gray-500 mt-1">
+                                {grade.status} • {grade.semester} • {grade.academicYear}
+                              </div>
+                            </div>
+                          );
+                        })()}
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         {(() => {
                           const studentGrades = selectedCourse 
@@ -705,22 +769,22 @@ const Grades: React.FC = () => {
                           
                           return (
                             <>
-                              <button
-                                onClick={() => handleStudentGrade(student)}
-                                disabled={hasGrade}
-                                className={`mr-3 ${
-                                  hasGrade 
-                                    ? 'text-gray-400 cursor-not-allowed' 
-                                    : 'text-blue-600 hover:text-blue-900'
-                                }`}
-                                title={hasGrade ? 'Grade already assigned - use Grades tab to edit' : 'Manage Grades'}
-                              >
-                                <GraduationCap className="h-4 w-4" />
-                              </button>
-                              {hasGrade && (
-                                <span className="text-xs text-gray-500 mr-3">
-                                  Grade assigned
-                                </span>
+                              {hasGrade ? (
+                                <button
+                                  onClick={() => handleStudentGrade(student)}
+                                  className="text-green-600 hover:text-green-900 mr-3"
+                                  title="View/Edit Grade"
+                                >
+                                  <GraduationCap className="h-4 w-4" />
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => handleStudentGrade(student)}
+                                  className="text-blue-600 hover:text-blue-900 mr-3"
+                                  title="Manage Grades"
+                                >
+                                  <GraduationCap className="h-4 w-4" />
+                                </button>
                               )}
                             </>
                           );
@@ -770,7 +834,7 @@ const Grades: React.FC = () => {
           courses={courses}
           onCreateGrade={createCourseGradeMutation}
           onUpdateGrade={updateCourseGradeMutation}
-          onGradeSubmitted={refetchGrades}
+          onGradeSubmitted={handleRefetchGrades}
         />
       )}
   </div>
@@ -942,9 +1006,6 @@ const StudentGradeModal: React.FC<{
   // Update form data when course changes
   const handleCourseChange = (courseId: string) => {
     const selectedCourseData = courses.find(course => course._id === courseId);
-    console.log('Selected course data:', selectedCourseData);
-    console.log('Available courses:', courses);
-    console.log('Course creditHours:', selectedCourseData?.creditHours);
     
     setFormData(prev => ({
       ...prev,
@@ -962,13 +1023,9 @@ const StudentGradeModal: React.FC<{
 
   // Initialize credits when component mounts or selectedCourse changes
   React.useEffect(() => {
-    console.log('useEffect triggered - selectedCourse:', selectedCourse);
-    console.log('Available courses in useEffect:', courses);
     
     if (selectedCourse) {
       const selectedCourseData = courses.find(course => course._id === selectedCourse);
-      console.log('Found course data in useEffect:', selectedCourseData);
-      console.log('Course creditHours in useEffect:', selectedCourseData?.creditHours);
       
       if (selectedCourseData) {
         setFormData(prev => ({
@@ -1018,11 +1075,6 @@ const StudentGradeModal: React.FC<{
         participation: formData.participation,
         facultyComments: formData.facultyComments
       };
-
-      // Debug logging
-      console.log('Submitting grade data:', gradeData);
-      console.log('Credits value:', formData.credits);
-      console.log('Credits type:', typeof formData.credits);
 
       await onCreateGrade.mutateAsync(gradeData);
       toast.success('Grade submitted successfully');
