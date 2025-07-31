@@ -159,38 +159,61 @@ const EditEnrollmentModal: React.FC<EditEnrollmentModalProps> = ({ isOpen, onClo
   // Reset form when enrollment data changes
   useEffect(() => {
     if (enrollment) {
-      // Set selected options for display
-      setSelectedStudent({
-        value: enrollment.student._id,
-        label: `${enrollment.student.fullName} (${enrollment.student.email})`
-      });
-      setSelectedProgram({
-        value: enrollment.program._id,
-        label: enrollment.program.name
-      });
-      setSelectedCourses(enrollment.courses.map(course => ({
-        value: course._id,
-        label: `${course.code} - ${course.name} (${course.creditHours} credits)`
-      })));
-      setSelectedAdvisor({
-        value: enrollment.advisor._id,
-        label: `${enrollment.advisor.fullName} (${enrollment.advisor.email})`
-      });
+      // Set selected options for display with null checks
+      if (enrollment.student) {
+        const studentName = enrollment.student.fullName || 
+          (enrollment.student.firstName && enrollment.student.lastName 
+            ? `${enrollment.student.firstName} ${enrollment.student.lastName}` 
+            : enrollment.student.name) || 
+          'Unknown';
+        setSelectedStudent({
+          value: enrollment.student._id,
+          label: `${studentName} (${enrollment.student.email || 'No email'})`
+        });
+      }
+      
+      if (enrollment.program) {
+        setSelectedProgram({
+          value: enrollment.program._id,
+          label: enrollment.program.name || 'Unknown Program'
+        });
+      }
+      
+      if (enrollment.courses && Array.isArray(enrollment.courses)) {
+        setSelectedCourses(enrollment.courses.map(course => ({
+          value: course._id,
+          label: `${course.code || 'N/A'} - ${course.name || 'Unknown Course'} (${course.creditHours || course.credits || 0} credits)`
+        })));
+      } else {
+        setSelectedCourses([]);
+      }
+      
+      if (enrollment.advisor) {
+        const advisorName = enrollment.advisor.fullName || 
+          (enrollment.advisor.firstName && enrollment.advisor.lastName 
+            ? `${enrollment.advisor.firstName} ${enrollment.advisor.lastName}` 
+            : enrollment.advisor.name) || 
+          'Unknown';
+        setSelectedAdvisor({
+          value: enrollment.advisor._id,
+          label: `${advisorName} (${enrollment.advisor.email || 'No email'})`
+        });
+      }
 
       reset({
-        student: enrollment.student._id,
-        program: enrollment.program._id,
-        semester: enrollment.semester,
-        academicYear: enrollment.academicYear,
-        courses: enrollment.courses.map(course => course._id),
-        status: enrollment.status,
-        enrollmentType: enrollment.enrollmentType,
-        advisor: enrollment.advisor._id,
-        notes: enrollment.notes,
-        gpa: enrollment.gpa,
-        cgpa: enrollment.cgpa,
-        academicStanding: enrollment.academicStanding,
-        financialStatus: enrollment.financialStatus
+        student: enrollment.student?._id || '',
+        program: enrollment.program?._id || '',
+        semester: enrollment.semester || 1,
+        academicYear: enrollment.academicYear || '2024-2025',
+        courses: enrollment.courses?.map(course => course._id) || [],
+        status: enrollment.status || 'active',
+        enrollmentType: enrollment.enrollmentType || 'full_time',
+        advisor: enrollment.advisor?._id || '',
+        notes: enrollment.notes || '',
+        gpa: enrollment.gpa || 0,
+        cgpa: enrollment.cgpa || 0,
+        academicStanding: enrollment.academicStanding || 'good_standing',
+        financialStatus: enrollment.financialStatus || 'unpaid'
       });
     }
   }, [enrollment, reset]);
@@ -211,6 +234,27 @@ const EditEnrollmentModal: React.FC<EditEnrollmentModalProps> = ({ isOpen, onClo
 
   if (!isOpen || !enrollment) return null;
 
+  // Safety check for required enrollment properties
+  if (!enrollment.student || !enrollment.program) {
+    console.error('Enrollment data is missing required properties:', enrollment);
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
+          <div className="text-center">
+            <h2 className="text-xl font-bold text-red-600 mb-2">Invalid Enrollment Data</h2>
+            <p className="text-gray-600 mb-4">The enrollment data is missing required information.</p>
+            <button
+              onClick={onClose}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[95vh] overflow-hidden flex flex-col">
@@ -224,7 +268,15 @@ const EditEnrollmentModal: React.FC<EditEnrollmentModalProps> = ({ isOpen, onClo
             </div>
             <div>
               <h2 className="text-2xl font-bold text-gray-900">Edit Enrollment</h2>
-              <p className="text-sm text-gray-600">Update enrollment details for {enrollment.student.fullName}</p>
+              <p className="text-sm text-gray-600">
+                Update enrollment details for {
+                  enrollment.student?.fullName || 
+                  (enrollment.student?.firstName && enrollment.student?.lastName 
+                    ? `${enrollment.student.firstName} ${enrollment.student.lastName}` 
+                    : enrollment.student?.name) || 
+                  'Unknown Student'
+                }
+              </p>
             </div>
           </div>
           <button
