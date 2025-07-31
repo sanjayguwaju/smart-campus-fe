@@ -51,6 +51,7 @@ import FacultyAssignments from './pages/Faculty/Assignments';
 import StudentAssignments from './pages/Student/Assignments';
 import FacultySubmissions from './pages/Faculty/Submissions';
 import StudentSubmissions from './pages/Student/Submissions';
+import GradeHistory from './pages/Student/GradeHistory';
 
 
 function App() {
@@ -149,6 +150,7 @@ function App() {
           <Route path="notices" element={<StudentNotices />} />
           <Route path="assignments" element={<StudentAssignments />} />
           <Route path="submissions" element={<StudentSubmissions />} />
+          <Route path="grade-history" element={<GradeHistory />} />
           <Route path="programs" element={<StudentPrograms />} />
           <Route path="profile" element={<StudentProfile />} />
           <Route path="mock-students" element={<StudentMockDemo />} />

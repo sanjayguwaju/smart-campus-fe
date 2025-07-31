@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import { useFacultyCourseGrades, useCreateCourseGrade, useUpdateCourseGrade, useBulkSubmitGrades, useDeleteCourseGrade } from '../../api/hooks/useCourseGrades';
+
 import { useAssignedFacultyCourses } from '../../api/hooks/useCourses';
 import { useStudentsByFaculty } from '../../api/hooks/useUsers';
 import { CourseGradeData } from '../../api/types/courseGrades';
@@ -8,24 +9,20 @@ import { toast } from 'react-hot-toast';
 import { 
   Users, 
   GraduationCap, 
-  Calendar, 
   BookOpen, 
   Award, 
   CheckCircle, 
-  XCircle, 
   Clock, 
-  Edit, 
   Trash2, 
-  Plus, 
   Filter,
   RefreshCw,
   Upload,
-  Pencil,
   User
 } from 'lucide-react';
 
 const Grades: React.FC = () => {
   const { user } = useAuthStore();
+
   const [selectedCourse, setSelectedCourse] = useState<string>('');
   const [activeTab, setActiveTab] = useState<'grades' | 'students'>('grades');
   const [filters, setFilters] = useState<{
@@ -85,6 +82,7 @@ const Grades: React.FC = () => {
   const createCourseGradeMutation = useCreateCourseGrade();
   const updateCourseGradeMutation = useUpdateCourseGrade();
   const deleteCourseGradeMutation = useDeleteCourseGrade();
+
 
   const grades: CourseGradeData[] = gradesData?.grades || [];
   const courses = coursesData?.courses || [];
@@ -218,23 +216,7 @@ const Grades: React.FC = () => {
     setIsStudentGradeModalOpen(true);
   };
 
-  const handleEditExistingGrade = (grade: CourseGradeData) => {
-    // Find the student for this grade
-    const student = students.find(s => s._id === grade.student._id);
-    if (!student) {
-      toast.error('Student not found');
-      return;
-    }
-    
-    setSelectedStudent(student);
-    setSelectedGradeForEdit(grade);
-    setIsStudentGradeModalOpen(true);
-  };
 
-  const handleEditGrade = (grade: CourseGradeData) => {
-    // Remove edit functionality - faculty should delete and recreate
-    toast.error('Edit functionality disabled. Please delete and recreate the grade if needed.');
-  };
 
   const handleDeleteGrade = async (gradeId: string) => {
     if (window.confirm('Are you sure you want to delete this grade? This action cannot be undone.')) {
@@ -292,6 +274,8 @@ const Grades: React.FC = () => {
         : [...prev, gradeId]
     );
   };
+
+
 
   const filteredGrades = selectedCourse 
     ? grades.filter(grade => grade.course._id === selectedCourse)
@@ -440,7 +424,7 @@ const Grades: React.FC = () => {
                   : 'text-gray-600 hover:text-gray-800'
               }`}
             >
-              <span>Grades (View/Edit)</span>
+              <span>Current Grades</span>
               <div
                 onClick={(e) => {
                   e.stopPropagation();
@@ -472,6 +456,8 @@ const Grades: React.FC = () => {
                 <RefreshCw className="w-4 h-4" />
               </div>
             </button>
+
+
           </div>
         </nav>
       </div>
@@ -690,7 +676,9 @@ const Grades: React.FC = () => {
             <p className="text-sm text-gray-600 mt-1">
               {selectedCourse 
                 ? 'Students enrolled in the selected course. Click on a student to manage their grades.'
-                : 'No students found. Select a course to view enrolled students.'
+                : students.length > 0 
+                  ? 'All students assigned to your courses. Select a course to filter or click on a student to manage their grades.'
+                  : 'No students found. Select a course to view enrolled students.'
               }
             </p>
             {selectedCourse && (
@@ -709,6 +697,13 @@ const Grades: React.FC = () => {
               <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-md">
                 <p className="text-xs text-blue-700">
                   💡 <strong>Tip:</strong> Grade details are now visible here. Use the <strong>Grades tab</strong> to view existing grades or perform bulk operations.
+                </p>
+              </div>
+            )}
+            {selectedCourse && gradeStatusCounts.assigned === 0 && gradeStatusCounts.notAssigned > 0 && (
+              <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded-md">
+                <p className="text-xs text-green-700">
+                  ✅ <strong>All students are ready for new grades!</strong> No grades are currently assigned. You can now assign grades to students.
                 </p>
               </div>
             )}
@@ -936,6 +931,8 @@ const Grades: React.FC = () => {
           )}
         </div>
       )}
+
+
 
       {/* Student Grade Modal */}
       {isStudentGradeModalOpen && selectedStudent && (

@@ -178,4 +178,6 @@ export const useCourseGradeStats = (courseId: string, enabled = true) => {
     }),
     enabled: !!courseId && enabled,
   });
-}; 
+};
+
+ 

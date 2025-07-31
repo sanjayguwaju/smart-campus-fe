@@ -129,5 +129,7 @@ export const courseGradeService = {
   }> => {
     const response = await apiClient.get(`${BASE_URL}/course/${courseId}/statistics`);
     return response.data;
-  }
+  },
+
+
 }; 

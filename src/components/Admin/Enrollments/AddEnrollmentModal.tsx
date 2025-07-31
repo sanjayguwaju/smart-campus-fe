@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import Select, { StylesConfig } from 'react-select';
 import AsyncSelect from 'react-select/async';
@@ -6,7 +6,7 @@ import { useCreateEnrollment } from '../../../api/hooks/useEnrollments';
 import { CreateEnrollmentRequest } from '../../../api/types/enrollments';
 import { userService } from '../../../api/services/userService';
 import { programService } from '../../../api/services/programService';
-
+import { departmentService } from '../../../api/services/departmentService';
 import { courseService } from '../../../api/services/courseService';
 
 interface AddEnrollmentModalProps {
@@ -24,8 +24,35 @@ const AddEnrollmentModal: React.FC<AddEnrollmentModalProps> = ({ isOpen, onClose
   
   // State to track selected options for display
   const [selectedStudent, setSelectedStudent] = React.useState<SelectOption | null>(null);
+  const [selectedDepartment, setSelectedDepartment] = React.useState<SelectOption | null>(null);
   const [selectedProgram, setSelectedProgram] = React.useState<SelectOption | null>(null);
   const [selectedCourses, setSelectedCourses] = React.useState<SelectOption[]>([]);
+  const [programOptionsKey, setProgramOptionsKey] = React.useState<number>(0);
+  const [courseOptionsKey, setCourseOptionsKey] = React.useState<number>(0);
+
+  // Trigger program options reload when department changes
+  useEffect(() => {
+    if (selectedDepartment) {
+      setProgramOptionsKey(prev => prev + 1);
+      // Clear selected program when department changes
+      if (selectedProgram) {
+        setSelectedProgram(null);
+        setValue('program', '');
+      }
+    }
+  }, [selectedDepartment]);
+
+  // Trigger course options reload when program changes
+  useEffect(() => {
+    if (selectedProgram) {
+      setCourseOptionsKey(prev => prev + 1);
+      // Clear selected courses when program changes
+      if (selectedCourses.length > 0) {
+        setSelectedCourses([]);
+        setValue('courses', []);
+      }
+    }
+  }, [selectedProgram]);
   
   // Custom styles for react-select
   const selectStyles: StylesConfig<SelectOption> = {
@@ -66,11 +93,12 @@ const AddEnrollmentModal: React.FC<AddEnrollmentModalProps> = ({ isOpen, onClose
     control,
     handleSubmit,
     reset,
-
+    setValue,
     formState: { errors, isSubmitting }
-  } = useForm<CreateEnrollmentRequest>({
+  } = useForm<any>({
     defaultValues: {
       student: '',
+      department: '',
       program: '',
       semester: 1,
       academicYear: '2024-2025',
@@ -99,13 +127,45 @@ const AddEnrollmentModal: React.FC<AddEnrollmentModalProps> = ({ isOpen, onClose
     }
   };
 
+  const loadDepartmentOptions = async (inputValue: string) => {
+    try {
+      const response = await departmentService.getDepartments(1, 100, inputValue);
+      const options = response?.data?.map((d: { _id: string; name: string }) => ({ 
+        value: d._id, 
+        label: d.name 
+      })) || [];
+      return options.filter((option: SelectOption) =>
+        option.label.toLowerCase().includes(inputValue.toLowerCase())
+      );
+    } catch (error) {
+      console.error('Error loading departments:', error);
+      return [];
+    }
+  };
+
   const loadProgramOptions = async (inputValue: string) => {
     try {
-      const response = await programService.getPrograms({ page: 1, limit: 100, search: inputValue });
+      // Only load programs if a department is selected
+      if (!selectedDepartment?.value) {
+        return [];
+      }
+      
+      const response = await programService.getPrograms({ 
+        page: 1, 
+        limit: 100, 
+        search: inputValue,
+        department: selectedDepartment.value 
+      });
       const options = response?.data?.map((p: { _id: string; name: string }) => ({ 
         value: p._id, 
         label: p.name 
       })) || [];
+      
+      // If no search input, return all options, otherwise filter
+      if (!inputValue) {
+        return options;
+      }
+      
       return options.filter((option: SelectOption) =>
         option.label.toLowerCase().includes(inputValue.toLowerCase())
       );
@@ -115,15 +175,27 @@ const AddEnrollmentModal: React.FC<AddEnrollmentModalProps> = ({ isOpen, onClose
     }
   };
 
-
-
   const loadCourseOptions = async (inputValue: string) => {
     try {
-      const response = await courseService.getCourses(1, 100, inputValue);
+      // Only load courses if a program is selected
+      if (!selectedProgram?.value) {
+        return [];
+      }
+      
+      // Get courses for the selected program
+      const response = await courseService.getCourses(1, 100, inputValue, {
+        program: selectedProgram.value
+      });
       const options = response?.data?.map((c: { _id: string; name: string; code: string; credits: number }) => ({ 
         value: c._id, 
         label: `${c.code} - ${c.name} (${c.credits} credits)` 
       })) || [];
+      
+      // If no search input, return all options, otherwise filter
+      if (!inputValue) {
+        return options;
+      }
+      
       return options.filter((option: SelectOption) =>
         option.label.toLowerCase().includes(inputValue.toLowerCase())
       );
@@ -133,11 +205,11 @@ const AddEnrollmentModal: React.FC<AddEnrollmentModalProps> = ({ isOpen, onClose
     }
   };
 
-
-
-  const onSubmit = async (data: CreateEnrollmentRequest) => {
+  const onSubmit = async (data: any) => {
     try {
-      await createEnrollmentMutation.mutateAsync(data);
+      // Remove department field from the data before sending to API
+      const { department, ...enrollmentData } = data;
+      await createEnrollmentMutation.mutateAsync(enrollmentData);
       reset();
       onClose();
     } catch (error) {
@@ -209,6 +281,39 @@ const AddEnrollmentModal: React.FC<AddEnrollmentModalProps> = ({ isOpen, onClose
               )}
             </div>
 
+            {/* Department Selection */}
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Department *
+              </label>
+              <Controller
+                name="department"
+                control={control}
+                rules={{ required: 'Department is required' }}
+                render={({ field }) => (
+                  <AsyncSelect
+                    loadOptions={loadDepartmentOptions}
+                    onChange={(option: any) => {
+                      field.onChange(option?.value || '');
+                      setSelectedDepartment(option);
+                    }}
+                    onBlur={field.onBlur}
+                    value={selectedDepartment}
+                    placeholder="Select department"
+                    styles={selectStyles}
+                    isClearable
+                    cacheOptions
+                    defaultOptions
+                    noOptionsMessage={() => "No departments found"}
+                    loadingMessage={() => "Loading departments..."}
+                  />
+                )}
+              />
+              {errors.department && (
+                <p className="mt-1 text-sm text-red-600">{errors.department.message}</p>
+              )}
+            </div>
+
             {/* Program Selection */}
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -220,6 +325,7 @@ const AddEnrollmentModal: React.FC<AddEnrollmentModalProps> = ({ isOpen, onClose
                 rules={{ required: 'Program is required' }}
                 render={({ field }) => (
                   <AsyncSelect
+                    key={programOptionsKey}
                     loadOptions={loadProgramOptions}
                     onChange={(option: any) => {
                       field.onChange(option?.value || '');
@@ -227,22 +333,24 @@ const AddEnrollmentModal: React.FC<AddEnrollmentModalProps> = ({ isOpen, onClose
                     }}
                     onBlur={field.onBlur}
                     value={selectedProgram}
-                    placeholder="Search programs..."
+                    placeholder={selectedDepartment ? "Select program" : "Please select a department first"}
                     styles={selectStyles}
                     isClearable
                     cacheOptions
                     defaultOptions
-                    noOptionsMessage={() => "No programs found"}
+                    isDisabled={!selectedDepartment}
+                    noOptionsMessage={() => selectedDepartment ? "No programs found" : "Please select a department first"}
                     loadingMessage={() => "Loading programs..."}
                   />
                 )}
               />
+              {!selectedDepartment && (
+                <p className="mt-1 text-sm text-gray-500">Please select a department first to view available programs</p>
+              )}
               {errors.program && (
                 <p className="mt-1 text-sm text-red-600">{errors.program.message}</p>
               )}
             </div>
-
-
 
             {/* Semester and Term */}
             <div>
@@ -358,8 +466,6 @@ const AddEnrollmentModal: React.FC<AddEnrollmentModalProps> = ({ isOpen, onClose
               )}
             </div>
 
-
-
             {/* Courses Selection */}
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -370,6 +476,7 @@ const AddEnrollmentModal: React.FC<AddEnrollmentModalProps> = ({ isOpen, onClose
                 control={control}
                 render={({ field }) => (
                   <AsyncSelect
+                    key={courseOptionsKey}
                     loadOptions={loadCourseOptions}
                     onChange={(options: any) => {
                       const selectedValues = Array.isArray(options) 
@@ -380,17 +487,21 @@ const AddEnrollmentModal: React.FC<AddEnrollmentModalProps> = ({ isOpen, onClose
                     }}
                     onBlur={field.onBlur}
                     value={selectedCourses}
-                    placeholder="Search courses..."
+                    placeholder={selectedProgram ? "Search courses..." : "Please select a program first"}
                     styles={selectStyles}
                     isMulti
                     isClearable
                     cacheOptions
                     defaultOptions
-                    noOptionsMessage={() => "No courses found"}
+                    isDisabled={!selectedProgram}
+                    noOptionsMessage={() => selectedProgram ? "No courses found" : "Please select a program first"}
                     loadingMessage={() => "Loading courses..."}
                   />
                 )}
               />
+              {!selectedProgram && (
+                <p className="mt-1 text-sm text-gray-500">Please select a program first to view available courses</p>
+              )}
               {errors.courses && (
                 <p className="mt-1 text-sm text-red-600">{errors.courses.message}</p>
               )}

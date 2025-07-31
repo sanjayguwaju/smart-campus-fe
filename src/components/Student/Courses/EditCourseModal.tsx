@@ -155,7 +155,7 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({ isOpen, onClose, cour
       setValue('code', course.code || '');
       setValue('description', course.description || '');
       setValue('credits', course.credits || 3);
-      setValue('department', course.department || '');
+      setValue('department', typeof course.department === 'string' ? course.department : course.department?._id || '');
       setValue('program', course.program || '');
       setValue('instructor', course.instructor || '');
       setValue('semester', String(course.semester || ''));
@@ -166,8 +166,9 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({ isOpen, onClose, cour
       // Set selected options for display
       if (course.department) {
         // We'll need to fetch the department name to set the selected option
+        const departmentId = typeof course.department === 'string' ? course.department : course.department._id;
         loadDepartmentOptions('').then(options => {
-          const deptOption = options.find(opt => opt.value === course.department);
+          const deptOption = options.find(opt => opt.value === departmentId);
           if (deptOption) {
             setSelectedDepartment(deptOption);
           }
