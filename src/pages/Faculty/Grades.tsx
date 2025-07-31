@@ -28,10 +28,12 @@ const Grades: React.FC = () => {
     semester?: number;
     academicYear?: string;
     status?: 'draft' | 'submitted' | 'approved' | 'disputed' | 'final';
+    gradeStatus?: 'assigned' | 'not_assigned';
   }>({
     semester: undefined,
     academicYear: undefined,
-    status: undefined
+    status: undefined,
+    gradeStatus: undefined
   });
   const [isAutoCalculateModalOpen, setIsAutoCalculateModalOpen] = useState(false);
   const [selectedGradesForBulk, setSelectedGradesForBulk] = useState<string[]>([]);
@@ -65,6 +67,54 @@ const Grades: React.FC = () => {
         student.courses.some(course => course._id === selectedCourse)
       )
     : students;
+
+  // Filter students based on grade status
+  const filteredStudents = courseStudents.filter(student => {
+    if (!filters.gradeStatus) return true;
+    
+    const studentGrades = selectedCourse 
+      ? grades.filter(grade => 
+          grade.student._id === student._id && 
+          grade.course._id === selectedCourse
+        )
+      : grades.filter(grade => 
+          grade.student._id === student._id
+        );
+    
+    if (filters.gradeStatus === 'assigned') {
+      return studentGrades.length > 0;
+    } else if (filters.gradeStatus === 'not_assigned') {
+      return studentGrades.length === 0;
+    }
+    
+    return true;
+  });
+
+  // Calculate grade status counts
+  const gradeStatusCounts = {
+    assigned: courseStudents.filter(student => {
+      const studentGrades = selectedCourse 
+        ? grades.filter(grade => 
+            grade.student._id === student._id && 
+            grade.course._id === selectedCourse
+          )
+        : grades.filter(grade => 
+            grade.student._id === student._id
+          );
+      return studentGrades.length > 0;
+    }).length,
+    notAssigned: courseStudents.filter(student => {
+      const studentGrades = selectedCourse 
+        ? grades.filter(grade => 
+            grade.student._id === student._id && 
+            grade.course._id === selectedCourse
+          )
+        : grades.filter(grade => 
+            grade.student._id === student._id
+          );
+      return studentGrades.length === 0;
+    }).length
+  };
 
   const getGradeColor = (grade: string) => {
     if (grade.startsWith('A')) return 'text-green-600 bg-green-50';
@@ -263,6 +313,19 @@ const Grades: React.FC = () => {
             <option value="approved">Approved</option>
             <option value="final">Final</option>
           </select>
+
+          <select
+            value={filters.gradeStatus || ''}
+            onChange={(e) => setFilters(prev => ({ 
+              ...prev, 
+              gradeStatus: e.target.value as 'assigned' | 'not_assigned' | undefined 
+            }))}
+            className="px-3 py-1 border border-gray-300 rounded-md text-sm"
+          >
+            <option value="">All Grade Status</option>
+            <option value="assigned">Assigned Grades</option>
+            <option value="not_assigned">Not Assigned Grades</option>
+          </select>
         </div>
       </div>
 
@@ -279,7 +342,7 @@ const Grades: React.FC = () => {
           >
             <div className="flex items-center space-x-2">
               <Award className="h-4 w-4" />
-              <span>Grades</span>
+              <span>Grades (View/Edit)</span>
             </div>
           </button>
           <button
@@ -292,7 +355,7 @@ const Grades: React.FC = () => {
           >
             <div className="flex items-center space-x-2">
               <Users className="h-4 w-4" />
-              <span>Students ({courseStudents.length})</span>
+              <span>Students (Assign New)</span>
             </div>
           </button>
         </nav>
@@ -371,6 +434,9 @@ const Grades: React.FC = () => {
                 {selectedCourse ? 'Course Grades' : 'All Grades'} 
                 {filteredGrades.length > 0 && ` (${filteredGrades.length})`}
               </h2>
+              <p className="text-sm text-gray-600 mt-1">
+                View and edit existing grades. Use the edit button to modify grades if needed.
+              </p>
             </div>
 
             {filteredGrades.length === 0 ? (
@@ -484,14 +550,36 @@ const Grades: React.FC = () => {
           <div className="px-6 py-4 border-b border-gray-200">
             <h2 className="text-lg font-semibold text-gray-900">
               {selectedCourse ? 'Enrolled Students' : 'All Students'} 
-              {courseStudents.length > 0 && ` (${courseStudents.length})`}
+              {filteredStudents.length > 0 && ` (${filteredStudents.length})`}
             </h2>
             <p className="text-sm text-gray-600 mt-1">
-              Manage grades, attendance, and feedback for enrolled students
+              {selectedCourse 
+                ? 'Students enrolled in the selected course. Click on a student to manage their grades.'
+                : 'No students found. Select a course to view enrolled students.'
+              }
             </p>
+            {selectedCourse && (
+              <div className="flex space-x-4 mt-3 text-sm">
+                <div className="flex items-center space-x-2">
+                  <span className="w-3 h-3 bg-green-500 rounded-full"></span>
+                  <span className="text-gray-600">Assigned Grades: <span className="font-medium text-green-600">{gradeStatusCounts.assigned}</span></span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="w-3 h-3 bg-red-500 rounded-full"></span>
+                  <span className="text-gray-600">Not Assigned: <span className="font-medium text-red-600">{gradeStatusCounts.notAssigned}</span></span>
+                </div>
+              </div>
+            )}
+            {selectedCourse && gradeStatusCounts.assigned > 0 && (
+              <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-md">
+                <p className="text-xs text-blue-700">
+                  💡 <strong>Tip:</strong> Students with assigned grades are disabled here. Use the <strong>Grades tab</strong> to edit existing grades.
+                </p>
+              </div>
+            )}
           </div>
           
-          {courseStudents.length === 0 ? (
+          {filteredStudents.length === 0 ? (
             <div className="p-8 text-center">
               <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <p className="text-gray-500">
@@ -525,12 +613,15 @@ const Grades: React.FC = () => {
                       Status
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Grade Status
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Actions
                     </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {courseStudents.map(student => (
+                  {filteredStudents.map(student => (
                     <tr key={student._id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
@@ -573,14 +664,67 @@ const Grades: React.FC = () => {
                           {student.enrollmentStatus}
                         </span>
                       </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                          (() => {
+                            const studentGrades = selectedCourse 
+                              ? grades.filter(grade => 
+                                  grade.student._id === student._id && 
+                                  grade.course._id === selectedCourse
+                                )
+                              : grades.filter(grade => 
+                                  grade.student._id === student._id
+                                );
+                            return studentGrades.length > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
+                          })()
+                        }`}>
+                          {(() => {
+                            const studentGrades = selectedCourse 
+                              ? grades.filter(grade => 
+                                  grade.student._id === student._id && 
+                                  grade.course._id === selectedCourse
+                                )
+                              : grades.filter(grade => 
+                                  grade.student._id === student._id
+                                );
+                            return studentGrades.length > 0 ? 'Assigned' : 'Not Assigned';
+                          })()}
+                        </span>
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button
-                          onClick={() => handleStudentGrade(student)}
-                          className="text-blue-600 hover:text-blue-900 mr-3"
-                          title="Manage Grades"
-                        >
-                          <GraduationCap className="h-4 w-4" />
-                        </button>
+                        {(() => {
+                          const studentGrades = selectedCourse 
+                            ? grades.filter(grade => 
+                                grade.student._id === student._id && 
+                                grade.course._id === selectedCourse
+                              )
+                            : grades.filter(grade => 
+                                grade.student._id === student._id
+                              );
+                          const hasGrade = studentGrades.length > 0;
+                          
+                          return (
+                            <>
+                              <button
+                                onClick={() => handleStudentGrade(student)}
+                                disabled={hasGrade}
+                                className={`mr-3 ${
+                                  hasGrade 
+                                    ? 'text-gray-400 cursor-not-allowed' 
+                                    : 'text-blue-600 hover:text-blue-900'
+                                }`}
+                                title={hasGrade ? 'Grade already assigned - use Grades tab to edit' : 'Manage Grades'}
+                              >
+                                <GraduationCap className="h-4 w-4" />
+                              </button>
+                              {hasGrade && (
+                                <span className="text-xs text-gray-500 mr-3">
+                                  Grade assigned
+                                </span>
+                              )}
+                            </>
+                          );
+                        })()}
                         <button
                           className="text-green-600 hover:text-green-900 mr-3"
                           title="View Profile"
@@ -626,6 +770,7 @@ const Grades: React.FC = () => {
           courses={courses}
           onCreateGrade={createCourseGradeMutation}
           onUpdateGrade={updateCourseGradeMutation}
+          onGradeSubmitted={refetchGrades}
         />
       )}
   </div>
@@ -754,11 +899,38 @@ const StudentGradeModal: React.FC<{
   courses: any[];
   onCreateGrade: any;
   onUpdateGrade: any;
-}> = ({ isOpen, onClose, student, selectedCourse, courses, onCreateGrade }) => {
+  onGradeSubmitted: () => void;
+}> = ({ isOpen, onClose, student, selectedCourse, courses, onCreateGrade, onUpdateGrade, onGradeSubmitted }) => {
+  // Get current semester and academic year (this should come from system settings)
+  const getCurrentSemesterInfo = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth() + 1; // January is 0
+    
+    // Simple logic - you might want to make this more sophisticated
+    let semester = 1;
+    let academicYear = `${year}-${year + 1}`;
+    
+    if (month >= 8 && month <= 12) {
+      semester = 1;
+      academicYear = `${year}-${year + 1}`;
+    } else if (month >= 1 && month <= 5) {
+      semester = 2;
+      academicYear = `${year - 1}-${year}`;
+    } else {
+      semester = 3; // Summer semester
+      academicYear = `${year - 1}-${year}`;
+    }
+    
+    return { semester, academicYear };
+  };
+
+  const currentSemesterInfo = getCurrentSemesterInfo();
+  
   const [formData, setFormData] = useState({
     course: selectedCourse || '',
-    semester: 1,
-    academicYear: '2024-2025',
+    semester: currentSemesterInfo.semester,
+    academicYear: currentSemesterInfo.academicYear,
     finalGrade: '',
     numericalGrade: 0,
     credits: 3,
@@ -767,6 +939,20 @@ const StudentGradeModal: React.FC<{
     facultyComments: ''
   });
 
+  // Update form data when course changes
+  const handleCourseChange = (courseId: string) => {
+    const selectedCourseData = courses.find(course => course._id === courseId);
+    console.log('Selected course data:', selectedCourseData);
+    console.log('Available courses:', courses);
+    console.log('Course creditHours:', selectedCourseData?.creditHours);
+    
+    setFormData(prev => ({
+      ...prev,
+      course: courseId,
+      credits: selectedCourseData?.creditHours || 3
+    }));
+  };
+
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Filter courses to only show courses the student is enrolled in
@@ -774,11 +960,46 @@ const StudentGradeModal: React.FC<{
     student.courses.some((studentCourse: any) => studentCourse._id === course._id)
   );
 
+  // Initialize credits when component mounts or selectedCourse changes
+  React.useEffect(() => {
+    console.log('useEffect triggered - selectedCourse:', selectedCourse);
+    console.log('Available courses in useEffect:', courses);
+    
+    if (selectedCourse) {
+      const selectedCourseData = courses.find(course => course._id === selectedCourse);
+      console.log('Found course data in useEffect:', selectedCourseData);
+      console.log('Course creditHours in useEffect:', selectedCourseData?.creditHours);
+      
+      if (selectedCourseData) {
+        setFormData(prev => ({
+          ...prev,
+          credits: selectedCourseData.creditHours || 3
+        }));
+      }
+    }
+  }, [selectedCourse, courses]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.course || !formData.finalGrade) {
-      toast.error('Please fill in all required fields');
+    // Enhanced validation
+    if (!formData.course) {
+      toast.error('Please select a course');
+      return;
+    }
+    
+    if (!formData.finalGrade) {
+      toast.error('Please select a final grade');
+      return;
+    }
+    
+    if (!formData.credits || formData.credits <= 0) {
+      toast.error('Course credits are required');
+      return;
+    }
+    
+    if (!formData.semester || !formData.academicYear) {
+      toast.error('Semester information is required');
       return;
     }
 
@@ -798,10 +1019,18 @@ const StudentGradeModal: React.FC<{
         facultyComments: formData.facultyComments
       };
 
+      // Debug logging
+      console.log('Submitting grade data:', gradeData);
+      console.log('Credits value:', formData.credits);
+      console.log('Credits type:', typeof formData.credits);
+
       await onCreateGrade.mutateAsync(gradeData);
       toast.success('Grade submitted successfully');
       onClose();
+      onGradeSubmitted();
     } catch (error: any) {
+      console.error('Grade submission error:', error);
+      console.error('Error response:', error.response?.data);
       toast.error(error.response?.data?.message || 'Failed to submit grade');
     } finally {
       setIsSubmitting(false);
@@ -845,7 +1074,7 @@ const StudentGradeModal: React.FC<{
                   <label className="block text-sm font-medium text-gray-700 mb-2">Course</label>
                   <select
                     value={formData.course}
-                    onChange={(e) => setFormData(prev => ({ ...prev, course: e.target.value }))}
+                    onChange={(e) => handleCourseChange(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                     required
                     disabled={enrolledCourses.length === 0}
@@ -875,10 +1104,10 @@ const StudentGradeModal: React.FC<{
                     min="1"
                     max="6"
                     value={formData.credits}
-                    onChange={(e) => setFormData(prev => ({ ...prev, credits: parseInt(e.target.value) }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-700"
+                    readOnly
                   />
+                  <p className="text-xs text-gray-500 mt-1">Automatically set from course credit hours</p>
                 </div>
               </div>
             </div>
@@ -962,30 +1191,24 @@ const StudentGradeModal: React.FC<{
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Semester</label>
-                  <select
-                    value={formData.semester}
-                    onChange={(e) => setFormData(prev => ({ ...prev, semester: parseInt(e.target.value) }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    required
-                  >
-                    {[1, 2, 3, 4, 5, 6, 7, 8].map(sem => (
-                      <option key={sem} value={sem}>Semester {sem}</option>
-                    ))}
-                  </select>
+                  <input
+                    type="text"
+                    value={`Semester ${formData.semester}`}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-700"
+                    readOnly
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Automatically determined by system</p>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Academic Year</label>
-                  <select
+                  <input
+                    type="text"
                     value={formData.academicYear}
-                    onChange={(e) => setFormData(prev => ({ ...prev, academicYear: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    required
-                  >
-                    <option value="2024-2025">2024-2025</option>
-                    <option value="2023-2024">2023-2024</option>
-                    <option value="2022-2023">2022-2023</option>
-                  </select>
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-700"
+                    readOnly
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Automatically determined by system</p>
                 </div>
               </div>
             </div>
