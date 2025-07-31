@@ -219,13 +219,26 @@ const Grades: React.FC = () => {
 
 
   const handleDeleteGrade = async (gradeId: string) => {
-    if (window.confirm('Are you sure you want to delete this grade? This action cannot be undone.')) {
+    const confirmMessage = `Are you sure you want to delete this grade? 
+
+This action cannot be undone and will:
+• Remove the grade from the system
+• Create a history entry for audit purposes
+• Allow you to reassign the grade if needed
+
+You can delete grades if:
+• You created the grade yourself, OR
+• You are the faculty assigned to the course (for error correction)
+
+Do you want to proceed?`;
+    
+    if (window.confirm(confirmMessage)) {
       try {
         await deleteCourseGradeMutation.mutateAsync(gradeId);
-        toast.success('Grade deleted successfully!');
+        // The success message will come from the backend
       } catch (error) {
         console.error('Delete grade error:', error);
-        toast.error('Failed to delete grade. Please try again.');
+        // The error message will come from the backend
       }
     }
   };
@@ -534,7 +547,7 @@ const Grades: React.FC = () => {
               </p>
               <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-md">
                 <p className="text-xs text-blue-700">
-                  💡 <strong>Note:</strong> Only <strong>draft</strong> grades can be edited. Once a grade is submitted, it cannot be modified.
+                  💡 <strong>Note:</strong> Only <strong>draft</strong> grades can be edited. However, you can <strong>delete</strong> any grade if you created it or are assigned to the course (for error correction).
                 </p>
               </div>
               {recentlySubmittedCount > 0 && (
