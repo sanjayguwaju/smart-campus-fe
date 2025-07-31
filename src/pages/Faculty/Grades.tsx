@@ -1,27 +1,28 @@
 import React, { useState } from 'react';
-import { 
-  Award, 
-  Users, 
-  Edit, 
-  Trash2, 
-  CheckCircle, 
-  Clock,
-  Filter,
-  Upload,
-  User,
-  BookOpen,
-  GraduationCap,
-  Pencil,
-  RefreshCw
-} from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
-import { useFacultyCourseGrades, useBulkSubmitGrades } from '../../api/hooks/useCourseGrades';
+import { useFacultyCourseGrades, useCreateCourseGrade, useUpdateCourseGrade, useBulkSubmitGrades, useDeleteCourseGrade } from '../../api/hooks/useCourseGrades';
 import { useAssignedFacultyCourses } from '../../api/hooks/useCourses';
 import { useStudentsByFaculty } from '../../api/hooks/useUsers';
-import { useCreateCourseGrade, useUpdateCourseGrade } from '../../api/hooks/useCourseGrades';
 import { CourseGradeData } from '../../api/types/courseGrades';
 import { toast } from 'react-hot-toast';
-import { debugFacultyData } from '../../utils/debugFacultyData';
+import { 
+  Users, 
+  GraduationCap, 
+  Calendar, 
+  BookOpen, 
+  Award, 
+  CheckCircle, 
+  XCircle, 
+  Clock, 
+  Edit, 
+  Trash2, 
+  Plus, 
+  Filter,
+  RefreshCw,
+  Upload,
+  Pencil,
+  User
+} from 'lucide-react';
 
 const Grades: React.FC = () => {
   const { user } = useAuthStore();
@@ -83,19 +84,11 @@ const Grades: React.FC = () => {
   const bulkSubmitGradesMutation = useBulkSubmitGrades();
   const createCourseGradeMutation = useCreateCourseGrade();
   const updateCourseGradeMutation = useUpdateCourseGrade();
+  const deleteCourseGradeMutation = useDeleteCourseGrade();
 
   const grades: CourseGradeData[] = gradesData?.grades || [];
   const courses = coursesData?.courses || [];
   const students = studentsData?.students || [];
-
-  // Debug logging
-  console.log('🔍 Faculty Grades Debug:', {
-    facultyId: user?._id,
-    coursesCount: courses.length,
-    studentsCount: students.length,
-    courses: courses.map(c => ({ id: c._id, name: c.name, code: c.code })),
-    students: students.map(s => ({ id: s._id, name: `${s.firstName} ${s.lastName}`, courses: s.courses?.length || 0 }))
-  });
 
   // Error handling for missing data
   if (studentsLoading) {
@@ -113,14 +106,6 @@ const Grades: React.FC = () => {
   if (coursesData && !coursesData.success) {
     console.error('❌ Courses API Error:', coursesData.message);
   }
-
-  // Comprehensive debugging
-  React.useEffect(() => {
-    if (user?._id && !studentsLoading && !coursesLoading) {
-      debugFacultyData.logFacultyData(user._id, courses, students);
-      debugFacultyData.verifyDataRelationships(user._id, courses, students);
-    }
-  }, [user?._id, courses, students, studentsLoading, coursesLoading]);
 
   // Filter students by selected course
   const courseStudents = selectedCourse 
@@ -220,7 +205,7 @@ const Grades: React.FC = () => {
         }
         
         // Set the existing grade for editing
-        setSelectedStudent(student);
+    setSelectedStudent(student);
         setSelectedGradeForEdit(studentGrade);
         setIsStudentGradeModalOpen(true);
         return; // Exit early since we're editing an existing grade
@@ -234,15 +219,20 @@ const Grades: React.FC = () => {
   };
 
   const handleEditGrade = (grade: CourseGradeData) => {
-    // Check if grade is already submitted/finalized
-    if (grade.status !== 'draft') {
-      toast.error(`Cannot edit grade that is already ${grade.status}. Only draft grades can be edited.`);
-      return;
+    // Remove edit functionality - faculty should delete and recreate
+    toast.error('Edit functionality disabled. Please delete and recreate the grade if needed.');
+  };
+
+  const handleDeleteGrade = async (gradeId: string) => {
+    if (window.confirm('Are you sure you want to delete this grade? This action cannot be undone.')) {
+      try {
+        await deleteCourseGradeMutation.mutateAsync(gradeId);
+        toast.success('Grade deleted successfully!');
+      } catch (error) {
+        console.error('Delete grade error:', error);
+        toast.error('Failed to delete grade. Please try again.');
+      }
     }
-    
-    setSelectedStudent(grade.student);
-    setSelectedGradeForEdit(grade);
-    setIsStudentGradeModalOpen(true);
   };
 
   const handleBulkSubmit = async () => {
@@ -428,54 +418,48 @@ const Grades: React.FC = () => {
       {/* Tab Navigation */}
       <div className="border-b border-gray-200">
         <nav className="flex space-x-8 border-b border-gray-200">
-          <button
-            onClick={() => setActiveTab('grades')}
-            className={`py-2 px-1 border-b-2 font-medium text-sm ${
-              activeTab === 'grades'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
-          >
-            <div className="flex items-center space-x-2">
-              <Award className="h-4 w-4" />
+          <div className="flex space-x-1 mb-6">
+            <button
+              onClick={() => setActiveTab('grades')}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                activeTab === 'grades'
+                  ? 'bg-blue-100 text-blue-700 border-b-2 border-blue-700'
+                  : 'text-gray-600 hover:text-gray-800'
+              }`}
+            >
               <span>Grades (View/Edit)</span>
-              <button
+              <div
                 onClick={(e) => {
                   e.stopPropagation();
                   refetchGrades();
-                  toast.success('Grades refreshed!');
                 }}
-                className="ml-2 p-2 hover:bg-blue-100 rounded-full text-blue-600 transition-colors border border-blue-200 bg-blue-50"
+                className="p-1 hover:bg-blue-200 rounded-full transition-colors cursor-pointer"
                 title="Refresh grades"
               >
-                <RefreshCw className="h-4 w-4" />
-              </button>
-            </div>
-          </button>
-          <button
-            onClick={() => setActiveTab('students')}
-            className={`py-2 px-1 border-b-2 font-medium text-sm ${
-              activeTab === 'students'
-                ? 'border-blue-500 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
-          >
-            <div className="flex items-center space-x-2">
-              <Users className="h-4 w-4" />
-              <span>Students (Assign New)</span>
-              <button
+                <RefreshCw className="w-4 h-4" />
+              </div>
+            </button>
+            <button
+              onClick={() => setActiveTab('students')}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                activeTab === 'students'
+                  ? 'bg-blue-100 text-blue-700 border-b-2 border-blue-700'
+                  : 'text-gray-600 hover:text-gray-800'
+              }`}
+            >
+              <span>Students (Manage Grades)</span>
+              <div
                 onClick={(e) => {
                   e.stopPropagation();
-                  Promise.all([refetchStudents(), refetchCourses()]);
-                  toast.success('Students and courses refreshed!');
+                  refetchStudents();
                 }}
-                className="ml-2 p-2 hover:bg-blue-100 rounded-full text-blue-600 transition-colors border border-blue-200 bg-blue-50"
-                title="Refresh students and courses"
+                className="p-1 hover:bg-blue-200 rounded-full transition-colors cursor-pointer"
+                title="Refresh students"
               >
-                <RefreshCw className="h-4 w-4" />
-              </button>
-            </div>
-          </button>
+                <RefreshCw className="w-4 h-4" />
+              </div>
+            </button>
+          </div>
         </nav>
       </div>
 
@@ -661,26 +645,17 @@ const Grades: React.FC = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {new Date(grade.submittedAt).toLocaleDateString()}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button
-                          onClick={() => handleEditGrade(grade)}
-                          disabled={grade.status !== 'draft'}
-                          title={grade.status !== 'draft' ? `Cannot edit ${grade.status} grade` : 'Edit grade'}
-                          className={`p-2 rounded-lg transition-colors ${
-                            grade.status === 'draft' 
-                              ? 'text-blue-600 hover:bg-blue-50' 
-                              : 'text-gray-400 cursor-not-allowed'
-                          }`}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </button>
-                        <button
-                            className="text-red-600 hover:text-red-900"
-                            title="Delete Grade"
-                        >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <div className="flex items-center space-x-2">
+                            <button
+                              onClick={() => handleDeleteGrade(grade._id)}
+                              className="text-red-600 hover:text-red-900 transition-colors"
+                              title="Delete grade"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </td>
             </tr>
           ))}
         </tbody>
@@ -911,13 +886,15 @@ const Grades: React.FC = () => {
                                       <span className={`text-xs font-medium ${isSubmitted ? 'text-green-600' : 'text-blue-600'}`}>
                                         {isSubmitted ? 'Submitted' : 'Draft'}
                                       </span>
-                        <button
-                          onClick={() => handleStudentGrade(student)}
-                                        className="text-blue-600 hover:text-blue-900"
-                                        title={isSubmitted ? "Edit Submitted Grade" : "View/Edit Grade"}
-                                      >
-                                        <GraduationCap className="h-4 w-4" />
-                                      </button>
+                                      {!isSubmitted && (
+                                        <button
+                                          onClick={() => handleStudentGrade(student)}
+                                          className="text-blue-600 hover:text-blue-900"
+                                          title="View/Edit Grade"
+                                        >
+                                          <GraduationCap className="h-4 w-4" />
+                                        </button>
+                                      )}
                                     </div>
                                   );
                                 })()
@@ -1045,7 +1022,7 @@ const StudentGradeModal: React.FC<{
         semester: selectedGradeForEdit.semester,
         academicYear: selectedGradeForEdit.academicYear,
         finalGrade: selectedGradeForEdit.finalGrade,
-        numericalGrade: selectedGradeForEdit.numericalGrade,
+        numericalGrade: selectedGradeForEdit.numericalGrade || 0,
         credits: selectedGradeForEdit.credits,
         attendance: selectedGradeForEdit.attendance || 0,
         participation: selectedGradeForEdit.participation || 0,
@@ -1135,12 +1112,12 @@ const StudentGradeModal: React.FC<{
       if (selectedGradeForEdit) {
         // Update existing grade
         const updateData = {
-        finalGrade: formData.finalGrade,
-        numericalGrade: formData.numericalGrade,
-        attendance: formData.attendance,
-        participation: formData.participation,
-        facultyComments: formData.facultyComments
-      };
+          finalGrade: formData.finalGrade,
+          numericalGrade: formData.numericalGrade,
+          attendance: formData.attendance,
+          participation: formData.participation,
+          facultyComments: formData.facultyComments
+        };
 
         await onUpdateGrade.mutateAsync({
           gradeId: selectedGradeForEdit._id,
@@ -1163,7 +1140,6 @@ const StudentGradeModal: React.FC<{
         toast.success('Grade submitted successfully!');
       }
 
-      onGradeSubmitted();
       onClose();
     } catch (error: any) {
       console.error('Grade submission error:', error);
@@ -1226,15 +1202,18 @@ const StudentGradeModal: React.FC<{
                   <label className="block text-sm font-medium text-gray-700 mb-2">Course</label>
                   {/* Always read-only since course is assigned by admin during enrollment */}
                   <div className="w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-700">
-                    {selectedCourse ? (
-                      // Show selected course name if available
-                      (() => {
+                    {(() => {
+                      // When editing an existing grade, show the grade's course
+                      if (selectedGradeForEdit) {
+                        return `${selectedGradeForEdit.course.name} (${selectedGradeForEdit.course.code})`;
+                      }
+                      
+                      // When creating a new grade, show selected course or student's courses
+                      if (selectedCourse) {
                         const course = validCourses.find(c => c._id === selectedCourse);
                         return course ? `${course.name} (${course.code})` : 'Course not found';
-                      })()
-                    ) : (
-                      // Show student's enrolled courses
-                      (() => {
+                      } else {
+                        // Show student's enrolled courses
                         if (student.courses && student.courses.length > 0) {
                           const courseNames = student.courses
                             .map((course: any) => `${course.name || course.title} (${course.code})`)
@@ -1242,8 +1221,8 @@ const StudentGradeModal: React.FC<{
                           return courseNames;
                         }
                         return 'No courses assigned';
-                      })()
-                    )}
+                      }
+                    })()}
                   </div>
                   <p className="text-xs text-gray-500 mt-1">Course assigned by admin during enrollment</p>
                 </div>
@@ -1299,8 +1278,14 @@ const StudentGradeModal: React.FC<{
                     min="0"
                     max="100"
                     step="0.1"
-                    value={formData.numericalGrade}
-                    onChange={(e) => setFormData(prev => ({ ...prev, numericalGrade: parseFloat(e.target.value) }))}
+                    value={isNaN(formData.numericalGrade) ? '' : formData.numericalGrade}
+                    onChange={(e) => {
+                      const value = parseFloat(e.target.value);
+                      setFormData(prev => ({ 
+                        ...prev, 
+                        numericalGrade: isNaN(value) ? 0 : value 
+                      }));
+                    }}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                     required
                   />
@@ -1314,11 +1299,14 @@ const StudentGradeModal: React.FC<{
                     type="number"
                     min="0"
                     max="100"
-                    value={formData.attendance}
-                    onChange={(e) => setFormData(prev => ({ 
-                      ...prev, 
-                      attendance: e.target.value === '' ? 0 : parseFloat(e.target.value) || 0 
-                    }))}
+                    value={isNaN(formData.attendance) ? '' : formData.attendance}
+                    onChange={(e) => {
+                      const value = parseFloat(e.target.value);
+                      setFormData(prev => ({ 
+                        ...prev, 
+                        attendance: isNaN(value) ? 0 : value 
+                      }));
+                    }}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
@@ -1329,11 +1317,14 @@ const StudentGradeModal: React.FC<{
                     type="number"
                     min="0"
                     max="100"
-                    value={formData.participation}
-                    onChange={(e) => setFormData(prev => ({ 
-                      ...prev, 
-                      participation: e.target.value === '' ? 0 : parseFloat(e.target.value) || 0 
-                    }))}
+                    value={isNaN(formData.participation) ? '' : formData.participation}
+                    onChange={(e) => {
+                      const value = parseFloat(e.target.value);
+                      setFormData(prev => ({ 
+                        ...prev, 
+                        participation: isNaN(value) ? 0 : value 
+                      }));
+                    }}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                   />
                 </div>

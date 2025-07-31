@@ -106,7 +106,6 @@ export const useUpdateCourseGrade = () => {
       toast.success('Grade updated successfully');
       queryClient.invalidateQueries({ queryKey: ['faculty-course-grades'] });
       queryClient.invalidateQueries({ queryKey: ['course-grades'] });
-      queryClient.invalidateQueries({ queryKey: ['course-grade'] });
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.message || 'Failed to update grade');
