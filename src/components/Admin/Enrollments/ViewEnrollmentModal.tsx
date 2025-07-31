@@ -227,24 +227,26 @@ const ViewEnrollmentModal: React.FC<ViewEnrollmentModalProps> = ({ isOpen, onClo
               </div>
 
               {/* Advisor Information */}
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                  <svg className="h-5 w-5 text-indigo-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                  Advisor Information
-                </h3>
-                <div className="bg-gray-50 rounded-lg p-4 space-y-3">
-                  <div>
-                    <label className="text-sm font-medium text-gray-500">Advisor Name</label>
-                    <p className="text-sm text-gray-900">{enrollment.advisor.fullName}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-500">Advisor Email</label>
-                    <p className="text-sm text-gray-900">{enrollment.advisor.email}</p>
+              {enrollment.advisor && (
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                    <svg className="h-5 w-5 text-indigo-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    Advisor Information
+                  </h3>
+                  <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">Advisor Name</label>
+                      <p className="text-sm text-gray-900">{enrollment.advisor.fullName}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">Advisor Email</label>
+                      <p className="text-sm text-gray-900">{enrollment.advisor.email}</p>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
 
               {/* Courses */}
               <div>
