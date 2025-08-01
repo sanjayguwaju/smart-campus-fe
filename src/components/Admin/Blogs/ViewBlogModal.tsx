@@ -11,7 +11,10 @@ const ViewBlogModal: React.FC<ViewBlogModalProps> = ({ isOpen, blog, onClose }) 
   if (!isOpen || !blog) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+    <div 
+      className="fixed top-0 left-0 w-screen h-screen bg-black bg-opacity-60 flex items-center justify-center z-50 p-4"
+      style={{ margin: 0, padding: '1rem' }}
+    >
       <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl p-6 relative max-h-[90vh] overflow-y-auto">
         <button
           className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"

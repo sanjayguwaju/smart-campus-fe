@@ -1,4 +1,4 @@
-import { Bell, LogOut } from "lucide-react";
+import { LogOut, User } from "lucide-react";
 import { UserData } from "../../api/types/users";
 
 interface AdminHeaderProps {
@@ -19,19 +19,13 @@ export const AdminHeader = ({ user, navigation, isActive, logout }: AdminHeaderP
         </div>
         
         <div className="flex items-center space-x-4">
-          <button className="p-2 text-gray-400 hover:text-gray-600">
-            <Bell className="h-6 w-6" />
-          </button>
-          
           <div className="flex items-center space-x-3">
             <div className="text-right">
               <p className="text-sm font-medium text-gray-900">{user?.displayName}</p>
               <p className="text-xs text-gray-500 capitalize">{user?.role}</p>
             </div>
             <div className="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center">
-              <span className="text-sm font-medium text-white">
-                {user?.firstName?.charAt(0) || user?.fullName?.charAt(0) || 'U'}
-              </span>
+              <User className="h-4 w-4 text-white" />
             </div>
             <button
               onClick={logout}

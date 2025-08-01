@@ -445,7 +445,6 @@ const Assignments: React.FC = () => {
                       <Calendar className="h-4 w-4 text-gray-400 mr-2" />
                       <div>
                         <div className="text-sm text-gray-900">{formatDate(assignment.dueDate)}</div>
-                        <div className="text-sm text-gray-500">{assignment.timeRemaining || 'N/A'}</div>
                       </div>
                     </div>
                   </td>
@@ -674,7 +673,10 @@ const Assignments: React.FC = () => {
       />
 
       {/* Delete Assignment Modal */}
-      <div className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 ${isDeleteModalOpen ? '' : 'hidden'}`}>
+      <div 
+        className={`fixed top-0 left-0 w-screen h-screen bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 ${isDeleteModalOpen ? '' : 'hidden'}`}
+        style={{ margin: 0, padding: '1rem' }}
+      >
         <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
           <h3 className="text-lg font-medium text-gray-900 mb-4">Delete Assignment</h3>
           <p className="text-sm text-gray-600 mb-6">

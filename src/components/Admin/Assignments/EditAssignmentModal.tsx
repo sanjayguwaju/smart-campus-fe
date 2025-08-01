@@ -6,7 +6,7 @@ import AsyncSelect from 'react-select/async';
 import { useUpdateAssignment } from '../../../api/hooks/useAssignments';
 import { useCourses } from '../../../api/hooks/useCourses';
 import { useUsers } from '../../../api/hooks/useUsers';
-import { AssignmentData, UpdateAssignmentRequest, AssignmentFile, AssignmentRequirements, GradingCriterion } from '../../../api/types/assignments';
+import { AssignmentData, UpdateAssignmentRequest, AssignmentFile } from '../../../api/types/assignments';
 import { CourseData } from '../../../api/types/courses';
 import { UserData } from '../../../api/types/users';
 import LoadingSpinner from '../../Layout/LoadingSpinner';
@@ -255,7 +255,10 @@ const EditAssignmentModal: React.FC<EditAssignmentModalProps> = ({ isOpen, onClo
   if (!isOpen || !assignment) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div 
+      className="fixed top-0 left-0 w-screen h-screen bg-black bg-opacity-60 flex items-center justify-center z-50 p-4"
+      style={{ margin: 0, padding: '1rem' }}
+    >
       <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <h2 className="text-xl font-semibold text-gray-900">Edit Assignment</h2>

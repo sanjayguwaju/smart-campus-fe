@@ -6,6 +6,8 @@ import { useDebounce } from '@uidotdev/usehooks';
 import { useSubmissions, useDeleteSubmission } from '../../api/hooks/useSubmissions';
 import { SubmissionData } from '../../api/types/submissions';
 import LoadingSpinner from '../../components/Layout/LoadingSpinner';
+import { useAuthStore } from '../../store/authStore';
+import { isStudent } from '../../utils/roleUtils';
 import { 
   AddSubmissionModal, 
   EditSubmissionModal, 
@@ -22,6 +24,7 @@ interface SelectOption {
 }
 
 const Submissions: React.FC = () => {
+  const { user } = useAuthStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedSubmissions, setSelectedSubmissions] = useState<string[]>([]);
@@ -274,13 +277,15 @@ const Submissions: React.FC = () => {
           <h1 className="text-2xl font-bold text-gray-900">Submissions</h1>
           <p className="text-gray-600">Manage all assignment submissions in the system</p>
         </div>
-        <button 
-          onClick={() => setIsAddSubmissionModalOpen(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Add Submission
-        </button>
+        {isStudent(user) && (
+          <button 
+            onClick={() => setIsAddSubmissionModalOpen(true)}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Submission
+          </button>
+        )}
       </div>
 
       {/* Filters and search */}

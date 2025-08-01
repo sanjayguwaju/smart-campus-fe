@@ -21,13 +21,13 @@ interface SelectOption {
 
 const EditEnrollmentModal: React.FC<EditEnrollmentModalProps> = ({ isOpen, onClose, enrollment }) => {
   const updateEnrollmentMutation = useUpdateEnrollment();
-  
+
   // State to track selected options for display
   const [selectedStudent, setSelectedStudent] = React.useState<SelectOption | null>(null);
   const [selectedProgram, setSelectedProgram] = React.useState<SelectOption | null>(null);
   const [selectedCourses, setSelectedCourses] = React.useState<SelectOption[]>([]);
   const [selectedAdvisor, setSelectedAdvisor] = React.useState<SelectOption | null>(null);
-  
+
   // Custom styles for react-select
   const selectStyles: StylesConfig<SelectOption> = {
     control: (provided, state) => ({
@@ -67,9 +67,9 @@ const EditEnrollmentModal: React.FC<EditEnrollmentModalProps> = ({ isOpen, onClo
   const loadStudentOptions = async (inputValue: string) => {
     try {
       const response = await userService.getUsers(1, 100, inputValue, { role: 'student' });
-      const options = (response?.data?.map((u: { _id: string; fullName: string; email: string }) => ({ 
-        value: u._id, 
-        label: `${u.fullName} (${u.email})` 
+      const options = (response?.data?.map((u: { _id: string; fullName: string; email: string }) => ({
+        value: u._id,
+        label: `${u.fullName} (${u.email})`
       })) || [])
         .sort((a: SelectOption, b: SelectOption) => a.label.localeCompare(b.label));
       return options.filter((option: SelectOption) =>
@@ -84,9 +84,9 @@ const EditEnrollmentModal: React.FC<EditEnrollmentModalProps> = ({ isOpen, onClo
   const loadProgramOptions = async (inputValue: string) => {
     try {
       const response = await programService.getPrograms({ page: 1, limit: 100, search: inputValue });
-      const options = response?.data?.map((p: { _id: string; name: string }) => ({ 
-        value: p._id, 
-        label: p.name 
+      const options = response?.data?.map((p: { _id: string; name: string }) => ({
+        value: p._id,
+        label: p.name
       })) || [];
       return options.filter((option: SelectOption) =>
         option.label.toLowerCase().includes(inputValue.toLowerCase())
@@ -100,9 +100,9 @@ const EditEnrollmentModal: React.FC<EditEnrollmentModalProps> = ({ isOpen, onClo
   const loadCourseOptions = async (inputValue: string) => {
     try {
       const response = await courseService.getCourses(1, 100, inputValue);
-      const options = response?.data?.map((c: { _id: string; name: string; code: string; credits: number }) => ({ 
-        value: c._id, 
-        label: `${c.code} - ${c.name} (${c.credits} credits)` 
+      const options = response?.data?.map((c: { _id: string; name: string; code: string; credits: number }) => ({
+        value: c._id,
+        label: `${c.code} - ${c.name} (${c.credits} credits)`
       })) || [];
       return options.filter((option: SelectOption) =>
         option.label.toLowerCase().includes(inputValue.toLowerCase())
@@ -116,9 +116,9 @@ const EditEnrollmentModal: React.FC<EditEnrollmentModalProps> = ({ isOpen, onClo
   const loadAdvisorOptions = async (inputValue: string) => {
     try {
       const response = await userService.getUsers(1, 100, inputValue, { role: 'faculty' });
-      const options = (response?.data?.map((u: { _id: string; fullName: string; email: string }) => ({ 
-        value: u._id, 
-        label: `${u.fullName} (${u.email})` 
+      const options = (response?.data?.map((u: { _id: string; fullName: string; email: string }) => ({
+        value: u._id,
+        label: `${u.fullName} (${u.email})`
       })) || [])
         .sort((a: SelectOption, b: SelectOption) => a.label.localeCompare(b.label));
       return options.filter((option: SelectOption) =>
@@ -161,31 +161,31 @@ const EditEnrollmentModal: React.FC<EditEnrollmentModalProps> = ({ isOpen, onClo
     if (enrollment) {
       // Set selected options for display
       setSelectedStudent({
-        value: enrollment.student._id,
-        label: `${enrollment.student.fullName} (${enrollment.student.email})`
+        value: enrollment.student?._id,
+        label: `${enrollment.student?.fullName} (${enrollment.student?.email})`
       });
       setSelectedProgram({
-        value: enrollment.program._id,
-        label: enrollment.program.name
+        value: enrollment.program?._id,
+        label: enrollment.program?.name
       });
-      setSelectedCourses(enrollment.courses.map(course => ({
+      setSelectedCourses(enrollment.courses?.map(course => ({
         value: course._id,
         label: `${course.code} - ${course.name} (${course.creditHours} credits)`
-      })));
+      })) || []);
       setSelectedAdvisor({
-        value: enrollment.advisor._id,
-        label: `${enrollment.advisor.fullName} (${enrollment.advisor.email})`
+        value: enrollment.advisor?._id,
+        label: `${enrollment.advisor?.fullName} (${enrollment.advisor?.email})`
       });
 
       reset({
-        student: enrollment.student._id,
-        program: enrollment.program._id,
+        student: enrollment.student?._id,
+        program: enrollment.program?._id,
         semester: enrollment.semester,
         academicYear: enrollment.academicYear,
-        courses: enrollment.courses.map(course => course._id),
+        courses: enrollment.courses?.map(course => course._id) || [],
         status: enrollment.status,
         enrollmentType: enrollment.enrollmentType,
-        advisor: enrollment.advisor._id,
+        advisor: enrollment.advisor?._id,
         notes: enrollment.notes,
         gpa: enrollment.gpa,
         cgpa: enrollment.cgpa,
@@ -197,7 +197,7 @@ const EditEnrollmentModal: React.FC<EditEnrollmentModalProps> = ({ isOpen, onClo
 
   const onSubmit = async (data: UpdateEnrollmentRequest) => {
     if (!enrollment) return;
-    
+
     try {
       await updateEnrollmentMutation.mutateAsync({
         id: enrollment._id,
@@ -212,7 +212,10 @@ const EditEnrollmentModal: React.FC<EditEnrollmentModalProps> = ({ isOpen, onClo
   if (!isOpen || !enrollment) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
+    <div 
+      className="fixed top-0 left-0 w-screen h-screen bg-black bg-opacity-60 flex items-center justify-center z-50 p-4"
+      style={{ margin: 0, padding: '1rem' }}
+    >
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[95vh] overflow-hidden flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50">
@@ -224,7 +227,7 @@ const EditEnrollmentModal: React.FC<EditEnrollmentModalProps> = ({ isOpen, onClo
             </div>
             <div>
               <h2 className="text-2xl font-bold text-gray-900">Edit Enrollment</h2>
-              <p className="text-sm text-gray-600">Update enrollment details for {enrollment.student.fullName}</p>
+              <p className="text-sm text-gray-600">Update enrollment details for {enrollment.student?.fullName}</p>
             </div>
           </div>
           <button
@@ -604,36 +607,36 @@ const EditEnrollmentModal: React.FC<EditEnrollmentModalProps> = ({ isOpen, onClo
               )}
             </div>
           </div>
-        </form>
 
-        {/* Footer */}
-        <div className="flex items-center justify-end space-x-3 p-6 border-t border-gray-100 bg-gray-50">
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            onClick={handleSubmit(onSubmit)}
-            disabled={isSubmitting || updateEnrollmentMutation.isPending}
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isSubmitting || updateEnrollmentMutation.isPending ? (
-              <div className="flex items-center space-x-2">
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                <span>Updating...</span>
-              </div>
-            ) : (
-              'Update Enrollment'
-            )}
-          </button>
-        </div>
+          {/* Footer */}
+          <div className="flex items-center justify-end space-x-3 p-6 border-t border-gray-100 bg-gray-50">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              onClick={handleSubmit(onSubmit)}
+              disabled={isSubmitting || updateEnrollmentMutation.isPending}
+              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isSubmitting || updateEnrollmentMutation.isPending ? (
+                <div className="flex items-center space-x-2">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span>Updating...</span>
+                </div>
+              ) : (
+                'Update Enrollment'
+              )}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );
 };
 
-export default EditEnrollmentModal; 
+export default EditEnrollmentModal;

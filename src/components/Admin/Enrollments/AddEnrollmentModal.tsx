@@ -6,8 +6,8 @@ import { useCreateEnrollment } from '../../../api/hooks/useEnrollments';
 import { CreateEnrollmentRequest } from '../../../api/types/enrollments';
 import { userService } from '../../../api/services/userService';
 import { programService } from '../../../api/services/programService';
-
 import { courseService } from '../../../api/services/courseService';
+import { CourseData } from '../../../api/types/courses';
 
 interface AddEnrollmentModalProps {
   isOpen: boolean;
@@ -121,9 +121,9 @@ const AddEnrollmentModal: React.FC<AddEnrollmentModalProps> = ({ isOpen, onClose
   const loadCourseOptions = async (inputValue: string) => {
     try {
       const response = await courseService.getCourses(1, 100, inputValue);
-      const options = response?.data?.map((c: { _id: string; name: string; code: string; credits: number }) => ({ 
+      const options = response?.data?.map((c: CourseData) => ({ 
         value: c._id, 
-        label: `${c.code} - ${c.name} (${c.credits} credits)` 
+        label: `${c.code} - ${c.name}` 
       })) || [];
       return options.filter((option: SelectOption) =>
         option.label.toLowerCase().includes(inputValue.toLowerCase())
@@ -147,7 +147,10 @@ const AddEnrollmentModal: React.FC<AddEnrollmentModalProps> = ({ isOpen, onClose
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
+    <div 
+      className="fixed top-0 left-0 w-screen h-screen bg-black bg-opacity-60 flex items-center justify-center z-50 p-4"
+      style={{ margin: 0, padding: '1rem' }}
+    >
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[95vh] overflow-hidden flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50">

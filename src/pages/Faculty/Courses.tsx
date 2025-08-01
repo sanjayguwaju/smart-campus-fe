@@ -1,16 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, Edit, Trash2, Eye, Filter, ChevronLeft, ChevronRight, MoreHorizontal } from 'lucide-react';
-import { toast } from 'react-hot-toast';
+import { Search, Eye, Filter, ChevronLeft, ChevronRight, MoreHorizontal } from 'lucide-react';
+
 import Select, { StylesConfig } from 'react-select';
 import { useDebounce } from '@uidotdev/usehooks';
-import { useAssignedFacultyCourses, useDeleteCourse } from '../../api/hooks/useCourses';
+import { useAssignedFacultyCourses } from '../../api/hooks/useCourses';
 import { CourseData } from '../../api/types/courses';
 import LoadingSpinner from '../../components/Layout/LoadingSpinner';
 import { useAuthStore } from '../../store/authStore';
 import { 
-  AddCourseModal, 
-  EditCourseModal, 
-  DeleteCourseModal, 
   ViewCourseModal, 
   CoursesFilterDrawer 
 } from '../../components/Faculty/Courses';
@@ -25,14 +22,10 @@ const Courses: React.FC = () => {
   const { user } = useAuthStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [selectedCourses, setSelectedCourses] = useState<string[]>([]);
+
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [isAddCourseModalOpen, setIsAddCourseModalOpen] = useState(false);
-  const [isEditCourseModalOpen, setIsEditCourseModalOpen] = useState(false);
-  const [selectedCourseForEdit, setSelectedCourseForEdit] = useState<CourseData | null>(null);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [selectedCourseForDelete, setSelectedCourseForDelete] = useState<CourseData | null>(null);
+
   const [isViewCourseModalOpen, setIsViewCourseModalOpen] = useState(false);
   const [selectedCourseForView, setSelectedCourseForView] = useState<CourseData | null>(null);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
@@ -111,7 +104,7 @@ const Courses: React.FC = () => {
     debouncedSearchTerm,
     filters
   );
-  const deleteCourseMutation = useDeleteCourse();
+
 
   // Extract courses and pagination from data
   const courses = data?.courses || [];
@@ -130,60 +123,13 @@ const Courses: React.FC = () => {
   // Use courses directly since filtering is now handled by the API
   const filteredCourses = courses;
 
-  const handleSelectCourse = (courseId: string) => {
-    setSelectedCourses(prev => 
-      prev.includes(courseId) 
-        ? prev.filter(id => id !== courseId)
-        : [...prev, courseId]
-    );
-  };
 
-  const handleSelectAll = () => {
-    if (selectedCourses.length === filteredCourses.length) {
-      setSelectedCourses([]);
-    } else {
-      setSelectedCourses(filteredCourses.map((course: CourseData) => course._id));
-    }
-  };
 
-  const handleDeleteCourse = async (courseId: string) => {
-    try {
-      await deleteCourseMutation.mutateAsync(courseId);
-      setSelectedCourseForDelete(null);
-      toast.success('Course deleted successfully');
-    } catch (error) {
-      console.error('Failed to delete course:', error);
-      toast.error('Failed to delete course. Please try again.');
-    }
-  };
 
-  const handleDeleteClick = (course: CourseData) => {
-    setSelectedCourseForDelete(course);
-    setIsDeleteModalOpen(true);
-  };
 
-  const handleDeleteSelected = async () => {
-    if (selectedCourses.length === 0) return;
-    
-    if (window.confirm(`Are you sure you want to delete ${selectedCourses.length} selected course(s)?`)) {
-      try {
-        // Delete courses one by one
-        for (const courseId of selectedCourses) {
-          await deleteCourseMutation.mutateAsync(courseId);
-        }
-        setSelectedCourses([]); // Clear selection after deletion
-        toast.success(`${selectedCourses.length} course(s) deleted successfully`);
-      } catch (error) {
-        console.error('Failed to delete selected courses:', error);
-        toast.error('Failed to delete some courses. Please try again.');
-      }
-    }
-  };
 
-  const handleEditCourse = (course: CourseData) => {
-    setSelectedCourseForEdit(course);
-    setIsEditCourseModalOpen(true);
-  };
+
+
 
   const handleViewCourse = (course: CourseData) => {
     setSelectedCourseForView(course);
@@ -231,13 +177,11 @@ const Courses: React.FC = () => {
   // Pagination handlers
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
-    setSelectedCourses([]); // Clear selection when changing pages
   };
 
   const handlePageSizeChange = (size: number) => {
     setPageSize(size);
     setCurrentPage(1); // Reset to first page when changing page size
-    setSelectedCourses([]); // Clear selection
   };
 
   if (isLoading) {
@@ -258,15 +202,8 @@ const Courses: React.FC = () => {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Courses</h1>
-          <p className="text-gray-600">Manage all courses in the system</p>
+          <p className="text-gray-600">View all assigned courses</p>
         </div>
-        <button 
-          onClick={() => setIsAddCourseModalOpen(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Add Course
-        </button>
       </div>
 
       {/* Filters and search */}
@@ -319,16 +256,7 @@ const Courses: React.FC = () => {
             <h3 className="text-lg font-medium text-gray-900">
               {pagination ? `${pagination.total} courses found` : `${filteredCourses.length} courses found`}
             </h3>
-            {selectedCourses.length > 0 && (
-              <div className="flex items-center space-x-2">
-                <span className="text-sm text-gray-500">
-                  {selectedCourses.length} selected
-                </span>
-                <button className="text-red-600 hover:text-red-800 text-sm font-medium" onClick={handleDeleteSelected}>
-                  Delete Selected
-                </button>
-              </div>
-            )}
+
           </div>
         </div>
 
@@ -336,14 +264,7 @@ const Courses: React.FC = () => {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left">
-                  <input
-                    type="checkbox"
-                    checked={selectedCourses.length === filteredCourses.length && filteredCourses.length > 0}
-                    onChange={handleSelectAll}
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                </th>
+
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Course
                 </th>
@@ -373,14 +294,7 @@ const Courses: React.FC = () => {
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredCourses.map((course: CourseData) => (
                 <tr key={course._id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <input
-                      type="checkbox"
-                      checked={selectedCourses.includes(course._id)}
-                      onChange={() => handleSelectCourse(course._id)}
-                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                    />
-                  </td>
+
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       {course.imageUrl ? (
@@ -474,27 +388,6 @@ const Courses: React.FC = () => {
                             >
                               <Eye className="h-4 w-4 mr-3" />
                               View Details
-                            </button>
-                            <button
-                              onClick={() => {
-                                setOpenDropdown(null);
-                                handleEditCourse(course);
-                              }}
-                              className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                            >
-                              <Edit className="h-4 w-4 mr-3" />
-                              Edit Course
-                            </button>
-                            <button
-                              onClick={() => {
-                                setOpenDropdown(null);
-                                handleDeleteClick(course);
-                              }}
-                              disabled={deleteCourseMutation.isPending}
-                              className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                              <Trash2 className="h-4 w-4 mr-3" />
-                              Delete Course
                             </button>
                           </div>
                         </div>
@@ -616,37 +509,7 @@ const Courses: React.FC = () => {
         )}
       </div>
 
-      {/* Add Course Modal */}
-      <AddCourseModal 
-        isOpen={isAddCourseModalOpen}
-        onClose={() => setIsAddCourseModalOpen(false)}
-      />
 
-      {/* Edit Course Modal */}
-      <EditCourseModal 
-        isOpen={isEditCourseModalOpen}
-        onClose={() => {
-          setIsEditCourseModalOpen(false);
-          setSelectedCourseForEdit(null);
-        }}
-        course={selectedCourseForEdit}
-      />
-
-      {/* Delete Course Modal */}
-      <DeleteCourseModal 
-        isOpen={isDeleteModalOpen}
-        onClose={() => {
-          setIsDeleteModalOpen(false);
-          setSelectedCourseForDelete(null);
-        }}
-        onDelete={() => {
-          if (selectedCourseForDelete) {
-            handleDeleteCourse(selectedCourseForDelete._id);
-          }
-        }}
-        courseName={selectedCourseForDelete?.name || ''}
-        isDeleting={deleteCourseMutation.isPending}
-      />
 
       {/* View Course Modal */}
       <ViewCourseModal 

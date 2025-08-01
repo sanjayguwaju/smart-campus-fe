@@ -318,57 +318,6 @@ const FacultyAssignments: React.FC = () => {
         </button>
       </div>
 
-      {/* Summary Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <FileText className="h-6 w-6 text-blue-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Total Assignments</p>
-              <p className="text-2xl font-bold text-gray-900">{summaryStats.total}</p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <Users className="h-6 w-6 text-green-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Total Submissions</p>
-              <p className="text-2xl font-bold text-gray-900">{summaryStats.totalSubmissions}</p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <div className="p-2 bg-yellow-100 rounded-lg">
-              <TrendingUp className="h-6 w-6 text-yellow-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Average Score</p>
-              <p className="text-2xl font-bold text-gray-900">{summaryStats.averageScore.toFixed(1)}%</p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <div className="p-2 bg-red-100 rounded-lg">
-              <Clock className="h-6 w-6 text-red-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Overdue</p>
-              <p className="text-2xl font-bold text-gray-900">{summaryStats.overdue}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Filters and search */}
       <div className="bg-white rounded-lg shadow p-6">
         <div className="flex flex-col sm:flex-row gap-4">

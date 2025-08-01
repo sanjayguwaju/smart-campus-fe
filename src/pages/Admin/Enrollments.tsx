@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, Edit, Trash2, Eye, Filter, ChevronLeft, ChevronRight, MoreHorizontal } from 'lucide-react';
-import { toast } from 'react-hot-toast';
+import { Plus, Search, Edit, Eye, Filter, ChevronLeft, ChevronRight, MoreHorizontal, Info, X } from 'lucide-react';
 import Select, { StylesConfig } from 'react-select';
 import { useDebounce } from '@uidotdev/usehooks';
-import { useEnrollments, useDeleteEnrollment } from '../../api/hooks/useEnrollments';
+import { useEnrollments } from '../../api/hooks/useEnrollments';
 import { EnrollmentData } from '../../api/types/enrollments';
 import LoadingSpinner from '../../components/Layout/LoadingSpinner';
 import { 
@@ -28,12 +27,11 @@ const Enrollments: React.FC = () => {
   const [isAddEnrollmentModalOpen, setIsAddEnrollmentModalOpen] = useState(false);
   const [isEditEnrollmentModalOpen, setIsEditEnrollmentModalOpen] = useState(false);
   const [selectedEnrollmentForEdit, setSelectedEnrollmentForEdit] = useState<EnrollmentData | null>(null);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [selectedEnrollmentForDelete, setSelectedEnrollmentForDelete] = useState<EnrollmentData | null>(null);
   const [isViewEnrollmentModalOpen, setIsViewEnrollmentModalOpen] = useState(false);
   const [selectedEnrollmentForView, setSelectedEnrollmentForView] = useState<EnrollmentData | null>(null);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
+  const [isImportantNoteModalOpen, setIsImportantNoteModalOpen] = useState(false);
   const [filters, setFilters] = useState({
     status: '',
     enrollmentType: '',
@@ -105,7 +103,6 @@ const Enrollments: React.FC = () => {
 
   // TanStack Query hooks
   const { data, isLoading, error } = useEnrollments(currentPage, pageSize, debouncedSearchTerm, filters);
-  const deleteEnrollmentMutation = useDeleteEnrollment();
 
   // Extract enrollments and pagination from data
   const enrollments = data?.enrollments || [];
@@ -130,39 +127,7 @@ const Enrollments: React.FC = () => {
     }
   };
 
-  const handleDeleteEnrollment = async (enrollmentId: string) => {
-    try {
-      await deleteEnrollmentMutation.mutateAsync(enrollmentId);
-      setSelectedEnrollmentForDelete(null);
-      toast.success('Enrollment deleted successfully');
-    } catch (error) {
-      console.error('Failed to delete enrollment:', error);
-      toast.error('Failed to delete enrollment. Please try again.');
-    }
-  };
 
-  const handleDeleteClick = (enrollment: EnrollmentData) => {
-    setSelectedEnrollmentForDelete(enrollment);
-    setIsDeleteModalOpen(true);
-  };
-
-  const handleDeleteSelected = async () => {
-    if (selectedEnrollments.length === 0) return;
-    
-    if (window.confirm(`Are you sure you want to delete ${selectedEnrollments.length} selected enrollment(s)?`)) {
-      try {
-        // Delete enrollments one by one
-        for (const enrollmentId of selectedEnrollments) {
-          await deleteEnrollmentMutation.mutateAsync(enrollmentId);
-        }
-        setSelectedEnrollments([]); // Clear selection after deletion
-        toast.success(`${selectedEnrollments.length} enrollment(s) deleted successfully`);
-      } catch (error) {
-        console.error('Failed to delete selected enrollments:', error);
-        toast.error('Failed to delete some enrollments. Please try again.');
-      }
-    }
-  };
 
   const handleEditEnrollment = (enrollment: EnrollmentData) => {
     setSelectedEnrollmentForEdit(enrollment);
@@ -249,6 +214,17 @@ const Enrollments: React.FC = () => {
         </button>
       </div>
 
+      {/* Important Notes Bar */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 cursor-pointer hover:bg-blue-100 transition-colors duration-200" onClick={() => setIsImportantNoteModalOpen(true)}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center">
+            <Info className="h-5 w-5 text-blue-500 mr-3" />
+            <span className="text-sm font-medium text-blue-800">Important: Enrollment Deletion Policy</span>
+          </div>
+          <span className="text-xs text-blue-600">Click to read more</span>
+        </div>
+      </div>
+
       {/* Filters and search */}
       <div className="bg-white rounded-lg shadow p-6">
         <div className="flex flex-col sm:flex-row gap-4">
@@ -299,16 +275,6 @@ const Enrollments: React.FC = () => {
             <h3 className="text-lg font-medium text-gray-900">
               {pagination ? `${pagination.total} enrollments found` : `${filteredEnrollments.length} enrollments found`}
             </h3>
-            {selectedEnrollments.length > 0 && (
-              <div className="flex items-center space-x-2">
-                <span className="text-sm text-gray-500">
-                  {selectedEnrollments.length} selected
-                </span>
-                <button className="text-red-600 hover:text-red-800 text-sm font-medium" onClick={handleDeleteSelected}>
-                  Delete Selected
-                </button>
-              </div>
-            )}
           </div>
         </div>
 
@@ -372,7 +338,7 @@ const Enrollments: React.FC = () => {
                     {enrollment.program?.name || 'N/A'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {enrollment.academicPeriod || 'N/A'}
+                    {enrollment?.academicYear || 'N/A'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeColor(enrollment.status)}`}>
@@ -414,17 +380,6 @@ const Enrollments: React.FC = () => {
                             >
                               <Edit className="h-4 w-4 mr-3" />
                               Edit Enrollment
-                            </button>
-                            <button
-                              onClick={() => {
-                                setOpenDropdown(null);
-                                handleDeleteClick(enrollment);
-                              }}
-                              disabled={deleteEnrollmentMutation.isPending}
-                              className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                              <Trash2 className="h-4 w-4 mr-3" />
-                              Delete Enrollment
                             </button>
                           </div>
                         </div>
@@ -591,37 +546,7 @@ const Enrollments: React.FC = () => {
         enrollment={selectedEnrollmentForEdit}
       />
 
-      {/* Delete Enrollment Modal */}
-      <div className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 ${isDeleteModalOpen ? '' : 'hidden'}`}>
-        <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Delete Enrollment</h3>
-          <p className="text-sm text-gray-600 mb-6">
-            Are you sure you want to delete the enrollment for {selectedEnrollmentForDelete?.student?.fullName}? This action cannot be undone.
-          </p>
-          <div className="flex justify-end space-x-3">
-            <button
-              onClick={() => {
-                setIsDeleteModalOpen(false);
-                setSelectedEnrollmentForDelete(null);
-              }}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={() => {
-                if (selectedEnrollmentForDelete) {
-                  handleDeleteEnrollment(selectedEnrollmentForDelete._id);
-                }
-              }}
-              disabled={deleteEnrollmentMutation.isPending}
-              className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {deleteEnrollmentMutation.isPending ? 'Deleting...' : 'Delete'}
-            </button>
-          </div>
-        </div>
-      </div>
+
 
       {/* View Enrollment Modal */}
       <ViewEnrollmentModal 
@@ -641,6 +566,92 @@ const Enrollments: React.FC = () => {
         onApplyFilters={handleApplyFilters}
         onClearFilters={handleClearFilters}
       />
+
+      {/* Important Note Modal */}
+      {isImportantNoteModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center">
+                <Info className="h-6 w-6 text-blue-500 mr-3" />
+                <h3 className="text-lg font-medium text-gray-900">Enrollment Deletion Policy</h3>
+              </div>
+              <button
+                onClick={() => setIsImportantNoteModalOpen(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors duration-200"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+            
+            <div className="space-y-4 text-sm text-gray-700">
+              <div className="bg-blue-50 border-l-4 border-blue-400 p-4">
+                <p className="font-medium text-blue-800 mb-2">
+                  Once an enrollment is created, it cannot be deleted from the system.
+                </p>
+                <p className="text-blue-700">
+                  This policy is in place to ensure data integrity and maintain a complete audit trail of all student enrollments for compliance and record-keeping purposes.
+                </p>
+              </div>
+
+              <div>
+                <h4 className="font-medium text-gray-900 mb-3">Instead of deletion, you can:</h4>
+                <div className="space-y-3">
+                  <div className="flex items-start">
+                    <div className="flex-shrink-0 w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mr-3 mt-0.5">
+                      <span className="text-green-600 text-xs font-bold">1</span>
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900">Edit Enrollment Details</p>
+                      <p className="text-gray-600">Update student information, program details, academic year, or any other enrollment-related data.</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start">
+                    <div className="flex-shrink-0 w-6 h-6 bg-yellow-100 rounded-full flex items-center justify-center mr-3 mt-0.5">
+                      <span className="text-yellow-600 text-xs font-bold">2</span>
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900">Deactivate Enrollment</p>
+                      <p className="text-gray-600">Change the status to "inactive" to mark the enrollment as no longer active while preserving the record.</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start">
+                    <div className="flex-shrink-0 w-6 h-6 bg-orange-100 rounded-full flex items-center justify-center mr-3 mt-0.5">
+                      <span className="text-orange-600 text-xs font-bold">3</span>
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900">Suspend Enrollment</p>
+                      <p className="text-gray-600">Temporarily suspend the enrollment if the student needs to take a break or has pending issues.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h4 className="font-medium text-gray-900 mb-2">Why This Policy Exists:</h4>
+                <ul className="text-gray-600 space-y-1">
+                  <li>• Maintains complete academic records for compliance</li>
+                  <li>• Ensures data integrity and prevents accidental data loss</li>
+                  <li>• Provides audit trail for regulatory requirements</li>
+                  <li>• Supports historical analysis and reporting</li>
+                  <li>• Protects against potential legal or accreditation issues</li>
+                </ul>
+              </div>
+            </div>
+
+            <div className="mt-6 flex justify-end">
+              <button
+                onClick={() => setIsImportantNoteModalOpen(false)}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
+              >
+                I Understand
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

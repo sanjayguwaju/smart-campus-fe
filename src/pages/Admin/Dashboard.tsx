@@ -1,5 +1,5 @@
 import React from 'react';
-import { Users, Calendar, FileText, GraduationCap, TrendingUp, Activity } from 'lucide-react';
+import { Users, Calendar, FileText, GraduationCap, TrendingUp } from 'lucide-react';
 
 const Dashboard: React.FC = () => {
   const stats = [
@@ -33,32 +33,7 @@ const Dashboard: React.FC = () => {
     },
   ];
 
-  const recentActivities = [
-    {
-      id: 1,
-      type: 'user',
-      message: 'New student registered: John Doe',
-      time: '2 minutes ago',
-    },
-    {
-      id: 2,
-      type: 'event',
-      message: 'Event "Tech Workshop" created',
-      time: '15 minutes ago',
-    },
-    {
-      id: 3,
-      type: 'notice',
-      message: 'Notice "Exam Schedule" published',
-      time: '1 hour ago',
-    },
-    {
-      id: 4,
-      type: 'program',
-      message: 'Program "Computer Science" updated',
-      time: '2 hours ago',
-    },
-  ];
+
 
   const quickActions = [
     { name: 'Add User', href: '/admin/users/new', icon: Users },
@@ -103,27 +78,30 @@ const Dashboard: React.FC = () => {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Quick Actions */}
-        <div className="lg:col-span-5">
-          <div className="bg-white rounded-lg shadow">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-medium text-gray-900">Quick Actions</h3>
-            </div>
-            <div className="p-6">
-              <div className="space-y-3">
-                {quickActions.map((action) => (
-                  <a
-                    key={action.name}
-                    href={action.href}
-                    className="flex items-center p-3 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    <action.icon className="mr-3 h-5 w-5 text-blue-600" />
+      {/* Quick Actions */}
+      <div className="bg-white rounded-lg shadow">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h3 className="text-lg font-medium text-gray-900">Quick Actions</h3>
+        </div>
+        <div className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {quickActions.map((action) => (
+              <a
+                key={action.name}
+                href={action.href}
+                className="group relative bg-white border border-gray-200 rounded-lg p-6 hover:border-blue-300 hover:shadow-md transition-all duration-200"
+              >
+                <div className="flex flex-col items-center text-center">
+                  <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-lg group-hover:bg-blue-200 transition-colors duration-200">
+                    <action.icon className="h-6 w-6 text-blue-600" />
+                  </div>
+                  <h3 className="mt-4 text-sm font-medium text-gray-900 group-hover:text-blue-600 transition-colors duration-200">
                     {action.name}
-                  </a>
-                ))}
-              </div>
-            </div>
+                  </h3>
+                  <div className="mt-2 w-8 h-0.5 bg-blue-600 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-200"></div>
+                </div>
+              </a>
+            ))}
           </div>
         </div>
       </div>

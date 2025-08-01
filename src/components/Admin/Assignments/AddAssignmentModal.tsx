@@ -265,7 +265,10 @@ const AddAssignmentModal: React.FC<AddAssignmentModalProps> = ({ isOpen, onClose
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div 
+      className="fixed top-0 left-0 w-screen h-screen bg-black bg-opacity-60 flex items-center justify-center z-50 p-4"
+      style={{ margin: 0, padding: '1rem' }}
+    >
       <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <h2 className="text-xl font-semibold text-gray-900">Add New Assignment</h2>

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useForm, SubmitHandler } from 'react-hook-form';
-import { Eye, EyeOff, LogIn } from 'lucide-react';
+import { Eye, EyeOff, LogIn, Copy, Check } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { Toaster, toast } from 'react-hot-toast';
 
@@ -14,6 +14,7 @@ interface LoginForm {
 
 const Login: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
+  const [copiedItem, setCopiedItem] = useState<string | null>(null);
   const { login, isLoading } = useAuthStore();
   const navigate = useNavigate();
   
@@ -22,6 +23,24 @@ const Login: React.FC = () => {
     handleSubmit,
     formState: { errors },
   } = useForm<LoginForm>();
+
+  const copyToClipboard = async (text: string, itemName: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedItem(itemName);
+      toast.success(`${itemName} copied to clipboard!`);
+      setTimeout(() => setCopiedItem(null), 2000);
+    } catch {
+      toast.error('Failed to copy to clipboard');
+    }
+  };
+
+  const demoCredentials = [
+    { role: 'Admin', email: 'admin@smartcampus.com' },
+    { role: 'Faculty', email: 'faculty@smartcampus.com' },
+    { role: 'Student', email: 'student@smartcampus.com' }
+  ];
+  const masterPassword = 'Test123@#';
 
   const onSubmit: SubmitHandler<LoginForm> = async (data) => {
     try {
@@ -182,12 +201,44 @@ const Login: React.FC = () => {
             </div>
           </form>
 
-          <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-            <p className="text-xs text-gray-600 mb-2">Demo Credentials:</p>
-            <div className="space-y-1 text-xs text-gray-500">
-              <p><strong>Admin:</strong> admin@smartcampus.com / Test123@#</p>
-              <p><strong>Faculty:</strong> faculty@smartcampus.com / Test123@#</p>
-              <p><strong>Student:</strong> student@smartcampus.com / Test123@#</p>
+          <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-100">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-sm font-medium text-gray-700">Demo Credentials:</p>
+              <button
+                onClick={() => copyToClipboard(masterPassword, 'Master Password')}
+                className="flex items-center gap-1 px-2 py-1 text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-md transition-colors duration-200"
+              >
+                {copiedItem === 'Master Password' ? (
+                  <Check className="h-3 w-3" />
+                ) : (
+                  <Copy className="h-3 w-3" />
+                )}
+                Copy Password
+              </button>
+            </div>
+            <div className="space-y-2">
+              {demoCredentials.map((credential) => (
+                <div key={credential.role} className="flex items-center justify-between p-2 bg-white rounded-md border border-gray-200">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-medium text-gray-700 min-w-[60px]">
+                      {credential.role}:
+                    </span>
+                    <span className="text-xs text-gray-600 font-mono">
+                      {credential.email}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => copyToClipboard(credential.email, `${credential.role} Email`)}
+                    className="p-1 text-gray-400 hover:text-blue-600 transition-colors duration-200"
+                  >
+                    {copiedItem === `${credential.role} Email` ? (
+                      <Check className="h-4 w-4 text-green-600" />
+                    ) : (
+                      <Copy className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
+              ))}
             </div>
           </div>
         </div>

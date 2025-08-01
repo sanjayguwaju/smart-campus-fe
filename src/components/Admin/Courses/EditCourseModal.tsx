@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { StylesConfig, SingleValue } from 'react-select';
 import AsyncSelect from 'react-select/async';
+import toast from 'react-hot-toast';
 import { useUpdateCourse } from '../../../api/hooks/useCourses';
 import { UpdateCourseRequest, CourseData } from '../../../api/types/courses';
 import { departmentService } from '../../../api/services/departmentService';
@@ -20,7 +21,6 @@ interface SelectOption {
 }
 
 const EditCourseModal: React.FC<EditCourseModalProps> = ({ isOpen, onClose, course }) => {
-  console.log(course)
   const updateCourseMutation = useUpdateCourse();
 
   // State to store selected option labels
@@ -35,6 +35,13 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({ isOpen, onClose, cour
       setProgramOptionsKey(prev => prev + 1);
     }
   }, [selectedDepartment]);
+
+  // Trigger program options reload when selectedProgram changes during loading
+  useEffect(() => {
+    if (selectedProgram) {
+      setProgramOptionsKey(prev => prev + 1);
+    }
+  }, [selectedProgram]);
 
   // Load options functions for AsyncSelect
   const loadDepartmentOptions = async (inputValue: string) => {
@@ -64,10 +71,13 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({ isOpen, onClose, cour
     }
   };
 
-  const loadProgramOptions = async (inputValue: string) => {
+  const loadProgramOptions = async (inputValue: string, departmentId?: string) => {
     try {
-      // Only load programs if a department is selected
-      if (!selectedDepartment?.value) {
+      // Use provided departmentId or fall back to selectedDepartment
+      const deptId = departmentId || selectedDepartment?.value;
+      
+      // Only load programs if a department is available
+      if (!deptId) {
         return [];
       }
 
@@ -75,7 +85,7 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({ isOpen, onClose, cour
         page: 1,
         limit: 100,
         search: inputValue,
-        department: selectedDepartment.value
+        department: deptId
       });
       const options = response?.data?.map((p: { _id: string; name: string }) => ({ value: p?._id, label: p?.name })) || [];
 
@@ -91,6 +101,19 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({ isOpen, onClose, cour
       console.error('Error loading programs:', error);
       return [];
     }
+  };
+
+  // Wrapper function for AsyncSelect (without departmentId parameter)
+  const loadProgramOptionsForSelect = async (inputValue: string) => {
+    // Get the current department value from the form
+    const currentDepartment = getValues('department') || selectedDepartment?.value;
+    
+    // Always load programs if department is available, regardless of input
+    if (currentDepartment) {
+      return loadProgramOptions(inputValue, currentDepartment);
+    }
+    
+    return [];
   };
 
   // Custom styles for react-select
@@ -133,6 +156,7 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({ isOpen, onClose, cour
     handleSubmit,
     reset,
     setValue,
+    getValues,
     formState: { errors, isSubmitting }
   } = useForm<UpdateCourseRequest>({
     defaultValues: {
@@ -141,6 +165,7 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({ isOpen, onClose, cour
       description: '',
       credits: 3,
       department: '',
+      program: '',
       instructor: '',
       semester: '',
       academicYear: '',
@@ -149,81 +174,161 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({ isOpen, onClose, cour
     }
   });
 
-  useEffect(() => {
-    if (course) {
-      setValue('name', course.name || '');
-      setValue('code', course.code || '');
-      setValue('description', course.description || '');
-      setValue('credits', course.credits || 3);
-      setValue('department', course.department || '');
-      setValue('program', course.program || '');
-      setValue('instructor', course.instructor || '');
-      setValue('semester', String(course.semester || ''));
-      setValue('academicYear', course.year || '');
-      setValue('maxStudents', course.maxStudents || 30);
-      setValue('isActive', course.isActive);
+  // Helper functions to get individual items by ID
+  const getDepartmentById = async (departmentId: string) => {
+    try {
+      const response = await departmentService.getDepartments(1, 100);
+      const department = response?.data?.find((d: { _id: string; name: string }) => d._id === departmentId);
+      return department ? { value: department._id, label: department.name } : null;
+    } catch (error) {
+      console.error('Error fetching department by ID:', error);
+      return null;
+    }
+  };
 
-      // Set selected options for display
-      if (course.department) {
-        // We'll need to fetch the department name to set the selected option
-        loadDepartmentOptions('').then(options => {
-          const deptOption = options.find(opt => opt.value === course.department);
-          if (deptOption) {
-            setSelectedDepartment(deptOption);
-          }
+  const getProgramById = async (programId: string, departmentId?: string) => {
+    try {
+      let response = await programService.getPrograms({
+        page: 1,
+        limit: 100,
+        department: departmentId
+      });
+      let programs = response?.data || [];
+      let program = programs.find((p: { _id: string; name: string }) => p._id === programId);
+      
+      if (!program && departmentId) {
+        response = await programService.getPrograms({
+          page: 1,
+          limit: 100
         });
+        programs = response?.data || [];
+        program = programs.find((p: { _id: string; name: string }) => p._id === programId);
       }
       
-      if (course.program) {
-        // We'll need to fetch the program name to set the selected option
-        // This will be set after department is loaded
-        loadProgramOptions('').then(options => {
-          const programOption = options.find(opt => opt.value === course.program);
-          if (programOption) {
-            setSelectedProgram(programOption);
-          }
-        });
+      return program ? { value: program._id, label: program.name } : null;
+    } catch (error) {
+      console.error('Error fetching program by ID:', error);
+      return null;
+    }
+  };
+
+  const getInstructorById = async (instructorId: string) => {
+    try {
+      const response = await userService.getUsers(1, 100, '', { role: 'faculty' });
+      const instructor = response?.data?.find((u: { _id: string; fullName: string }) => u._id === instructorId);
+      return instructor ? { value: instructor._id, label: instructor.fullName } : null;
+    } catch (error) {
+      console.error('Error fetching instructor by ID:', error);
+      return null;
+    }
+  };
+
+  useEffect(() => {
+    const loadCourseData = async () => {
+      if (!course) {
+        // Reset selections when course is null
+        setSelectedDepartment(null);
+        setSelectedProgram(null);
+        setSelectedInstructor(null);
+        return;
       }
 
-      // Handle instructor selection - check multiple possible fields
-      const instructorId = course.instructor || course.instructorName;
-      if (instructorId) {
-        console.log('Loading instructor options for:', instructorId);
-        loadInstructorOptions('').then(options => {
-          console.log('Available instructor options:', options);
-          const instructorOption = options.find(opt => opt.value === instructorId);
-          console.log('Found instructor option:', instructorOption);
+      // Set basic form values
+      setValue('name', course.name ?? '');
+      setValue('code', course.code ?? '');
+      setValue('description', course.description ?? '');
+      setValue('credits', course.credits ?? 3);
+      setValue('semester', String(course.semester ?? ''));
+      setValue('academicYear', String(course.year ?? ''));
+      setValue('maxStudents', course.maxStudents ?? 30);
+      setValue('isActive', course.isActive ?? true);
+
+      // Extract department ID (handle both string and object cases)
+      const departmentId = typeof course.department === 'string' 
+        ? course.department 
+        : course.department?._id;
+
+      // Extract program ID (handle both string and object cases)
+      const programId = typeof course.program === 'string' 
+        ? course.program 
+        : (course.program as { _id: string })?._id;
+
+      // Extract instructor ID (handle multiple possible fields)
+      const instructorId = course.instructor ?? 
+                          course.instructorName ?? 
+                          course.faculty?._id;
+
+      try {
+        // Load and set department first
+        if (departmentId) {
+          setValue('department', departmentId);
+          const departmentOption = await getDepartmentById(departmentId);
+          if (departmentOption) {
+            setSelectedDepartment(departmentOption);
+          }
+        }
+
+        // Load and set program (ensure department is set first)
+        if (programId && departmentId) {
+          setValue('program', programId);
+          setTimeout(async () => {
+            const programOption = await getProgramById(programId, departmentId);
+            if (programOption) {
+              setSelectedProgram(programOption);
+              setProgramOptionsKey(prev => prev + 1);
+            }
+          }, 200);
+        }
+
+        // Load and set instructor
+        if (instructorId) {
+          setValue('instructor', instructorId);
+          const instructorOption = await getInstructorById(instructorId);
           if (instructorOption) {
             setSelectedInstructor(instructorOption);
-          } else {
-            console.log('Instructor not found in options, instructorId:', instructorId);
-            console.log('Available option values:', options.map(opt => opt.value));
           }
-        }).catch(error => {
-          console.error('Error loading instructor options:', error);
-        });
-      } else {
-        console.log('No instructor found in course data');
-        console.log('Course data:', course);
+        }
+      } catch (error) {
+        console.error('Error loading course data:', error);
       }
-    }
+    };
+
+    loadCourseData();
   }, [course, setValue]);
 
   const onSubmit = async (data: UpdateCourseRequest) => {
     if (!course) return;
     try {
       await updateCourseMutation.mutateAsync({ id: course._id, courseData: data });
+      toast.success('Course updated successfully!');
       reset();
+      setSelectedDepartment(null);
+      setSelectedProgram(null);
+      setSelectedInstructor(null);
       onClose();
     } catch (error) {
       console.error('Failed to update course:', error);
+      toast.error('Failed to update course. Please try again.');
     }
   };
+
+  // Reset form and selections when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      reset();
+      setSelectedDepartment(null);
+      setSelectedProgram(null);
+      setSelectedInstructor(null);
+    }
+  }, [isOpen, reset]);
 
   if (!isOpen || !course) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
+    <div 
+      className="fixed top-0 left-0 w-screen h-screen bg-black bg-opacity-60 flex items-center justify-center z-50 p-4"
+      style={{ margin: 0, padding: '1rem' }}
+    >
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[95vh] overflow-hidden flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50">
@@ -256,7 +361,7 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({ isOpen, onClose, cour
               <div className="flex items-center mb-6">
                 <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center mr-3">
                   <svg className="h-4 w-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900">Basic Information</h3>
@@ -411,7 +516,7 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({ isOpen, onClose, cour
                         loadOptions={loadDepartmentOptions}
                         onChange={(newValue) => {
                           const singleValue = newValue as SingleValue<SelectOption>;
-                          field.onChange(singleValue?.value || '');
+                          field.onChange(singleValue?.value ?? '');
                           setSelectedDepartment(singleValue);
 
                           // Clear selected program when department changes
@@ -447,28 +552,25 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({ isOpen, onClose, cour
                     rules={{ required: 'Program is required' }}
                     render={({ field }) => (
                       <AsyncSelect
-                        key={programOptionsKey}
-                        loadOptions={loadProgramOptions}
+                        key={`program-${programOptionsKey}-${selectedProgram?.value || 'none'}`}
+                        loadOptions={loadProgramOptionsForSelect}
                         onChange={(newValue) => {
                           const singleValue = newValue as SingleValue<SelectOption>;
-                          field.onChange(singleValue?.value || '');
+                          field.onChange(singleValue?.value ?? '');
                           setSelectedProgram(singleValue);
                         }}
                         onBlur={field.onBlur}
                         value={selectedProgram}
-                        placeholder={selectedDepartment ? "Select program" : "Please select a department first"}
+                        placeholder="Select program"
                         styles={selectStyles}
                         className="w-full"
                         isSearchable
-                        cacheOptions
-                        defaultOptions
-                        isDisabled={!selectedDepartment}
+                        cacheOptions={false}
+                        defaultOptions={true}
+                        noOptionsMessage={() => selectedDepartment ? "No programs found" : "Please select a department first"}
                       />
                     )}
                   />
-                  {!selectedDepartment && (
-                    <p className="mt-1 text-sm text-gray-500">Please select a department first to view available programs</p>
-                  )}
                   {errors.program && (
                     <p className="mt-1 text-sm text-red-600">{errors.program.message}</p>
                   )}
@@ -487,7 +589,7 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({ isOpen, onClose, cour
                         loadOptions={loadInstructorOptions}
                         onChange={(newValue) => {
                           const singleValue = newValue as SingleValue<SelectOption>;
-                          field.onChange(singleValue?.value || '');
+                          field.onChange(singleValue?.value ?? '');
                           setSelectedInstructor(singleValue);
                         }}
                         onBlur={field.onBlur}
@@ -620,4 +722,4 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({ isOpen, onClose, cour
   );
 };
 
-export default EditCourseModal; 
+export default EditCourseModal;

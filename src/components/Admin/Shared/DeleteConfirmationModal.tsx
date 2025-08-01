@@ -36,7 +36,10 @@ const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+    <div 
+      className="fixed top-0 left-0 w-screen h-screen bg-black bg-opacity-60 flex items-center justify-center z-50 p-4"
+      style={{ margin: 0, padding: '1rem' }}
+    >
       <div className="bg-white rounded-2xl shadow-2xl p-0 w-full max-w-md animate-fadeIn">
         <div className="flex flex-col items-center p-6 relative">
           <button
