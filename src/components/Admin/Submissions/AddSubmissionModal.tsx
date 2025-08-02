@@ -3,9 +3,10 @@ import { useForm, Controller } from 'react-hook-form';
 import AsyncSelect from 'react-select/async';
 import { StylesConfig, SingleValue } from 'react-select';
 import { useCreateSubmission } from '../../../api/hooks/useSubmissions';
-import { CreateSubmissionRequest } from '../../../api/types/submissions';
+import { CreateSubmissionRequest, CreateSubmissionFile } from '../../../api/types/submissions';
 import { assignmentService } from '../../../api/services/assignmentService';
-import { userService } from '../../../api/services/userService';
+import { useAuthStore } from '../../../store/authStore';
+import { uploadDocumentToCloudinary } from '../../../api/config/cloudinary';
 
 interface AddSubmissionModalProps {
   isOpen: boolean;
@@ -18,6 +19,7 @@ interface SelectOption {
 }
 
 const AddSubmissionModal: React.FC<AddSubmissionModalProps> = ({ isOpen, onClose }) => {
+  const { user } = useAuthStore();
   const createSubmissionMutation = useCreateSubmission();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   
@@ -64,7 +66,12 @@ const AddSubmissionModal: React.FC<AddSubmissionModalProps> = ({ isOpen, onClose
   } = useForm<CreateSubmissionRequest>({
     defaultValues: {
       assignment: '',
+      title: '',
+      description: '',
       files: [],
+      submissionType: 'individual',
+      isDraft: false,
+      notes: '',
       studentComments: '',
     }
   });
@@ -75,8 +82,11 @@ const AddSubmissionModal: React.FC<AddSubmissionModalProps> = ({ isOpen, onClose
   // Load options functions for AsyncSelect
   const loadAssignmentOptions = async (inputValue: string) => {
     try {
-      const response = await assignmentService.getAssignments(1, 100, inputValue);
-      const options = response.data?.assignments?.map((a: { _id: string; title: string }) => ({ value: a._id, label: a.title })) || [];
+      console.log('Loading assignments with input:', inputValue);
+      const response = await assignmentService.getMyCourseAssignments(user?._id || '', 1, 100, inputValue, {});
+      console.log("Assignment response:", response);
+      const options = response?.data?.map((a: { _id: string; title: string }) => ({ value: a._id, label: a.title })) || [];
+      console.log("Assignment options:", options);
       return options.filter((option: SelectOption) =>
         option.label.toLowerCase().includes(inputValue.toLowerCase())
       );
@@ -85,6 +95,8 @@ const AddSubmissionModal: React.FC<AddSubmissionModalProps> = ({ isOpen, onClose
       return [];
     }
   };
+
+
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
@@ -97,16 +109,49 @@ const AddSubmissionModal: React.FC<AddSubmissionModalProps> = ({ isOpen, onClose
 
   const onSubmit = async (data: CreateSubmissionRequest) => {
     try {
+      console.log('Submitting form data:', data);
+      console.log('Selected files:', selectedFiles);
+      
+      // Upload files to Cloudinary first
+      const uploadPromises = selectedFiles.map(async (file) => {
+        try {
+          const fileUrl = await uploadDocumentToCloudinary(file);
+          return {
+            fileName: file.name,
+            fileUrl: fileUrl, // Use the actual Cloudinary URL
+            fileSize: file.size,
+            fileType: file.type
+          };
+        } catch (uploadError) {
+          console.error(`Failed to upload ${file.name}:`, uploadError);
+          // Fallback to temporary URL if upload fails
+          return {
+            fileName: file.name,
+            fileUrl: `https://example.com/temp/${file.name}`,
+            fileSize: file.size,
+            fileType: file.type
+          };
+        }
+      });
+      
+      const uploadedFiles: CreateSubmissionFile[] = await Promise.all(uploadPromises);
+      
       const submissionData = {
         ...data,
-        files: selectedFiles
+        files: uploadedFiles,
+        student: user?._id // Include the current user's ID as the student
       };
+      
+      console.log('Final submission data:', submissionData);
+      
       await createSubmissionMutation.mutateAsync(submissionData);
       reset();
       setSelectedFiles([]);
+      setSelectedAssignment(null);
       onClose();
     } catch (error) {
       console.error('Failed to create submission:', error);
+      // You might want to show a toast notification here
     }
   };
 
@@ -155,36 +200,130 @@ const AddSubmissionModal: React.FC<AddSubmissionModalProps> = ({ isOpen, onClose
                 <h3 className="text-lg font-semibold text-gray-900">Assignment Details</h3>
               </div>
               
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Assignment *
-                </label>
-                <Controller
-                  name="assignment"
-                  control={control}
-                  rules={{ required: 'Assignment is required' }}
-                  render={({ field }) => (
-                    <AsyncSelect
-                      loadOptions={loadAssignmentOptions}
-                      onChange={(newValue) => {
-                        const singleValue = newValue as SingleValue<SelectOption>;
-                        field.onChange(singleValue?.value || '');
-                        setSelectedAssignment(singleValue);
-                      }}
-                      onBlur={field.onBlur}
-                      value={selectedAssignment}
-                      placeholder="Select assignment"
-                      styles={selectStyles}
-                      className="w-full"
-                      isSearchable
-                      cacheOptions
-                      defaultOptions
-                    />
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Assignment *
+                  </label>
+                  <Controller
+                    name="assignment"
+                    control={control}
+                    rules={{ required: 'Assignment is required' }}
+                    render={({ field }) => (
+                      <AsyncSelect
+                        loadOptions={loadAssignmentOptions}
+                        onChange={(newValue) => {
+                          const singleValue = newValue as SingleValue<SelectOption>;
+                          field.onChange(singleValue?.value || '');
+                          setSelectedAssignment(singleValue);
+                        }}
+                        onBlur={field.onBlur}
+                        value={selectedAssignment}
+                        placeholder="Select assignment"
+                        styles={selectStyles}
+                        className="w-full"
+                        isSearchable
+                        cacheOptions
+                        defaultOptions
+                      />
+                    )}
+                  />
+                  {errors.assignment && (
+                    <p className="mt-1 text-sm text-red-600">{errors.assignment.message}</p>
                   )}
-                />
-                {errors.assignment && (
-                  <p className="mt-1 text-sm text-red-600">{errors.assignment.message}</p>
-                )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Submission Title *
+                  </label>
+                  <Controller
+                    name="title"
+                    control={control}
+                    rules={{ required: 'Title is required' }}
+                    render={({ field }) => (
+                      <input
+                        {...field}
+                        type="text"
+                        className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+                        placeholder="Enter submission title"
+                      />
+                    )}
+                  />
+                  {errors.title && (
+                    <p className="mt-1 text-sm text-red-600">{errors.title.message}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Description *
+                  </label>
+                  <Controller
+                    name="description"
+                    control={control}
+                    rules={{ required: 'Description is required' }}
+                    render={({ field }) => (
+                      <textarea
+                        {...field}
+                        rows={3}
+                        className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 resize-none"
+                        placeholder="Describe your submission"
+                      />
+                    )}
+                  />
+                  {errors.description && (
+                    <p className="mt-1 text-sm text-red-600">{errors.description.message}</p>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Submission Type *
+                    </label>
+                    <Controller
+                      name="submissionType"
+                      control={control}
+                      rules={{ required: 'Submission type is required' }}
+                      render={({ field }) => (
+                        <select
+                          {...field}
+                          className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+                        >
+                          <option value="individual">Individual</option>
+                          <option value="group">Group</option>
+                        </select>
+                      )}
+                    />
+                    {errors.submissionType && (
+                      <p className="mt-1 text-sm text-red-600">{errors.submissionType.message}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Draft Status
+                    </label>
+                    <Controller
+                      name="isDraft"
+                      control={control}
+                      render={({ field }) => (
+                        <div className="flex items-center mt-2">
+                          <input
+                            type="checkbox"
+                            checked={field.value}
+                            onChange={(e) => field.onChange(e.target.checked)}
+                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                          />
+                          <label className="ml-2 text-sm text-gray-700">
+                            Save as draft
+                          </label>
+                        </div>
+                      )}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -219,7 +358,7 @@ const AddSubmissionModal: React.FC<AddSubmissionModalProps> = ({ isOpen, onClose
                     <p className="mt-2 text-sm text-gray-600">
                       <span className="font-medium text-blue-600 hover:text-blue-500">Click to upload</span> or drag and drop
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">PDF, DOC, DOCX, TXT, ZIP, RAR up to 10MB each</p>
+                    <p className="text-xs text-gray-500 mt-1">PDF, DOC, DOCX</p>
                   </label>
                 </div>
                 

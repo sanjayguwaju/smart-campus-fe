@@ -116,24 +116,26 @@ export const submissionService = {
     return response.data;
   },
 
-  async createSubmission(submissionData: CreateSubmissionRequest): Promise<CreateSubmissionResponse> {
-    const formData = new FormData();
-    formData.append('assignment', submissionData.assignment);
-    
-    if (submissionData.studentComments) {
-      formData.append('studentComments', submissionData.studentComments);
-    }
-    
-    submissionData.files.forEach((file, index) => {
-      formData.append(`files`, file);
-    });
+  async createSubmission(submissionData: CreateSubmissionRequest & { student?: string }): Promise<CreateSubmissionResponse> {
+    // Prepare the JSON payload according to the API specification
+    const payload = {
+      assignment: submissionData.assignment,
+      title: submissionData.title,
+      description: submissionData.description,
+      files: submissionData.files,
+      submissionType: submissionData.submissionType,
+      isDraft: submissionData.isDraft,
+      notes: submissionData.notes,
+      studentComments: submissionData.studentComments,
+      ...(submissionData.student && { student: submissionData.student })
+    };
 
     const response = await apiClient.post<CreateSubmissionResponse>(
       "/submissions",
-      formData,
+      payload,
       {
         headers: {
-          'Content-Type': 'multipart/form-data',
+          'Content-Type': 'application/json',
         },
       }
     );

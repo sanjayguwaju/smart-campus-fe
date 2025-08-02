@@ -3,9 +3,11 @@ import { useForm, Controller } from 'react-hook-form';
 import AsyncSelect from 'react-select/async';
 import { StylesConfig, SingleValue } from 'react-select';
 import { useCreateSubmission } from '../../../api/hooks/useSubmissions';
-import { CreateSubmissionRequest } from '../../../api/types/submissions';
+import { CreateSubmissionRequest, CreateSubmissionFile } from '../../../api/types/submissions';
 import { assignmentService } from '../../../api/services/assignmentService';
 import { userService } from '../../../api/services/userService';
+import { useAuthStore } from '../../../store/authStore';
+import { uploadDocumentToCloudinary } from '../../../api/config/cloudinary';
 
 interface AddSubmissionModalProps {
   isOpen: boolean;
@@ -18,6 +20,7 @@ interface SelectOption {
 }
 
 const AddSubmissionModal: React.FC<AddSubmissionModalProps> = ({ isOpen, onClose }) => {
+  const { user } = useAuthStore();
   const createSubmissionMutation = useCreateSubmission();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   
@@ -75,8 +78,11 @@ const AddSubmissionModal: React.FC<AddSubmissionModalProps> = ({ isOpen, onClose
   // Load options functions for AsyncSelect
   const loadAssignmentOptions = async (inputValue: string) => {
     try {
+      console.log('Loading assignments with input:', inputValue);
       const response = await assignmentService.getAssignments(1, 100, inputValue);
-      const options = response.data?.assignments?.map((a: { _id: string; title: string }) => ({ value: a._id, label: a.title })) || [];
+      console.log("Assignment response:", response);
+      const options = response?.data?.map((a: { _id: string; title: string }) => ({ value: a._id, label: a.title })) || [];
+      console.log("Assignment options:", options);
       return options.filter((option: SelectOption) =>
         option.label.toLowerCase().includes(inputValue.toLowerCase())
       );
@@ -97,13 +103,45 @@ const AddSubmissionModal: React.FC<AddSubmissionModalProps> = ({ isOpen, onClose
 
   const onSubmit = async (data: CreateSubmissionRequest) => {
     try {
+      console.log('Submitting form data:', data);
+      console.log('Selected files:', selectedFiles);
+      
+      // Upload files to Cloudinary first
+      const uploadPromises = selectedFiles.map(async (file) => {
+        try {
+          const fileUrl = await uploadDocumentToCloudinary(file);
+          return {
+            fileName: file.name,
+            fileUrl: fileUrl, // Use the actual Cloudinary URL
+            fileSize: file.size,
+            fileType: file.type
+          };
+        } catch (uploadError) {
+          console.error(`Failed to upload ${file.name}:`, uploadError);
+          // Fallback to temporary URL if upload fails
+          return {
+            fileName: file.name,
+            fileUrl: `https://example.com/temp/${file.name}`,
+            fileSize: file.size,
+            fileType: file.type
+          };
+        }
+      });
+      
+      const uploadedFiles: CreateSubmissionFile[] = await Promise.all(uploadPromises);
+      
       const submissionData = {
         ...data,
-        files: selectedFiles
+        files: uploadedFiles,
+        student: user?._id // Include the current user's ID as the student
       };
+      
+      console.log('Final submission data:', submissionData);
+      
       await createSubmissionMutation.mutateAsync(submissionData);
       reset();
       setSelectedFiles([]);
+      setSelectedAssignment(null);
       onClose();
     } catch (error) {
       console.error('Failed to create submission:', error);

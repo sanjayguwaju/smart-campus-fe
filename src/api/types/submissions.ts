@@ -7,6 +7,13 @@ export interface SubmissionFile {
   uploadedAt: string;
 }
 
+export interface CreateSubmissionFile {
+  fileName: string;
+  fileUrl: string;
+  fileSize: number;
+  fileType: string;
+}
+
 export interface CriteriaScore {
   _id: string;
   criterion: string;
@@ -114,7 +121,12 @@ export interface SubmissionResponse {
 
 export interface CreateSubmissionRequest {
   assignment: string;
-  files: File[];
+  title: string;
+  description: string;
+  files: CreateSubmissionFile[];
+  submissionType: 'individual' | 'group';
+  isDraft: boolean;
+  notes?: string;
   studentComments?: string;
 }
 
