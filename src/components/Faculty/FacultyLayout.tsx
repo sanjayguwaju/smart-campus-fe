@@ -23,6 +23,7 @@ const FacultyLayout: React.FC = () => {
     { name: 'Students', href: '/faculty/students', icon: Users, isChild: true },
     { name: 'Assignments', href: '/faculty/assignments', icon: FileText },
     { name: 'Submissions', href: '/faculty/submissions', icon: FileText },
+    { name: 'Grades', href: '/faculty/grades', icon: Award },
     { name: 'Profile', href: '/faculty/profile', icon: User },
   ];
 
@@ -69,6 +70,12 @@ const FacultyLayout: React.FC = () => {
             </div>
             
             <div className="flex items-center space-x-4">
+              <Link
+                to="/"
+                className="bg-gray-600 text-white px-3 py-2 rounded-lg hover:bg-gray-700 text-sm font-medium"
+              >
+                ← Back to Main Page
+              </Link>
               <div className="flex items-center space-x-3">
                 <div className="text-right">
                   <p className="text-sm font-medium text-gray-900">{user?.firstName} {user?.lastName}</p>

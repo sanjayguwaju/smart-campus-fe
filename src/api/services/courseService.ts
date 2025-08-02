@@ -16,6 +16,7 @@ export const courseService = {
   async getCourses(page = 1, limit = 10, search?: string, filters?: {
     status?: string;
     department?: string;
+    program?: string;
     instructor?: string;
     semester?: string;
     academicYear?: string;
@@ -31,6 +32,7 @@ export const courseService = {
     if (filters) {
       if (filters.status) params.append('status', filters.status);
       if (filters.department) params.append('department', filters.department);
+      if (filters.program) params.append('program', filters.program);
       if (filters.instructor) params.append('instructor', filters.instructor);
       if (filters.semester) params.append('semester', filters.semester);
       if (filters.academicYear) params.append('academicYear', filters.academicYear);
@@ -60,7 +62,11 @@ export const courseService = {
       instructorName,
       creditHours: courseData.credits,
       semester: Number(courseData.semester), // only send semester
-      year: courseData.academicYear ? parseInt(courseData.academicYear.split('-')[0], 10) : undefined,
+      year: courseData.academicYear && typeof courseData.academicYear === 'string' 
+        ? parseInt(courseData.academicYear.split('-')[0], 10) 
+        : courseData.academicYear && typeof courseData.academicYear === 'number'
+        ? courseData.academicYear
+        : undefined,
     };
     // Only delete fields that are not needed by the backend
     delete (mappedData as any).instructor;
@@ -91,7 +97,11 @@ export const courseService = {
       instructorName,
       creditHours: courseData.credits,
       semester: Number(courseData.semester), // ensure number
-      year: courseData.academicYear ? parseInt(courseData.academicYear.split('-')[0], 10) : undefined,
+      year: courseData.academicYear && typeof courseData.academicYear === 'string' 
+        ? parseInt(courseData.academicYear.split('-')[0], 10) 
+        : courseData.academicYear && typeof courseData.academicYear === 'number'
+        ? courseData.academicYear
+        : undefined,
     };
     delete (mappedData as any).instructor;
     delete (mappedData as any).credits;

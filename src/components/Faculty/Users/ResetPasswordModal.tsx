@@ -99,7 +99,7 @@ const ResetPasswordModal: React.FC<ResetPasswordModalProps> = ({
                     message: 'Password must be at least 8 characters long'
                   },
                   pattern: {
-                    value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/,
+                    value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]/,
                     message: 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'
                   }
                 })}
@@ -175,8 +175,8 @@ const ResetPasswordModal: React.FC<ResetPasswordModalProps> = ({
                 One number
               </li>
               <li className="flex items-center">
-                <span className={`w-1.5 h-1.5 rounded-full mr-2 ${/[@$!%*?&]/.test(newPassword || '') ? 'bg-green-500' : 'bg-gray-300'}`}></span>
-                One special character (@$!%*?&)
+                <span className={`w-1.5 h-1.5 rounded-full mr-2 ${/[@$!%*?&#]/.test(newPassword || '') ? 'bg-green-500' : 'bg-gray-300'}`}></span>
+                One special character (@$!%*?&#)
               </li>
             </ul>
           </div>

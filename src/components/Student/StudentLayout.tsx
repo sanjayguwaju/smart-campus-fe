@@ -24,6 +24,8 @@ const StudentLayout: React.FC = () => {
     { name: 'My Courses', href: '/student/courses', icon: BookOpen },
     { name: 'Assignments', href: '/student/assignments', icon: BookOpen },
     { name: 'Submissions', href: '/student/submissions', icon: FileText },
+    { name: 'Grades', href: '/student/grades', icon: Award },
+    { name: 'Grade History', href: '/student/grade-history', icon: GraduationCap },
     { name: 'Profile', href: '/student/profile', icon: User },
   ];
 
@@ -70,6 +72,12 @@ const StudentLayout: React.FC = () => {
             </div>
             
             <div className="flex items-center space-x-4">
+              <Link
+                to="/"
+                className="bg-gray-600 text-white px-3 py-2 rounded-lg hover:bg-gray-700 text-sm font-medium"
+              >
+                ← Back to Main Page
+              </Link>
               <div className="flex items-center space-x-3">
                 <div className="text-right">
                   <p className="text-sm font-medium text-gray-900">{user?.displayName || user?.fullName || 'Student'}</p>
