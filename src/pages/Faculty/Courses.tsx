@@ -105,7 +105,6 @@ const Courses: React.FC = () => {
     filters
   );
 
-
   // Extract courses and pagination from data
   const courses = data?.courses || [];
   const pagination = data?.pagination;
@@ -122,14 +121,6 @@ const Courses: React.FC = () => {
 
   // Use courses directly since filtering is now handled by the API
   const filteredCourses = courses;
-
-
-
-
-
-
-
-
 
   const handleViewCourse = (course: CourseData) => {
     setSelectedCourseForView(course);
@@ -268,9 +259,9 @@ const Courses: React.FC = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Course
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Department
-                </th>
+                </th> */}
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Instructor
                 </th>
@@ -329,7 +320,7 @@ const Courses: React.FC = () => {
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {/* <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {typeof course.department === 'string'
                       ? course.department
                       : (
@@ -339,7 +330,7 @@ const Courses: React.FC = () => {
                         })()
                       )
                     }
-                  </td>
+                  </td> */}
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {course.faculty && typeof course.faculty === 'object' && 'firstName' in course.faculty
                       ? course.faculty.fullName || `${course.faculty.firstName} ${course.faculty.lastName}`

@@ -295,6 +295,8 @@ const Submissions: React.FC = () => {
     );
   }
 
+
+
   return (
     <div className="space-y-6">
       {/* Page header */}
@@ -534,6 +536,35 @@ const Submissions: React.FC = () => {
                   </td>
                 </tr>
               ))}
+              {(!Array.isArray(filteredSubmissions) || filteredSubmissions.length === 0) && (
+                <tr>
+                  <td colSpan={8} className="px-6 py-12 text-center">
+                    <div className="text-gray-500">
+                      <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                      </svg>
+                      <h3 className="mt-2 text-sm font-medium text-gray-900">No submissions found</h3>
+                      <p className="mt-1 text-sm text-gray-500">
+                        {searchTerm || Object.values(filters).some(v => v !== '' && v !== undefined)
+                          ? 'Try adjusting your search or filter criteria.'
+                          : 'You haven\'t received any assignment submissions yet. Students will appear here once they submit their assignments.'
+                        }
+                      </p>
+                      {!searchTerm && !Object.values(filters).some(v => v !== '' && v !== undefined) && (
+                        <div className="mt-6">
+                          <button
+                            onClick={() => setIsAddSubmissionModalOpen(true)}
+                            className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                          >
+                            <Plus className="h-4 w-4 mr-2" />
+                            Add Submission
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
