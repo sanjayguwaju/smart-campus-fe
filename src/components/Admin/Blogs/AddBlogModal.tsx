@@ -81,7 +81,7 @@ const AddBlogModal: React.FC<AddBlogModalProps> = ({ isOpen, onClose }) => {
       const formDataToSend = new FormData();
       formDataToSend.append('title', formData.title || '');
       formDataToSend.append('slug', formData.slug || '');
-      formDataToSend.append('author', formData.author || '');
+      // Note: author is now set automatically from the authenticated user
       formDataToSend.append('content', formData.content || '');
       formDataToSend.append('summary', formData.summary || '');
       formDataToSend.append('isPublished', formData.isPublished?.toString() || 'false');
@@ -192,16 +192,15 @@ const AddBlogModal: React.FC<AddBlogModalProps> = ({ isOpen, onClose }) => {
                 {/* Author */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Author *
+                    Author (Auto-set from current user)
                   </label>
                   <input
                     type="text"
                     name="author"
                     value={formData.author}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    disabled
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-600 cursor-not-allowed"
                     placeholder="Author name"
-                    required
                   />
                 </div>
 
