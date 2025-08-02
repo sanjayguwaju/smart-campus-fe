@@ -28,7 +28,6 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({ isOpen, onClose, cour
   const [selectedInstructor, setSelectedInstructor] = React.useState<SelectOption | null>(null);
   const [selectedProgram, setSelectedProgram] = React.useState<SelectOption | null>(null);
   const [programOptionsKey, setProgramOptionsKey] = React.useState<number>(0);
-  const [isLoadingOptions, setIsLoadingOptions] = React.useState<boolean>(false);
 
   // Trigger program options reload when department changes
   useEffect(() => {
@@ -73,7 +72,6 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({ isOpen, onClose, cour
   };
 
   const loadProgramOptions = async (inputValue: string, departmentId?: string) => {
-  const loadProgramOptions = async (inputValue: string, departmentId?: string) => {
     try {
       // Use provided departmentId or fall back to selectedDepartment
       const deptId = departmentId || selectedDepartment?.value;
@@ -87,7 +85,6 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({ isOpen, onClose, cour
         page: 1,
         limit: 100,
         search: inputValue,
-        department: deptId
         department: deptId
       });
       const options = response?.data?.map((p: { _id: string; name: string }) => ({ value: p?._id, label: p?.name })) || [];
@@ -358,18 +355,7 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({ isOpen, onClose, cour
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6">
-          {isLoadingOptions ? (
-            <div className="flex items-center justify-center h-64">
-              <div className="text-center">
-                <svg className="animate-spin h-8 w-8 text-blue-600 mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                <p className="text-gray-600">Loading course data...</p>
-              </div>
-            </div>
-          ) : (
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
             {/* Basic Information Section */}
             <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
               <div className="flex items-center mb-6">
@@ -730,7 +716,6 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({ isOpen, onClose, cour
               </button>
             </div>
           </form>
-          )}
         </div>
       </div>
     </div>
