@@ -5,7 +5,11 @@ export interface BlogPost {
   title: string;
   slug: string;
   author: string;
-  coverImage?: string;
+  coverImage?: {
+    url: string;
+    alt?: string;
+    caption?: string;
+  };
   content: string;
   summary: string;
   tags: string[];

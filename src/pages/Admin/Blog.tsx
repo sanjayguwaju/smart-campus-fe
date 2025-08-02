@@ -220,11 +220,11 @@ const AdminBlog: React.FC = () => {
               {/* Publish/Unpublish button top-right, outside padded content, matching events */}
               <div className="p-6 flex flex-col">
                 {/* Blog Cover Image */}
-                {post.coverImage ? (
+                {post.coverImage?.url ? (
                   <div className="mb-4">
                     <img
-                      src={post.coverImage}
-                      alt={post.title}
+                      src={post.coverImage.url}
+                      alt={post.coverImage.alt || post.title}
                       className="w-full h-48 object-cover rounded-lg"
                       onError={e => {
                         const target = e.target as HTMLImageElement;

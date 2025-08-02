@@ -1,5 +1,5 @@
 import React from 'react';
-import { BlogPost } from '../../api/services/blogService';
+import { BlogPost } from '../../../api/services/blogService';
 
 interface ViewBlogModalProps {
   isOpen: boolean;
@@ -27,14 +27,14 @@ const ViewBlogModal: React.FC<ViewBlogModalProps> = ({ isOpen, blog, onClose }) 
           <div className="flex items-center gap-4 mb-2">
             <span className="text-sm text-gray-600">By {blog.author}</span>
             <span className="text-sm text-gray-400">{blog.createdAt ? new Date(blog.createdAt).toLocaleDateString() : ''}</span>
-            {blog.published ? (
+            {blog.isPublished ? (
               <span className="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full">Published</span>
             ) : (
               <span className="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded-full">Draft</span>
             )}
           </div>
-          {blog.coverImage && (
-            <img src={`/${blog.coverImage}`} alt="Cover" className="w-full max-h-64 object-cover rounded mb-4" />
+          {blog.coverImage?.url && (
+            <img src={blog.coverImage.url} alt={blog.coverImage.alt || "Cover"} className="w-full max-h-64 object-cover rounded mb-4" />
           )}
           <div className="mb-2">
             <strong>Summary:</strong> {blog.summary}

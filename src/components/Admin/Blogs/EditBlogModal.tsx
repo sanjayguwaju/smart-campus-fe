@@ -14,7 +14,22 @@ interface EditBlogModalProps {
 const EditBlogModal: React.FC<EditBlogModalProps> = ({ isOpen, onClose, blog }) => {
   const { updateBlog } = useBlogs();
   
-  const [formData, setFormData] = useState<Partial<BlogPost>>({
+  // Form data interface for editing (coverImage as string)
+  interface FormData {
+    title: string;
+    slug: string;
+    author: string;
+    coverImage: string;
+    content: string;
+    summary: string;
+    tags: string[];
+    isPublished: boolean;
+    status: 'draft' | 'published' | 'archived';
+    credits: string;
+    attachments: string[];
+  }
+  
+  const [formData, setFormData] = useState<FormData>({
     title: '',
     slug: '',
     author: '',
@@ -39,7 +54,7 @@ const EditBlogModal: React.FC<EditBlogModalProps> = ({ isOpen, onClose, blog }) 
         title: blog.title || '',
         slug: blog.slug || '',
         author: blog.author || '',
-        coverImage: blog.coverImage || '',
+        coverImage: blog.coverImage?.url || '',
         content: blog.content || '',
         summary: blog.summary || '',
         tags: blog.tags || [],
@@ -98,7 +113,7 @@ const EditBlogModal: React.FC<EditBlogModalProps> = ({ isOpen, onClose, blog }) 
       const formDataToSend = new FormData();
       formDataToSend.append('title', formData.title || '');
       formDataToSend.append('slug', formData.slug || '');
-      formDataToSend.append('author', formData.author || '');
+      // Note: author is not editable and is set automatically from the authenticated user
       formDataToSend.append('content', formData.content || '');
       formDataToSend.append('summary', formData.summary || '');
       formDataToSend.append('isPublished', formData.isPublished?.toString() || 'false');
@@ -192,16 +207,15 @@ const EditBlogModal: React.FC<EditBlogModalProps> = ({ isOpen, onClose, blog }) 
                 {/* Author */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Author *
+                    Author (Auto-set from current user)
                   </label>
                   <input
                     type="text"
                     name="author"
                     value={formData.author}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    disabled
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-600 cursor-not-allowed"
                     placeholder="Author name"
-                    required
                   />
                 </div>
 

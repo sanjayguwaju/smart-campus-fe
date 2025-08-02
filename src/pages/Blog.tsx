@@ -109,11 +109,11 @@ const Blog: React.FC = () => {
           <div className="bg-white rounded-lg shadow-lg overflow-hidden">
             <div className="md:flex">
               <div className="md:w-1/2">
-                {featuredPost.coverImage ? (
-                  <div className="h-64 md:h-full relative overflow-hidden">
+                {featuredPost.coverImage?.url ? (
+                  <div className="h-64 md:h-80 lg:h-96 relative overflow-hidden">
                     <img
-                      src={featuredPost.coverImage}
-                      alt={featuredPost.title}
+                      src={featuredPost.coverImage.url}
+                      alt={featuredPost.coverImage.alt || featuredPost.title}
                       className="w-full h-full object-cover"
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
@@ -122,7 +122,7 @@ const Blog: React.FC = () => {
                       }}
                     />
                     {/* Fallback placeholder */}
-                    <div className="hidden h-64 md:h-full bg-gradient-to-br from-blue-400 to-purple-600 flex items-center justify-center">
+                    <div className="hidden h-64 md:h-80 lg:h-96 bg-gradient-to-br from-blue-400 to-purple-600 flex items-center justify-center">
                       <div className="text-white text-center">
                         <Calendar className="h-16 w-16 mx-auto mb-4" />
                         <p className="text-lg">Featured Article</p>
@@ -169,11 +169,11 @@ const Blog: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {filteredPosts.map((post: BlogPost) => (
             <article key={post._id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-              {post.coverImage ? (
-                <div className="h-48 relative overflow-hidden">
+              {post.coverImage?.url ? (
+                <div className="h-40 md:h-44 relative overflow-hidden">
                   <img
-                    src={post.coverImage}
-                    alt={post.title}
+                    src={post.coverImage.url}
+                    alt={post.coverImage.alt || post.title}
                     className="w-full h-full object-cover"
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;
@@ -182,7 +182,7 @@ const Blog: React.FC = () => {
                     }}
                   />
                   {/* Fallback placeholder */}
-                  <div className="hidden h-48 bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
+                  <div className="hidden h-40 md:h-44 bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
                     <Tag className="h-12 w-12 text-gray-400" />
                   </div>
                 </div>
