@@ -90,7 +90,6 @@ export interface CreateEnrollmentRequest {
   courses: string[];
   status: string;
   enrollmentType: string;
-  advisor: string;
   notes?: string;
   scholarship?: {
     type: string;
@@ -107,12 +106,7 @@ export interface UpdateEnrollmentRequest {
   courses?: string[];
   status?: string;
   enrollmentType?: string;
-  advisor?: string;
   notes?: string;
-  gpa?: number;
-  cgpa?: number;
-  academicStanding?: string;
-  financialStatus?: string;
   scholarship?: {
     type: string;
     amount: number;

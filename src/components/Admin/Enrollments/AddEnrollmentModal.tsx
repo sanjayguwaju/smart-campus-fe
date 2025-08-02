@@ -1,13 +1,15 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import Select, { StylesConfig } from 'react-select';
+import { SingleValue } from 'react-select';
 import AsyncSelect from 'react-select/async';
-import { useCreateEnrollment } from '../../../api/hooks/useEnrollments';
+import { useCreateEnrollment, useEnrollments } from '../../../api/hooks/useEnrollments';
 import { CreateEnrollmentRequest } from '../../../api/types/enrollments';
 import { userService } from '../../../api/services/userService';
 import { programService } from '../../../api/services/programService';
+import { departmentService } from '../../../api/services/departmentService';
 import { courseService } from '../../../api/services/courseService';
-import { CourseData } from '../../../api/types/courses';
+import { toast } from 'react-hot-toast';
 
 interface AddEnrollmentModalProps {
   isOpen: boolean;
@@ -21,11 +23,60 @@ interface SelectOption {
 
 const AddEnrollmentModal: React.FC<AddEnrollmentModalProps> = ({ isOpen, onClose }) => {
   const createEnrollmentMutation = useCreateEnrollment();
+  const { data: enrollmentsData } = useEnrollments(1, 100, '', {});
   
   // State to track selected options for display
   const [selectedStudent, setSelectedStudent] = React.useState<SelectOption | null>(null);
   const [selectedProgram, setSelectedProgram] = React.useState<SelectOption | null>(null);
   const [selectedCourses, setSelectedCourses] = React.useState<SelectOption[]>([]);
+  const [programOptionsKey, setProgramOptionsKey] = React.useState<number>(0);
+  const [courseOptionsKey, setCourseOptionsKey] = React.useState<number>(0);
+  const [enrollmentInfo, setEnrollmentInfo] = React.useState<string>('');
+
+  // Trigger program options reload when needed
+  useEffect(() => {
+    setProgramOptionsKey(prev => prev + 1);
+  }, []);
+
+  // Trigger course options reload when program changes
+  useEffect(() => {
+    if (selectedProgram) {
+      setCourseOptionsKey(prev => prev + 1);
+      // Clear selected courses when program changes
+      if (selectedCourses.length > 0) {
+        setSelectedCourses([]);
+        setValue('courses', []);
+      }
+    }
+  }, [selectedProgram]);
+
+  // Check enrollment status when student or program changes
+  useEffect(() => {
+    if (selectedStudent && selectedProgram && enrollmentsData?.enrollments) {
+      const existingEnrollments = enrollmentsData.enrollments;
+      const studentEnrollments = existingEnrollments.filter(
+        (enrollment: any) => enrollment.student._id === selectedStudent.value
+      );
+
+      const enrollmentsInSameProgram = studentEnrollments.filter(
+        (enrollment: any) => enrollment.program._id === selectedProgram.value
+      );
+
+      if (enrollmentsInSameProgram.length > 0) {
+        const enrollmentDetails = enrollmentsInSameProgram.map((enrollment: any) => 
+          `${enrollment.status} (${enrollment.academicYear}, Semester ${enrollment.semester})`
+        ).join(', ');
+        
+        setEnrollmentInfo(
+          `Student has ${enrollmentsInSameProgram.length} enrollment(s) in this program: ${enrollmentDetails}`
+        );
+      } else {
+        setEnrollmentInfo('');
+      }
+    } else {
+      setEnrollmentInfo('');
+    }
+  }, [selectedStudent, selectedProgram, enrollmentsData]);
   
   // Custom styles for react-select
   const selectStyles: StylesConfig<SelectOption> = {
@@ -66,9 +117,9 @@ const AddEnrollmentModal: React.FC<AddEnrollmentModalProps> = ({ isOpen, onClose
     control,
     handleSubmit,
     reset,
-
+    setValue,
     formState: { errors, isSubmitting }
-  } = useForm<CreateEnrollmentRequest>({
+  } = useForm<any>({
     defaultValues: {
       student: '',
       program: '',
@@ -77,7 +128,6 @@ const AddEnrollmentModal: React.FC<AddEnrollmentModalProps> = ({ isOpen, onClose
       courses: [],
       status: 'active',
       enrollmentType: 'full_time',
-
       notes: ''
     }
   });
@@ -100,13 +150,49 @@ const AddEnrollmentModal: React.FC<AddEnrollmentModalProps> = ({ isOpen, onClose
     }
   };
 
+  const loadDepartmentOptions = async (inputValue: string) => {
+    try {
+      console.log('AddEnrollmentModal: Loading departments with inputValue:', inputValue);
+      const response = await departmentService.getDepartments(1, 100, inputValue);
+      console.log('AddEnrollmentModal: Department response:', response);
+      const options = response?.data?.map((d: { _id: string; name: string }) => ({ 
+        value: d._id, 
+        label: d.name 
+      })) || [];
+      console.log('AddEnrollmentModal: Department options:', options);
+      const filteredOptions = options.filter((option: SelectOption) =>
+        option.label.toLowerCase().includes(inputValue.toLowerCase())
+      );
+      console.log('AddEnrollmentModal: Filtered options:', filteredOptions);
+      return filteredOptions;
+    } catch (error) {
+      console.error('AddEnrollmentModal: Error loading departments:', error);
+      return [];
+    }
+  };
+
   const loadProgramOptions = async (inputValue: string) => {
     try {
-      const response = await programService.getPrograms({ page: 1, limit: 100, search: inputValue });
+      console.log('Loading all programs with search:', inputValue);
+      const response = await programService.getPrograms({ 
+        page: 1, 
+        limit: 100, 
+        search: inputValue
+      });
+      console.log('Program API response:', response);
+      
       const options = response?.data?.map((p: { _id: string; name: string }) => ({ 
         value: p._id, 
         label: p.name 
       })) || [];
+      
+      console.log('Program options:', options);
+      
+      // If no search input, return all options, otherwise filter
+      if (!inputValue) {
+        return options;
+      }
+      
       return options.filter((option: SelectOption) =>
         option.label.toLowerCase().includes(inputValue.toLowerCase())
       );
@@ -116,15 +202,31 @@ const AddEnrollmentModal: React.FC<AddEnrollmentModalProps> = ({ isOpen, onClose
     }
   };
 
-
-
   const loadCourseOptions = async (inputValue: string) => {
     try {
-      const response = await courseService.getCourses(1, 100, inputValue);
-      const options = response?.data?.map((c: CourseData) => ({ 
+      // Only load courses if a program is selected
+      if (!selectedProgram?.value) {
+        return [];
+      }
+      
+      console.log('Loading courses for program:', selectedProgram.value, 'with search:', inputValue);
+      const response = await courseService.getCourses(1, 100, inputValue, {
+        program: selectedProgram.value
+      });
+      console.log('Course API response:', response);
+      
+      const options = response?.data?.map((c: { _id: string; name: string; code: string; credits: number }) => ({ 
         value: c._id, 
         label: `${c.code} - ${c.name}` 
       })) || [];
+      
+      console.log('Course options:', options);
+      
+      // If no search input, return all options, otherwise filter
+      if (!inputValue) {
+        return options;
+      }
+      
       return options.filter((option: SelectOption) =>
         option.label.toLowerCase().includes(inputValue.toLowerCase())
       );
@@ -134,13 +236,97 @@ const AddEnrollmentModal: React.FC<AddEnrollmentModalProps> = ({ isOpen, onClose
     }
   };
 
-  const onSubmit = async (data: CreateEnrollmentRequest) => {
+  const onSubmit = async (data: any) => {
     try {
+      // Check for existing enrollments for this student (limited to 100 most recent)
+      const existingEnrollments = enrollmentsData?.enrollments || [];
+      const studentEnrollments = existingEnrollments.filter(
+        (enrollment: any) => enrollment.student._id === data.student
+      );
+
+      // Check if student has ANY enrollment in the same program (regardless of status)
+      const enrollmentInSameProgram = studentEnrollments.find(
+        (enrollment: any) => enrollment.program._id === data.program
+      );
+
+      if (enrollmentInSameProgram) {
+        toast.error(
+          `Student already has an enrollment in this program. ` +
+          `Current status: ${enrollmentInSameProgram.status} ` +
+          `(${enrollmentInSameProgram.academicYear}, Semester ${enrollmentInSameProgram.semester}). ` +
+          `Only one enrollment per student per program is allowed. ` +
+          `Please complete or drop the existing enrollment first.`
+        );
+        return;
+      }
+
+      // Check if student has any active enrollments in other programs
+      const activeEnrollmentsInOtherPrograms = studentEnrollments.filter(
+        (enrollment: any) => 
+          enrollment.program._id !== data.program && 
+          ['active', 'suspended'].includes(enrollment.status)
+      );
+
+      if (activeEnrollmentsInOtherPrograms.length > 0) {
+        const programNames = activeEnrollmentsInOtherPrograms
+          .map((enrollment: any) => enrollment.program.name)
+          .join(', ');
+        
+        toast.error(
+          `Student has active enrollments in other programs: ${programNames}. ` +
+          `Please complete or drop those enrollments first.`
+        );
+        return;
+      }
+
+      // Check for duplicate enrollment in same semester and academic year
+      const duplicateEnrollment = studentEnrollments.find(
+        (enrollment: any) => 
+          enrollment.program._id === data.program && 
+          enrollment.semester === data.semester && 
+          enrollment.academicYear === data.academicYear
+      );
+
+      if (duplicateEnrollment) {
+        toast.error(
+          `Student is already enrolled in this program for ${data.academicYear}, Semester ${data.semester}. ` +
+          `Current status: ${duplicateEnrollment.status}. ` +
+          `Please select a different semester or academic year.`
+        );
+        return;
+      }
+
+      // All validations passed, create the enrollment
       await createEnrollmentMutation.mutateAsync(data);
+      toast.success('Enrollment created successfully!');
       reset();
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to create enrollment:', error);
+      
+      // Handle specific backend error messages
+      if (error?.response?.data?.message) {
+        const errorMessage = error.response.data.message;
+        
+        // Handle the specific duplicate enrollment error
+        if (errorMessage.includes('already enrolled in this program for the specified semester and academic year')) {
+          toast.error(
+            `Student is already enrolled in this program for ${data.academicYear}, Semester ${data.semester}. ` +
+            `Only one enrollment per student per program is allowed. ` +
+            `Please complete or drop the existing enrollment first.`
+          );
+        } else if (errorMessage.includes('already enrolled in this program')) {
+          toast.error(
+            `Student already has an enrollment in this program. ` +
+            `Only one enrollment per student per program is allowed. ` +
+            `Please complete or drop the existing enrollment first.`
+          );
+        } else {
+          toast.error(errorMessage);
+        }
+      } else {
+        toast.error('Failed to create enrollment. Please try again.');
+      }
     }
   };
 
@@ -190,61 +376,78 @@ const AddEnrollmentModal: React.FC<AddEnrollmentModalProps> = ({ isOpen, onClose
                 render={({ field }) => (
                   <AsyncSelect
                     loadOptions={loadStudentOptions}
-                    onChange={(option: any) => {
-                      field.onChange(option?.value || '');
-                      setSelectedStudent(option);
+                    onChange={(newValue) => {
+                      const singleValue = newValue as SingleValue<SelectOption>;
+                      field.onChange(singleValue?.value || '');
+                      setSelectedStudent(singleValue);
                     }}
                     onBlur={field.onBlur}
                     value={selectedStudent}
                     placeholder="Search students..."
                     styles={selectStyles}
-                    isClearable
+                    className="w-full"
+                    isSearchable
                     cacheOptions
                     defaultOptions
-                    noOptionsMessage={() => "No students found"}
-                    loadingMessage={() => "Loading students..."}
                   />
                 )}
               />
               {errors.student && (
-                <p className="mt-1 text-sm text-red-600">{errors.student.message}</p>
+                <p className="mt-1 text-sm text-red-600">{errors.student.message?.toString()}</p>
               )}
             </div>
 
-            {/* Program Selection */}
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Program *
-              </label>
-              <Controller
-                name="program"
-                control={control}
-                rules={{ required: 'Program is required' }}
-                render={({ field }) => (
-                  <AsyncSelect
-                    loadOptions={loadProgramOptions}
-                    onChange={(option: any) => {
-                      field.onChange(option?.value || '');
-                      setSelectedProgram(option);
-                    }}
-                    onBlur={field.onBlur}
-                    value={selectedProgram}
-                    placeholder="Search programs..."
-                    styles={selectStyles}
-                    isClearable
-                    cacheOptions
-                    defaultOptions
-                    noOptionsMessage={() => "No programs found"}
-                    loadingMessage={() => "Loading programs..."}
-                  />
+
+
+                         {/* Program Selection */}
+             <div className="md:col-span-2">
+               <label className="block text-sm font-medium text-gray-700 mb-2">
+                 Program *
+               </label>
+               <Controller
+                 name="program"
+                 control={control}
+                 rules={{ required: 'Program is required' }}
+                 render={({ field }) => (
+                   <AsyncSelect
+                     key={programOptionsKey}
+                     loadOptions={loadProgramOptions}
+                     onChange={(newValue) => {
+                       const singleValue = newValue as SingleValue<SelectOption>;
+                       console.log('Program selected:', singleValue);
+                       field.onChange(singleValue?.value || '');
+                       setSelectedProgram(singleValue);
+                     }}
+                     onBlur={field.onBlur}
+                     value={selectedProgram}
+                     placeholder="Select program"
+                     styles={selectStyles}
+                     className="w-full"
+                     isSearchable
+                     cacheOptions
+                     defaultOptions
+                   />
+                 )}
+               />
+                               {enrollmentInfo && (
+                  <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-sm text-blue-800">
+                      <span className="font-medium">Note:</span> {enrollmentInfo}
+                    </p>
+                    <p className="text-xs text-blue-600 mt-1">
+                      <span className="font-medium">Rule:</span> Only one enrollment per student per program is allowed. 
+                      You must complete or drop the existing enrollment first.
+                    </p>
+                    <p className="text-xs text-blue-600 mt-1">
+                      <span className="font-medium">Info:</span> Showing enrollments from the most recent 100 records. 
+                      Backend validation will catch any additional conflicts.
+                    </p>
+                  </div>
                 )}
-              />
-              {errors.program && (
-                <p className="mt-1 text-sm text-red-600">{errors.program.message}</p>
-              )}
-            </div>
-
-
+               {errors.program && (
+                 <p className="mt-1 text-sm text-red-600">{errors.program.message?.toString()}</p>
+               )}
+             </div>
 
             {/* Semester and Term */}
             <div>
@@ -267,7 +470,7 @@ const AddEnrollmentModal: React.FC<AddEnrollmentModalProps> = ({ isOpen, onClose
                 )}
               />
               {errors.semester && (
-                <p className="mt-1 text-sm text-red-600">{errors.semester.message}</p>
+                <p className="mt-1 text-sm text-red-600">{errors.semester.message?.toString()}</p>
               )}
             </div>
 
@@ -290,7 +493,7 @@ const AddEnrollmentModal: React.FC<AddEnrollmentModalProps> = ({ isOpen, onClose
                 )}
               />
               {errors.academicYear && (
-                <p className="mt-1 text-sm text-red-600">{errors.academicYear.message}</p>
+                <p className="mt-1 text-sm text-red-600">{errors.academicYear.message?.toString()}</p>
               )}
             </div>
 
@@ -305,7 +508,7 @@ const AddEnrollmentModal: React.FC<AddEnrollmentModalProps> = ({ isOpen, onClose
                 rules={{ required: 'Enrollment type is required' }}
                 render={({ field }) => (
                   <Select
-                    value={field.value ? { value: field.value, label: field.value.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ') } : null}
+                    value={field.value ? { value: field.value, label: field.value.split('_').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ') } : null}
                     onChange={(option: any) => {
                       field.onChange(option?.value || '');
                     }}
@@ -322,7 +525,7 @@ const AddEnrollmentModal: React.FC<AddEnrollmentModalProps> = ({ isOpen, onClose
                 )}
               />
               {errors.enrollmentType && (
-                <p className="mt-1 text-sm text-red-600">{errors.enrollmentType.message}</p>
+                <p className="mt-1 text-sm text-red-600">{errors.enrollmentType.message?.toString()}</p>
               )}
             </div>
 
@@ -356,7 +559,7 @@ const AddEnrollmentModal: React.FC<AddEnrollmentModalProps> = ({ isOpen, onClose
                 )}
               />
               {errors.status && (
-                <p className="mt-1 text-sm text-red-600">{errors.status.message}</p>
+                <p className="mt-1 text-sm text-red-600">{errors.status.message?.toString()}</p>
               )}
             </div>
 
@@ -370,29 +573,34 @@ const AddEnrollmentModal: React.FC<AddEnrollmentModalProps> = ({ isOpen, onClose
                 control={control}
                 render={({ field }) => (
                   <AsyncSelect
+                    key={courseOptionsKey}
                     loadOptions={loadCourseOptions}
-                    onChange={(options: any) => {
-                      const selectedValues = Array.isArray(options) 
-                        ? options.map((option: SelectOption) => option.value)
+                    onChange={(newValue) => {
+                      console.log('Courses selected:', newValue);
+                      const selectedValues = Array.isArray(newValue) 
+                        ? newValue.map((option: SelectOption) => option.value)
                         : [];
                       field.onChange(selectedValues);
-                      setSelectedCourses(Array.isArray(options) ? options : []);
+                      setSelectedCourses(Array.isArray(newValue) ? newValue : []);
                     }}
                     onBlur={field.onBlur}
                     value={selectedCourses}
-                    placeholder="Search courses..."
+                    placeholder={selectedProgram ? "Search courses..." : "Please select a program first"}
                     styles={selectStyles}
+                    className="w-full"
                     isMulti
-                    isClearable
+                    isSearchable
                     cacheOptions
                     defaultOptions
-                    noOptionsMessage={() => "No courses found"}
-                    loadingMessage={() => "Loading courses..."}
+                    isDisabled={!selectedProgram}
                   />
                 )}
               />
+              {!selectedProgram && (
+                <p className="mt-1 text-sm text-gray-500">Please select a program first to view available courses</p>
+              )}
               {errors.courses && (
-                <p className="mt-1 text-sm text-red-600">{errors.courses.message}</p>
+                <p className="mt-1 text-sm text-red-600">{errors.courses.message?.toString()}</p>
               )}
             </div>
 
@@ -414,7 +622,7 @@ const AddEnrollmentModal: React.FC<AddEnrollmentModalProps> = ({ isOpen, onClose
                 )}
               />
               {errors.notes && (
-                <p className="mt-1 text-sm text-red-600">{errors.notes.message}</p>
+                <p className="mt-1 text-sm text-red-600">{errors.notes.message?.toString()}</p>
               )}
             </div>
           </div>

@@ -166,8 +166,9 @@ const EditCourseModal: React.FC<EditCourseModalProps> = ({ isOpen, onClose, cour
       // Set selected options for display
       if (course.department) {
         // We'll need to fetch the department name to set the selected option
+        const departmentId = typeof course.department === 'string' ? course.department : course.department._id;
         loadDepartmentOptions('').then(options => {
-          const deptOption = options.find(opt => opt.value === course.department);
+          const deptOption = options.find(opt => opt.value === departmentId);
           if (deptOption) {
             setSelectedDepartment(deptOption);
           }

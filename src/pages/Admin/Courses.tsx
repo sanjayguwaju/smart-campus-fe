@@ -406,8 +406,8 @@ const Courses: React.FC = () => {
                     {course.creditHours}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeColor(course.isActive)}`}>
-                      {course.isActive ? 'Active' : 'Inactive'}
+                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeColor(course.isAvailable || course.status === 'active')}`}>
+                      {course.isAvailable || course.status === 'active' ? 'Active' : 'Inactive'}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">

@@ -136,27 +136,20 @@ const EditEnrollmentModal: React.FC<EditEnrollmentModalProps> = ({ isOpen, onClo
     reset,
     watch,
     formState: { errors, isSubmitting }
-  } = useForm<UpdateEnrollmentRequest>({
-    defaultValues: {
-      student: '',
-      program: '',
-      semester: 1,
-      academicYear: '2024-2025',
-      courses: [],
-      status: 'active',
-      enrollmentType: 'full_time',
-      advisor: '',
-      notes: '',
-      gpa: 0,
-      cgpa: 0,
-      academicStanding: 'good_standing',
-      financialStatus: 'unpaid'
-    }
-  });
+     } = useForm<UpdateEnrollmentRequest>({
+     defaultValues: {
+       semester: 1,
+       academicYear: '2024-2025',
+       courses: [],
+       status: 'active',
+       enrollmentType: 'full_time',
+       notes: ''
+     }
+   });
 
   const watchedEnrollmentType = watch('enrollmentType');
 
-  // Reset form when enrollment data changes
+    // Reset form when enrollment data changes
   useEffect(() => {
     if (enrollment) {
       // Set selected options for display
@@ -201,7 +194,7 @@ const EditEnrollmentModal: React.FC<EditEnrollmentModalProps> = ({ isOpen, onClo
     try {
       await updateEnrollmentMutation.mutateAsync({
         id: enrollment._id,
-        enrollmentData: data
+        enrollmentData: updateData
       });
       onClose();
     } catch (error) {
@@ -210,6 +203,27 @@ const EditEnrollmentModal: React.FC<EditEnrollmentModalProps> = ({ isOpen, onClo
   };
 
   if (!isOpen || !enrollment) return null;
+
+  // Safety check for required enrollment properties
+  if (!enrollment.student || !enrollment.program) {
+    console.error('Enrollment data is missing required properties:', enrollment);
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
+          <div className="text-center">
+            <h2 className="text-xl font-bold text-red-600 mb-2">Invalid Enrollment Data</h2>
+            <p className="text-gray-600 mb-4">The enrollment data is missing required information.</p>
+            <button
+              onClick={onClose}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div 
@@ -243,69 +257,27 @@ const EditEnrollmentModal: React.FC<EditEnrollmentModalProps> = ({ isOpen, onClo
         {/* Form */}
         <form onSubmit={handleSubmit(onSubmit)} className="flex-1 overflow-y-auto p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Student Selection */}
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Student *
-              </label>
-              <Controller
-                name="student"
-                control={control}
-                rules={{ required: 'Student is required' }}
-                render={({ field }) => (
-                  <AsyncSelect
-                    value={selectedStudent}
-                    onChange={(option: any) => {
-                      field.onChange(option?.value || '');
-                      setSelectedStudent(option);
-                    }}
-                    loadOptions={loadStudentOptions}
-                    placeholder="Search and select a student..."
-                    styles={selectStyles}
-                    isClearable
-                    noOptionsMessage={() => "No students found"}
-                    loadingMessage={() => "Loading students..."}
-                    cacheOptions
-                    defaultOptions
-                  />
-                )}
-              />
-              {errors.student && (
-                <p className="mt-1 text-sm text-red-600">{errors.student.message}</p>
-              )}
-            </div>
+                         {/* Student Selection - Read Only */}
+             <div className="md:col-span-2">
+               <label className="block text-sm font-medium text-gray-700 mb-2">
+                 Student (Read Only)
+               </label>
+               <div className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-700">
+                 {selectedStudent?.label || 'No student selected'}
+               </div>
+               <p className="mt-1 text-xs text-gray-500">Student cannot be changed after enrollment is created</p>
+             </div>
 
-            {/* Program Selection */}
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Program *
-              </label>
-              <Controller
-                name="program"
-                control={control}
-                rules={{ required: 'Program is required' }}
-                render={({ field }) => (
-                  <AsyncSelect
-                    value={selectedProgram}
-                    onChange={(option: any) => {
-                      field.onChange(option?.value || '');
-                      setSelectedProgram(option);
-                    }}
-                    loadOptions={loadProgramOptions}
-                    placeholder="Search and select a program..."
-                    styles={selectStyles}
-                    isClearable
-                    noOptionsMessage={() => "No programs found"}
-                    loadingMessage={() => "Loading programs..."}
-                    cacheOptions
-                    defaultOptions
-                  />
-                )}
-              />
-              {errors.program && (
-                <p className="mt-1 text-sm text-red-600">{errors.program.message}</p>
-              )}
-            </div>
+                         {/* Program Selection - Read Only */}
+             <div className="md:col-span-2">
+               <label className="block text-sm font-medium text-gray-700 mb-2">
+                 Program (Read Only)
+               </label>
+               <div className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-700">
+                 {selectedProgram?.label || 'No program selected'}
+               </div>
+               <p className="mt-1 text-xs text-gray-500">Program cannot be changed after enrollment is created</p>
+             </div>
 
             {/* Semester and Term */}
             <div>
@@ -365,7 +337,11 @@ const EditEnrollmentModal: React.FC<EditEnrollmentModalProps> = ({ isOpen, onClo
                 rules={{ required: 'Enrollment type is required' }}
                 render={({ field }) => (
                   <Select
-                    {...field}
+                    value={field.value ? { value: field.value, label: field.value.charAt(0).toUpperCase() + field.value.slice(1).replace('_', ' ') } : null}
+                    onChange={(option: any) => {
+                      field.onChange(option?.value || '');
+                    }}
+                    onBlur={field.onBlur}
                     placeholder="Select enrollment type..."
                     options={[
                       { value: 'full_time', label: 'Full Time' },
@@ -387,203 +363,59 @@ const EditEnrollmentModal: React.FC<EditEnrollmentModalProps> = ({ isOpen, onClo
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Status *
               </label>
-              <Controller
-                name="status"
-                control={control}
-                rules={{ required: 'Status is required' }}
-                render={({ field }) => (
-                  <Select
-                    {...field}
-                    placeholder="Select status..."
-                    options={[
-                      { value: 'active', label: 'Active' },
-                      { value: 'inactive', label: 'Inactive' },
-                      { value: 'suspended', label: 'Suspended' },
-                      { value: 'completed', label: 'Completed' }
-                    ]}
-                    styles={selectStyles}
-                    isClearable
-                  />
-                )}
-              />
+                             <Controller
+                 name="status"
+                 control={control}
+                 rules={{ required: 'Status is required' }}
+                 render={({ field }) => (
+                     <Select
+                       value={field.value ? { value: field.value, label: field.value.charAt(0).toUpperCase() + field.value.slice(1).replace('_', ' ') } : null}
+                       onChange={(option: any) => {
+                         field.onChange(option?.value || '');
+                       }}
+                       onBlur={field.onBlur}
+                       placeholder="Select status..."
+                       options={[
+                         { value: 'active', label: 'Active' },
+                         { value: 'completed', label: 'Completed' },
+                         { value: 'dropped', label: 'Dropped' },
+                         { value: 'suspended', label: 'Suspended' },
+                         { value: 'graduated', label: 'Graduated' }
+                       ]}
+                       styles={selectStyles}
+                       isClearable
+                     />
+                 )}
+               />
               {errors.status && (
                 <p className="mt-1 text-sm text-red-600">{errors.status.message}</p>
               )}
             </div>
 
-            {/* Advisor Selection */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Advisor *
-              </label>
-              <Controller
-                name="advisor"
-                control={control}
-                rules={{ required: 'Advisor is required' }}
-                render={({ field }) => (
-                  <AsyncSelect
-                    value={selectedAdvisor}
-                    onChange={(option: any) => {
-                      field.onChange(option?.value || '');
-                      setSelectedAdvisor(option);
-                    }}
-                    loadOptions={loadAdvisorOptions}
-                    placeholder="Search and select an advisor..."
-                    styles={selectStyles}
-                    isClearable
-                    noOptionsMessage={() => "No advisors found"}
-                    loadingMessage={() => "Loading advisors..."}
-                    cacheOptions
-                    defaultOptions
-                  />
-                )}
-              />
-              {errors.advisor && (
-                <p className="mt-1 text-sm text-red-600">{errors.advisor.message}</p>
-              )}
-            </div>
 
-            {/* GPA */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                GPA
-              </label>
-              <Controller
-                name="gpa"
-                control={control}
-                rules={{ min: { value: 0, message: 'GPA must be at least 0' }, max: { value: 4, message: 'GPA cannot exceed 4' } }}
-                render={({ field }) => (
-                  <input
-                    {...field}
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    max="4"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Enter GPA"
-                  />
-                )}
-              />
-              {errors.gpa && (
-                <p className="mt-1 text-sm text-red-600">{errors.gpa.message}</p>
-              )}
-            </div>
 
-            {/* CGPA */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                CGPA
-              </label>
-              <Controller
-                name="cgpa"
-                control={control}
-                rules={{ min: { value: 0, message: 'CGPA must be at least 0' }, max: { value: 4, message: 'CGPA cannot exceed 4' } }}
-                render={({ field }) => (
-                  <input
-                    {...field}
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    max="4"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Enter CGPA"
-                  />
-                )}
-              />
-              {errors.cgpa && (
-                <p className="mt-1 text-sm text-red-600">{errors.cgpa.message}</p>
-              )}
-            </div>
 
-            {/* Academic Standing */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Academic Standing
-              </label>
-              <Controller
-                name="academicStanding"
-                control={control}
-                render={({ field }) => (
-                  <Select
-                    {...field}
-                    placeholder="Select academic standing..."
-                    options={[
-                      { value: 'good_standing', label: 'Good Standing' },
-                      { value: 'academic_warning', label: 'Academic Warning' },
-                      { value: 'academic_probation', label: 'Academic Probation' },
-                      { value: 'academic_suspension', label: 'Academic Suspension' }
-                    ]}
-                    styles={selectStyles}
-                    isClearable
-                  />
-                )}
-              />
-              {errors.academicStanding && (
-                <p className="mt-1 text-sm text-red-600">{errors.academicStanding.message}</p>
-              )}
-            </div>
 
-            {/* Financial Status */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Financial Status
-              </label>
-              <Controller
-                name="financialStatus"
-                control={control}
-                render={({ field }) => (
-                  <Select
-                    {...field}
-                    placeholder="Select financial status..."
-                    options={[
-                      { value: 'paid', label: 'Paid' },
-                      { value: 'unpaid', label: 'Unpaid' },
-                      { value: 'partial', label: 'Partial Payment' },
-                      { value: 'scholarship', label: 'Scholarship' }
-                    ]}
-                    styles={selectStyles}
-                    isClearable
-                  />
-                )}
-              />
-              {errors.financialStatus && (
-                <p className="mt-1 text-sm text-red-600">{errors.financialStatus.message}</p>
-              )}
-            </div>
-
-            {/* Courses Selection */}
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Courses
-              </label>
-              <Controller
-                name="courses"
-                control={control}
-                render={({ field }) => {
-                  return (
-                    <AsyncSelect
-                      value={selectedCourses}
-                      onChange={(selectedOptions: any) => {
-                        setSelectedCourses(selectedOptions || []);
-                        field.onChange(selectedOptions?.map((option: any) => option.value) || []);
-                      }}
-                      loadOptions={loadCourseOptions}
-                      placeholder="Search and select courses..."
-                      styles={selectStyles}
-                      isMulti
-                      isClearable
-                      noOptionsMessage={() => "No courses found"}
-                      loadingMessage={() => "Loading courses..."}
-                      cacheOptions
-                      defaultOptions
-                    />
-                  );
-                }}
-              />
-              {errors.courses && (
-                <p className="mt-1 text-sm text-red-600">{errors.courses.message}</p>
-              )}
-            </div>
+                         {/* Courses Selection - Read Only */}
+             <div className="md:col-span-2">
+               <label className="block text-sm font-medium text-gray-700 mb-2">
+                 Courses (Read Only)
+               </label>
+               <div className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-700 min-h-[48px]">
+                 {selectedCourses.length > 0 ? (
+                   <div className="space-y-1">
+                     {selectedCourses.map((course, index) => (
+                       <div key={index} className="text-sm">
+                         {course.label}
+                       </div>
+                     ))}
+                   </div>
+                 ) : (
+                   <span className="text-gray-500">No courses selected</span>
+                 )}
+               </div>
+               <p className="mt-1 text-xs text-gray-500">Course changes require separate course registration process</p>
+             </div>
 
             {/* Notes */}
             <div className="md:col-span-2">
