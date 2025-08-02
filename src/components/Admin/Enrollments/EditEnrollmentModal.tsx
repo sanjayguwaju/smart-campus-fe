@@ -136,20 +136,20 @@ const EditEnrollmentModal: React.FC<EditEnrollmentModalProps> = ({ isOpen, onClo
     reset,
     watch,
     formState: { errors, isSubmitting }
-     } = useForm<UpdateEnrollmentRequest>({
-     defaultValues: {
-       semester: 1,
-       academicYear: '2024-2025',
-       courses: [],
-       status: 'active',
-       enrollmentType: 'full_time',
-       notes: ''
-     }
-   });
+  } = useForm<UpdateEnrollmentRequest>({
+    defaultValues: {
+      semester: 1,
+      academicYear: '2024-2025',
+      courses: [],
+      status: 'active',
+      enrollmentType: 'full_time',
+      notes: ''
+    }
+  });
 
   const watchedEnrollmentType = watch('enrollmentType');
 
-    // Reset form when enrollment data changes
+  // Reset form when enrollment data changes
   useEffect(() => {
     if (enrollment) {
       // Set selected options for display
@@ -208,7 +208,10 @@ const EditEnrollmentModal: React.FC<EditEnrollmentModalProps> = ({ isOpen, onClo
   if (!enrollment.student || !enrollment.program) {
     console.error('Enrollment data is missing required properties:', enrollment);
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
+      <div
+        className="fixed top-0 left-0 w-screen h-screen bg-black bg-opacity-60 flex items-center justify-center z-50 p-4"
+        style={{ margin: 0, padding: '1rem' }}
+      >
         <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
           <div className="text-center">
             <h2 className="text-xl font-bold text-red-600 mb-2">Invalid Enrollment Data</h2>
@@ -226,7 +229,7 @@ const EditEnrollmentModal: React.FC<EditEnrollmentModalProps> = ({ isOpen, onClo
   }
 
   return (
-    <div 
+    <div
       className="fixed top-0 left-0 w-screen h-screen bg-black bg-opacity-60 flex items-center justify-center z-50 p-4"
       style={{ margin: 0, padding: '1rem' }}
     >
@@ -257,27 +260,27 @@ const EditEnrollmentModal: React.FC<EditEnrollmentModalProps> = ({ isOpen, onClo
         {/* Form */}
         <form onSubmit={handleSubmit(onSubmit)} className="flex-1 overflow-y-auto p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                         {/* Student Selection - Read Only */}
-             <div className="md:col-span-2">
-               <label className="block text-sm font-medium text-gray-700 mb-2">
-                 Student (Read Only)
-               </label>
-               <div className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-700">
-                 {selectedStudent?.label || 'No student selected'}
-               </div>
-               <p className="mt-1 text-xs text-gray-500">Student cannot be changed after enrollment is created</p>
-             </div>
+            {/* Student Selection - Read Only */}
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Student (Read Only)
+              </label>
+              <div className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-700">
+                {selectedStudent?.label || 'No student selected'}
+              </div>
+              <p className="mt-1 text-xs text-gray-500">Student cannot be changed after enrollment is created</p>
+            </div>
 
-                         {/* Program Selection - Read Only */}
-             <div className="md:col-span-2">
-               <label className="block text-sm font-medium text-gray-700 mb-2">
-                 Program (Read Only)
-               </label>
-               <div className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-700">
-                 {selectedProgram?.label || 'No program selected'}
-               </div>
-               <p className="mt-1 text-xs text-gray-500">Program cannot be changed after enrollment is created</p>
-             </div>
+            {/* Program Selection - Read Only */}
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Program (Read Only)
+              </label>
+              <div className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-700">
+                {selectedProgram?.label || 'No program selected'}
+              </div>
+              <p className="mt-1 text-xs text-gray-500">Program cannot be changed after enrollment is created</p>
+            </div>
 
             {/* Semester and Term */}
             <div>
@@ -363,30 +366,30 @@ const EditEnrollmentModal: React.FC<EditEnrollmentModalProps> = ({ isOpen, onClo
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Status *
               </label>
-                             <Controller
-                 name="status"
-                 control={control}
-                 rules={{ required: 'Status is required' }}
-                 render={({ field }) => (
-                     <Select
-                       value={field.value ? { value: field.value, label: field.value.charAt(0).toUpperCase() + field.value.slice(1).replace('_', ' ') } : null}
-                       onChange={(option: any) => {
-                         field.onChange(option?.value || '');
-                       }}
-                       onBlur={field.onBlur}
-                       placeholder="Select status..."
-                       options={[
-                         { value: 'active', label: 'Active' },
-                         { value: 'completed', label: 'Completed' },
-                         { value: 'dropped', label: 'Dropped' },
-                         { value: 'suspended', label: 'Suspended' },
-                         { value: 'graduated', label: 'Graduated' }
-                       ]}
-                       styles={selectStyles}
-                       isClearable
-                     />
-                 )}
-               />
+              <Controller
+                name="status"
+                control={control}
+                rules={{ required: 'Status is required' }}
+                render={({ field }) => (
+                  <Select
+                    value={field.value ? { value: field.value, label: field.value.charAt(0).toUpperCase() + field.value.slice(1).replace('_', ' ') } : null}
+                    onChange={(option: any) => {
+                      field.onChange(option?.value || '');
+                    }}
+                    onBlur={field.onBlur}
+                    placeholder="Select status..."
+                    options={[
+                      { value: 'active', label: 'Active' },
+                      { value: 'completed', label: 'Completed' },
+                      { value: 'dropped', label: 'Dropped' },
+                      { value: 'suspended', label: 'Suspended' },
+                      { value: 'graduated', label: 'Graduated' }
+                    ]}
+                    styles={selectStyles}
+                    isClearable
+                  />
+                )}
+              />
               {errors.status && (
                 <p className="mt-1 text-sm text-red-600">{errors.status.message}</p>
               )}
@@ -396,26 +399,26 @@ const EditEnrollmentModal: React.FC<EditEnrollmentModalProps> = ({ isOpen, onClo
 
 
 
-                         {/* Courses Selection - Read Only */}
-             <div className="md:col-span-2">
-               <label className="block text-sm font-medium text-gray-700 mb-2">
-                 Courses (Read Only)
-               </label>
-               <div className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-700 min-h-[48px]">
-                 {selectedCourses.length > 0 ? (
-                   <div className="space-y-1">
-                     {selectedCourses.map((course, index) => (
-                       <div key={index} className="text-sm">
-                         {course.label}
-                       </div>
-                     ))}
-                   </div>
-                 ) : (
-                   <span className="text-gray-500">No courses selected</span>
-                 )}
-               </div>
-               <p className="mt-1 text-xs text-gray-500">Course changes require separate course registration process</p>
-             </div>
+            {/* Courses Selection - Read Only */}
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Courses (Read Only)
+              </label>
+              <div className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-700 min-h-[48px]">
+                {selectedCourses.length > 0 ? (
+                  <div className="space-y-1">
+                    {selectedCourses.map((course, index) => (
+                      <div key={index} className="text-sm">
+                        {course.label}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <span className="text-gray-500">No courses selected</span>
+                )}
+              </div>
+              <p className="mt-1 text-xs text-gray-500">Course changes require separate course registration process</p>
+            </div>
 
             {/* Notes */}
             <div className="md:col-span-2">

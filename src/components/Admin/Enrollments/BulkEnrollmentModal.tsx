@@ -132,17 +132,17 @@ const BulkEnrollmentModal: React.FC<BulkEnrollmentModalProps> = ({ isOpen, onClo
       console.log('BulkEnrollmentModal: Loading departments with inputValue:', inputValue);
       const response = await departmentService.getDepartments(1, 100, inputValue);
       console.log('BulkEnrollmentModal: Department response:', response);
-      const options = response?.data?.map((dept: { _id: string; name: string }) => ({ 
-        value: dept._id, 
-        label: dept.name 
+      const options = response?.data?.map((dept: { _id: string; name: string }) => ({
+        value: dept._id,
+        label: dept.name
       })) || [];
       console.log('BulkEnrollmentModal: Department options:', options);
-      
+
       // If no search input, return all options, otherwise filter
       if (!inputValue) {
         return options;
       }
-      
+
       const filteredOptions = options.filter((option: SelectOption) =>
         option.label.toLowerCase().includes(inputValue.toLowerCase())
       );
@@ -157,25 +157,25 @@ const BulkEnrollmentModal: React.FC<BulkEnrollmentModalProps> = ({ isOpen, onClo
   const loadProgramOptions = async (inputValue: string) => {
     try {
       console.log('Loading all programs with search:', inputValue);
-      const response = await programService.getPrograms({ 
-        page: 1, 
-        limit: 100, 
+      const response = await programService.getPrograms({
+        page: 1,
+        limit: 100,
         search: inputValue
       });
       console.log('Program API response:', response);
-      
-      const options = response?.data?.map((program: { _id: string; name: string }) => ({ 
-        value: program._id, 
-        label: program.name 
+
+      const options = response?.data?.map((program: { _id: string; name: string }) => ({
+        value: program._id,
+        label: program.name
       })) || [];
-      
+
       console.log('Program options:', options);
-      
+
       // If no search input, return all options, otherwise filter
       if (!inputValue) {
         return options;
       }
-      
+
       return options.filter((option: SelectOption) =>
         option.label.toLowerCase().includes(inputValue.toLowerCase())
       );
@@ -191,25 +191,25 @@ const BulkEnrollmentModal: React.FC<BulkEnrollmentModalProps> = ({ isOpen, onClo
       if (!selectedProgram?.value) {
         return [];
       }
-      
+
       console.log('Loading courses for program:', selectedProgram.value, 'with search:', inputValue);
       const response = await courseService.getCourses(1, 100, inputValue, {
         program: selectedProgram.value
       });
       console.log('Course API response:', response);
-      
-      const options = response?.data?.map((course: { _id: string; name: string; code: string; credits?: number }) => ({ 
-        value: course._id, 
-        label: `${course.code} - ${course.name} (${course.credits || 3} credits)` 
+
+      const options = response?.data?.map((course: { _id: string; name: string; code: string; credits?: number }) => ({
+        value: course._id,
+        label: `${course.code} - ${course.name} (${course.credits || 3} credits)`
       })) || [];
-      
+
       console.log('Course options:', options);
-      
+
       // If no search input, return all options, otherwise filter
       if (!inputValue) {
         return options;
       }
-      
+
       return options.filter((option: SelectOption) =>
         option.label.toLowerCase().includes(inputValue.toLowerCase())
       );
@@ -224,7 +224,7 @@ const BulkEnrollmentModal: React.FC<BulkEnrollmentModalProps> = ({ isOpen, onClo
     if (emailPattern) {
       return student.email.toLowerCase().includes(emailPattern.toLowerCase());
     }
-    
+
     if (rollNumberRange.start && rollNumberRange.end) {
       const email = student.email;
       const rollMatch = email.match(/(\d+)@/);
@@ -235,7 +235,7 @@ const BulkEnrollmentModal: React.FC<BulkEnrollmentModalProps> = ({ isOpen, onClo
         return rollNumber >= start && rollNumber <= end;
       }
     }
-    
+
     return false;
   });
 
@@ -256,7 +256,7 @@ const BulkEnrollmentModal: React.FC<BulkEnrollmentModalProps> = ({ isOpen, onClo
   };
 
   const handleToggleStudent = (student: UserData) => {
-    setSelectedStudents(prev => 
+    setSelectedStudents(prev =>
       prev.find(s => s._id === student._id)
         ? prev.filter(s => s._id !== student._id)
         : [...prev, student]
@@ -283,7 +283,7 @@ const BulkEnrollmentModal: React.FC<BulkEnrollmentModalProps> = ({ isOpen, onClo
 
     for (const student of selectedStudents) {
       const existingEnrollment = validateStudentEnrollment(student._id, data.program);
-      
+
       if (existingEnrollment) {
         validationErrors.push(
           `${student.fullName}: Already has ${existingEnrollment.status} enrollment ` +
@@ -298,17 +298,17 @@ const BulkEnrollmentModal: React.FC<BulkEnrollmentModalProps> = ({ isOpen, onClo
     if (validationErrors.length > 0) {
       const errorMessage = `Cannot enroll ${validationErrors.length} student(s):\n${validationErrors.slice(0, 3).join('\n')}${validationErrors.length > 3 ? `\n...and ${validationErrors.length - 3} more` : ''}`;
       toast.error(errorMessage);
-      
+
       if (validStudents.length === 0) {
         return; // No valid students to enroll
       }
-      
+
       // Ask user if they want to proceed with valid students only
       const proceed = window.confirm(
         `${validationErrors.length} students cannot be enrolled due to existing enrollments.\n` +
         `Proceed with enrolling ${validStudents.length} valid students?`
       );
-      
+
       if (!proceed) {
         return;
       }
@@ -334,7 +334,7 @@ const BulkEnrollmentModal: React.FC<BulkEnrollmentModalProps> = ({ isOpen, onClo
           successCount++;
         } catch (error: any) {
           console.error(`Failed to enroll ${student.fullName}:`, error);
-          
+
           // Handle specific backend error messages
           if (error?.response?.data?.message) {
             const errorMessage = error.response.data.message;
@@ -382,7 +382,10 @@ const BulkEnrollmentModal: React.FC<BulkEnrollmentModalProps> = ({ isOpen, onClo
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
+    <div
+      className="fixed top-0 left-0 w-screen h-screen bg-black bg-opacity-60 flex items-center justify-center z-50 p-4"
+      style={{ margin: 0, padding: '1rem' }}
+    >
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[95vh] overflow-hidden flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-gradient-to-r from-green-50 to-emerald-50">
@@ -417,7 +420,7 @@ const BulkEnrollmentModal: React.FC<BulkEnrollmentModalProps> = ({ isOpen, onClo
                   <div>
                     <h3 className="text-sm font-medium text-blue-900">How it works</h3>
                     <p className="text-sm text-blue-700 mt-1">
-                      Filter students by email pattern (e.g., "0223") or roll number range (e.g., 022312-022360) 
+                      Filter students by email pattern (e.g., "0223") or roll number range (e.g., 022312-022360)
                       to enroll multiple students at once. This is perfect for enrolling entire classes or batches.
                     </p>
                   </div>
@@ -525,9 +528,8 @@ const BulkEnrollmentModal: React.FC<BulkEnrollmentModalProps> = ({ isOpen, onClo
                       {filteredStudents.map((student: UserData) => (
                         <div
                           key={student._id}
-                          className={`p-3 hover:bg-gray-50 cursor-pointer ${
-                            selectedStudents.find(s => s._id === student._id) ? 'bg-blue-50' : ''
-                          }`}
+                          className={`p-3 hover:bg-gray-50 cursor-pointer ${selectedStudents.find(s => s._id === student._id) ? 'bg-blue-50' : ''
+                            }`}
                           onClick={() => handleToggleStudent(student)}
                         >
                           <div className="flex items-center space-x-3">
@@ -588,7 +590,7 @@ const BulkEnrollmentModal: React.FC<BulkEnrollmentModalProps> = ({ isOpen, onClo
                   <div>
                     <h3 className="text-sm font-medium text-orange-900">Enrollment Rule</h3>
                     <p className="text-sm text-orange-700 mt-1">
-                      Only one enrollment per student per program is allowed. Students with existing enrollments 
+                      Only one enrollment per student per program is allowed. Students with existing enrollments
                       in the selected program will be automatically excluded from this bulk enrollment.
                     </p>
                   </div>
@@ -597,17 +599,17 @@ const BulkEnrollmentModal: React.FC<BulkEnrollmentModalProps> = ({ isOpen, onClo
 
               {/* Enrollment Details */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                               {/* Program Selection */}
-               <div className="md:col-span-2">
-                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                   Program *
-                 </label>
-                 <Controller
-                   name="program"
-                   control={control}
-                   rules={{ required: 'Program is required' }}
-                   render={({ field }) => (
-                                           <AsyncSelect
+                {/* Program Selection */}
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Program *
+                  </label>
+                  <Controller
+                    name="program"
+                    control={control}
+                    rules={{ required: 'Program is required' }}
+                    render={({ field }) => (
+                      <AsyncSelect
                         key={programOptionsKey}
                         loadOptions={loadProgramOptions}
                         onChange={(newValue) => {
@@ -625,12 +627,12 @@ const BulkEnrollmentModal: React.FC<BulkEnrollmentModalProps> = ({ isOpen, onClo
                         cacheOptions
                         defaultOptions
                       />
-                   )}
-                 />
-                                   {errors.program && (
+                    )}
+                  />
+                  {errors.program && (
                     <p className="mt-1 text-sm text-red-600">{errors.program.message?.toString()}</p>
                   )}
-               </div>
+                </div>
 
                 {/* Semester */}
                 <div>
@@ -652,9 +654,9 @@ const BulkEnrollmentModal: React.FC<BulkEnrollmentModalProps> = ({ isOpen, onClo
                       />
                     )}
                   />
-                                     {errors.semester && (
-                     <p className="mt-1 text-sm text-red-600">{errors.semester.message?.toString()}</p>
-                   )}
+                  {errors.semester && (
+                    <p className="mt-1 text-sm text-red-600">{errors.semester.message?.toString()}</p>
+                  )}
                 </div>
 
                 {/* Academic Year */}
@@ -675,9 +677,9 @@ const BulkEnrollmentModal: React.FC<BulkEnrollmentModalProps> = ({ isOpen, onClo
                       />
                     )}
                   />
-                                     {errors.academicYear && (
-                     <p className="mt-1 text-sm text-red-600">{errors.academicYear.message?.toString()}</p>
-                   )}
+                  {errors.academicYear && (
+                    <p className="mt-1 text-sm text-red-600">{errors.academicYear.message?.toString()}</p>
+                  )}
                 </div>
 
                 {/* Enrollment Type */}
@@ -691,7 +693,7 @@ const BulkEnrollmentModal: React.FC<BulkEnrollmentModalProps> = ({ isOpen, onClo
                     rules={{ required: 'Enrollment type is required' }}
                     render={({ field }) => (
                       <Select
-                                                 value={field.value ? { value: field.value, label: field.value.split('_').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ') } : null}
+                        value={field.value ? { value: field.value, label: field.value.split('_').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ') } : null}
                         onChange={(option: any) => {
                           field.onChange(option?.value || '');
                         }}
@@ -707,9 +709,9 @@ const BulkEnrollmentModal: React.FC<BulkEnrollmentModalProps> = ({ isOpen, onClo
                       />
                     )}
                   />
-                                     {errors.enrollmentType && (
-                     <p className="mt-1 text-sm text-red-600">{errors.enrollmentType.message?.toString()}</p>
-                   )}
+                  {errors.enrollmentType && (
+                    <p className="mt-1 text-sm text-red-600">{errors.enrollmentType.message?.toString()}</p>
+                  )}
                 </div>
 
                 {/* Status */}
@@ -741,9 +743,9 @@ const BulkEnrollmentModal: React.FC<BulkEnrollmentModalProps> = ({ isOpen, onClo
                       />
                     )}
                   />
-                                     {errors.status && (
-                     <p className="mt-1 text-sm text-red-600">{errors.status.message?.toString()}</p>
-                   )}
+                  {errors.status && (
+                    <p className="mt-1 text-sm text-red-600">{errors.status.message?.toString()}</p>
+                  )}
                 </div>
               </div>
 
@@ -752,40 +754,40 @@ const BulkEnrollmentModal: React.FC<BulkEnrollmentModalProps> = ({ isOpen, onClo
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Courses
                 </label>
-                                 <Controller
-                   name="courses"
-                   control={control}
-                   render={({ field }) => (
-                                           <AsyncSelect
-                        key={courseOptionsKey}
-                        loadOptions={loadCourseOptions}
-                        onChange={(newValue) => {
-                          console.log('Courses selected:', newValue);
-                          const selectedValues = Array.isArray(newValue) 
-                            ? newValue.map((option: SelectOption) => option.value)
-                            : [];
-                          field.onChange(selectedValues);
-                          setSelectedCourses(Array.isArray(newValue) ? newValue : []);
-                        }}
-                        onBlur={field.onBlur}
-                        value={selectedCourses}
-                        placeholder={selectedProgram ? "Search courses..." : "Please select a program first"}
-                        styles={selectStyles}
-                        className="w-full"
-                        isMulti
-                        isSearchable
-                        cacheOptions
-                        defaultOptions
-                        isDisabled={!selectedProgram}
-                      />
-                   )}
-                 />
-                                 {!selectedProgram && (
-                   <p className="mt-1 text-sm text-gray-500">Please select a program first to view available courses</p>
-                 )}
-                 {errors.courses && (
-                   <p className="mt-1 text-sm text-red-600">{errors.courses.message?.toString()}</p>
-                 )}
+                <Controller
+                  name="courses"
+                  control={control}
+                  render={({ field }) => (
+                    <AsyncSelect
+                      key={courseOptionsKey}
+                      loadOptions={loadCourseOptions}
+                      onChange={(newValue) => {
+                        console.log('Courses selected:', newValue);
+                        const selectedValues = Array.isArray(newValue)
+                          ? newValue.map((option: SelectOption) => option.value)
+                          : [];
+                        field.onChange(selectedValues);
+                        setSelectedCourses(Array.isArray(newValue) ? newValue : []);
+                      }}
+                      onBlur={field.onBlur}
+                      value={selectedCourses}
+                      placeholder={selectedProgram ? "Search courses..." : "Please select a program first"}
+                      styles={selectStyles}
+                      className="w-full"
+                      isMulti
+                      isSearchable
+                      cacheOptions
+                      defaultOptions
+                      isDisabled={!selectedProgram}
+                    />
+                  )}
+                />
+                {!selectedProgram && (
+                  <p className="mt-1 text-sm text-gray-500">Please select a program first to view available courses</p>
+                )}
+                {errors.courses && (
+                  <p className="mt-1 text-sm text-red-600">{errors.courses.message?.toString()}</p>
+                )}
               </div>
 
               {/* Notes */}
@@ -805,9 +807,9 @@ const BulkEnrollmentModal: React.FC<BulkEnrollmentModalProps> = ({ isOpen, onClo
                     />
                   )}
                 />
-                                 {errors.notes && (
-                   <p className="mt-1 text-sm text-red-600">{errors.notes.message?.toString()}</p>
-                 )}
+                {errors.notes && (
+                  <p className="mt-1 text-sm text-red-600">{errors.notes.message?.toString()}</p>
+                )}
               </div>
 
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
@@ -816,7 +818,7 @@ const BulkEnrollmentModal: React.FC<BulkEnrollmentModalProps> = ({ isOpen, onClo
                   <div>
                     <h3 className="text-sm font-medium text-yellow-900">Ready to enroll</h3>
                     <p className="text-sm text-yellow-700 mt-1">
-                      You are about to enroll {selectedStudents.length} students in {selectedCourses.length} courses. 
+                      You are about to enroll {selectedStudents.length} students in {selectedCourses.length} courses.
                       This action cannot be undone.
                     </p>
                   </div>
