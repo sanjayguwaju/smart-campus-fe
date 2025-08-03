@@ -208,6 +208,15 @@ const StudentSubmissions: React.FC = () => {
     });
   };
 
+  const formatFileSize = (sizeInBytes: number) => {
+    const sizeInMB = sizeInBytes / (1024 * 1024);
+    if (sizeInMB < 1) {
+      const sizeInKB = sizeInBytes / 1024;
+      return `${sizeInKB.toFixed(1)} KB`;
+    }
+    return `${sizeInMB.toFixed(1)} MB`;
+  };
+
   // Pagination handlers
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -349,7 +358,7 @@ const StudentSubmissions: React.FC = () => {
                       {submission.files.length} file{submission.files.length !== 1 ? 's' : ''}
                     </div>
                     <div className="text-sm text-gray-500">
-                      {submission.files.reduce((total, file) => total + file.fileSize, 0).toFixed(1)} MB total
+                      {formatFileSize(submission.files.reduce((total, file) => total + file.fileSize, 0))} total
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">

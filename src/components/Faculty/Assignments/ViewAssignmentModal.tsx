@@ -11,6 +11,8 @@ interface ViewAssignmentModalProps {
 const ViewAssignmentModal: React.FC<ViewAssignmentModalProps> = ({ isOpen, onClose, assignment }) => {
   if (!isOpen || !assignment) return null;
 
+
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -224,9 +226,9 @@ const ViewAssignmentModal: React.FC<ViewAssignmentModalProps> = ({ isOpen, onClo
           </div>
 
           {/* Assignment Files */}
-          {assignment.files.length > 0 && (
-            <div className="border border-gray-200 rounded-lg p-4">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Assignment Files</h3>
+          <div className="border border-gray-200 rounded-lg p-4">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Assignment Files</h3>
+            {assignment.files.length > 0 ? (
               <div className="space-y-2">
                 {assignment.files.map((file, index) => (
                   <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
@@ -235,21 +237,41 @@ const ViewAssignmentModal: React.FC<ViewAssignmentModalProps> = ({ isOpen, onClo
                       <div>
                         <div className="text-sm font-medium text-gray-900">{file.fileName}</div>
                         <div className="text-sm text-gray-500">{file.fileSize.toFixed(2)} MB</div>
+                        <div className="text-xs text-gray-400">{file.fileType}</div>
+                        {file.fileUrl && file.fileUrl.startsWith('blob:') && (
+                          <div className="text-xs text-red-500">⚠️ File not properly uploaded</div>
+                        )}
                       </div>
                     </div>
                     <div className="flex items-center space-x-2">
                       <button
-                        onClick={() => window.open(file.fileUrl, '_blank')}
-                        className="text-blue-600 hover:text-blue-800"
+                        onClick={() => {
+                          console.log('Opening file:', file.fileUrl);
+                          console.log('File details:', file);
+                          if (file.fileUrl && !file.fileUrl.startsWith('blob:')) {
+                            window.open(file.fileUrl, '_blank');
+                          } else {
+                            alert('File URL not available or file not properly uploaded to Cloudinary');
+                          }
+                        }}
+                        className="text-blue-600 hover:text-blue-800 p-1 rounded hover:bg-blue-50"
                         title="View file"
                       >
                         <Eye className="h-4 w-4" />
                       </button>
                       <a
                         href={file.fileUrl}
-                        download
-                        className="text-green-600 hover:text-green-800"
+                        download={file.fileName}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-green-600 hover:text-green-800 p-1 rounded hover:bg-green-50"
                         title="Download file"
+                        onClick={(e) => {
+                          if (!file.fileUrl || file.fileUrl.startsWith('blob:')) {
+                            e.preventDefault();
+                            alert('File URL not available or file not properly uploaded to Cloudinary');
+                          }
+                        }}
                       >
                         <Download className="h-4 w-4" />
                       </a>
@@ -257,8 +279,13 @@ const ViewAssignmentModal: React.FC<ViewAssignmentModalProps> = ({ isOpen, onClo
                   </div>
                 ))}
               </div>
-            </div>
-          )}
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <FileText className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                <p className="text-sm">No files attached to this assignment</p>
+              </div>
+            )}
+          </div>
 
           {/* Statistics */}
           <div className="border border-gray-200 rounded-lg p-4">

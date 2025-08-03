@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, Edit, Trash2, Eye, Filter, ChevronLeft, ChevronRight, MoreHorizontal, Calendar, Award, Users, Clock, FileText, TrendingUp } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Eye, Filter, ChevronLeft, ChevronRight, MoreHorizontal, Calendar, Award, Users, Clock, FileText } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import Select, { StylesConfig } from 'react-select';
 import { useDebounce } from '@uidotdev/usehooks';
@@ -12,9 +12,11 @@ import {
 } from '../../components/Faculty/Assignments';
 import {
   EditAssignmentModal,
-  ViewAssignmentModal,
   AssignmentsFilterDrawer
 } from '../../components/Admin/Assignments';
+import {
+  ViewAssignmentModal
+} from '../../components/Faculty/Assignments';
 
 // Select option interface
 interface SelectOption {
@@ -55,7 +57,6 @@ const FacultyAssignments: React.FC = () => {
   // Status filter options
   const statusOptions: SelectOption[] = [
     { value: 'all', label: 'All Status' },
-    { value: 'draft', label: 'Draft' },
     { value: 'published', label: 'Published' },
     { value: 'submission_closed', label: 'Submission Closed' },
     { value: 'grading', label: 'Grading' },
@@ -128,7 +129,6 @@ const FacultyAssignments: React.FC = () => {
   // Calculate summary statistics
   const summaryStats = {
     total: filteredAssignments.length,
-    draft: filteredAssignments.filter(a => a.status === 'draft').length,
     published: filteredAssignments.filter(a => a.status === 'published').length,
     grading: filteredAssignments.filter(a => a.status === 'grading').length,
     completed: filteredAssignments.filter(a => a.status === 'completed').length,
@@ -201,6 +201,8 @@ const FacultyAssignments: React.FC = () => {
     setSelectedAssignmentForView(assignment);
     setIsViewAssignmentModalOpen(true);
   };
+
+
 
   const handleApplyFilters = (newFilters: AssignmentFilters) => {
     setFilters(newFilters);
@@ -317,6 +319,8 @@ const FacultyAssignments: React.FC = () => {
           Add Assignment
         </button>
       </div>
+
+
 
       {/* Filters and search */}
       <div className="bg-white rounded-lg shadow p-6">

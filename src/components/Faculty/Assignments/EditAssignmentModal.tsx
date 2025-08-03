@@ -5,7 +5,7 @@ import Select from 'react-select';
 import AsyncSelect from 'react-select/async';
 import { useUpdateAssignment } from '../../../api/hooks/useAssignments';
 import { useCourses } from '../../../api/hooks/useCourses';
-import { useUsers } from '../../../api/hooks/useUsers';
+import { useUsersByRole } from '../../../api/hooks/useUsers';
 import { AssignmentData, UpdateAssignmentRequest, AssignmentFile, AssignmentRequirements, GradingCriterion } from '../../../api/types/assignments';
 import { CourseData } from '../../../api/types/courses';
 import { UserData } from '../../../api/types/users';
@@ -71,7 +71,7 @@ const EditAssignmentModal: React.FC<EditAssignmentModalProps> = ({ isOpen, onClo
   // Hooks
   const updateAssignmentMutation = useUpdateAssignment();
   const { data: coursesData } = useCourses(1, 100, undefined, undefined, isOpen);
-  const { data: usersData } = useUsers(1, 100, '', { role: 'faculty' }, isOpen);
+  const { data: usersData } = useUsersByRole('faculty', isOpen);
 
   const courses = coursesData?.courses || [];
   const faculty = usersData?.users || [];

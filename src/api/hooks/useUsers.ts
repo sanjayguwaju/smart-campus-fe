@@ -153,6 +153,36 @@ export const useStudentsByFaculty = (
   });
 };
 
+export const useUsersByRole = (role: string, enabled = true) => {
+  return useQuery({
+    queryKey: ["users-by-role", role],
+    queryFn: () => userService.getUsersByRole(role),
+    select: (response) => {
+      return {
+        users: response.data,
+        success: response.success,
+        message: response.message,
+        timestamp: response.timestamp,
+      };
+    },
+    enabled,
+    staleTime: 10 * 60 * 1000, // 10 minutes - data stays fresh for 10 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes - cache time (formerly cacheTime)
+    retry: (failureCount, error: unknown) => {
+      // Don't retry on 401 errors
+      if (error && typeof error === 'object' && 'response' in error) {
+        const apiError = error as { response?: { status?: number } };
+        if (apiError.response?.status === 401) {
+          return false;
+        }
+      }
+      // Only retry up to 2 times for other errors
+      return failureCount < 2;
+    },
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
+  });
+};
+
 export const useUpdateUser = () => {
   const queryClient = useQueryClient();
 

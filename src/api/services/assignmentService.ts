@@ -118,13 +118,13 @@ export const assignmentService = {
 
   // Publish assignment
   publishAssignment: async (id: string): Promise<AssignmentResponse> => {
-    const response = await apiClient.patch(`${BASE_URL}/${id}/publish`);
+    const response = await apiClient.patch(`${BASE_URL}/${id}/status`, { status: 'published' });
     return response.data;
   },
 
   // Unpublish assignment
   unpublishAssignment: async (id: string): Promise<AssignmentResponse> => {
-    const response = await apiClient.patch(`${BASE_URL}/${id}/unpublish`);
+    const response = await apiClient.patch(`${BASE_URL}/${id}/status`, { status: 'draft' });
     return response.data;
   },
 

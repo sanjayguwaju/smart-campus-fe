@@ -146,4 +146,9 @@ export const userService = {
     );
     return response.data;
   },
+
+  async getUsersByRole(role: string): Promise<UsersResponse> {
+    const response = await apiClient.get<UsersResponse>(`/users/role/${role}`);
+    return response.data;
+  },
 };

@@ -105,7 +105,7 @@ const AddCourseModal: React.FC<AddCourseModalProps> = ({ isOpen, onClose }) => {
 
   const loadInstructorOptions = async (inputValue: string) => {
     try {
-      const response = await userService.getUsers(1, 100, inputValue, { role: 'faculty' });
+      const response = await userService.getUsersByRole('faculty');
       const options = (response?.data?.map((u: { _id: string; fullName: string }) => ({ value: u._id, label: u.fullName })) || [])
         .sort((a: SelectOption, b: SelectOption) => a.label.localeCompare(b.label));
       return options.filter((option: SelectOption) =>

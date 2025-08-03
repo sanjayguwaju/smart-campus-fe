@@ -3,11 +3,12 @@ import { X, Plus, Trash2, Upload } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import Select from 'react-select';
 import { useCreateFacultyAssignment } from '../../../api/hooks/useAssignments';
-import { useCourses } from '../../../api/hooks/useCourses';
+import { useAssignedFacultyCourses } from '../../../api/hooks/useCourses';
 import { CreateAssignmentRequest, AssignmentFile } from '../../../api/types/assignments';
 import { CourseData } from '../../../api/types/courses';
 import { useAuthStore } from '../../../store/authStore';
 import LoadingSpinner from '../../Layout/LoadingSpinner';
+import { uploadDocumentToCloudinary } from '../../../api/config/cloudinary';
 
 interface AddAssignmentModalProps {
   isOpen: boolean;
@@ -65,8 +66,8 @@ const AddAssignmentModal: React.FC<AddAssignmentModalProps> = ({ isOpen, onClose
       }
     ],
     totalPoints: 100,
-    status: 'draft',
-    isVisible: false,
+    status: 'published',
+    isVisible: true,
     tags: ['web-development', 'full-stack', 'project'],
     difficulty: 'Hard',
     estimatedTime: 40
@@ -77,7 +78,7 @@ const AddAssignmentModal: React.FC<AddAssignmentModalProps> = ({ isOpen, onClose
 
   // Hooks
   const createFacultyAssignmentMutation = useCreateFacultyAssignment();
-  const { data: coursesData } = useCourses(1, 100, undefined, undefined, isOpen);
+  const { data: coursesData } = useAssignedFacultyCourses(user?._id || '', 1, 100, undefined, undefined, isOpen);
 
   const courses = coursesData?.courses || [];
   const users = []; // No longer needed
@@ -230,17 +231,41 @@ const AddAssignmentModal: React.FC<AddAssignmentModalProps> = ({ isOpen, onClose
     }));
   };
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (files) {
-      const newFiles: AssignmentFile[] = Array.from(files).map(file => ({
-        fileName: file.name,
-        fileUrl: URL.createObjectURL(file),
-        fileSize: file.size / 1024 / 1024, // Convert to MB
-        fileType: file.type,
-        uploadedAt: new Date().toISOString()
-      }));
-      setUploadedFiles(prev => [...prev, ...newFiles]);
+      try {
+        // Show loading toast
+        const loadingToast = toast.loading('Uploading files...');
+        
+        const uploadPromises = Array.from(files).map(async (file) => {
+          try {
+            // Upload file to Cloudinary
+            const fileUrl = await uploadDocumentToCloudinary(file);
+            
+            return {
+              fileName: file.name,
+              fileUrl: fileUrl, // Use Cloudinary URL instead of blob URL
+              fileSize: file.size / 1024 / 1024, // Convert to MB
+              fileType: file.type,
+              uploadedAt: new Date().toISOString()
+            };
+          } catch (uploadError) {
+            console.error(`Failed to upload ${file.name}:`, uploadError);
+            toast.error(`Failed to upload ${file.name}`);
+            throw uploadError;
+          }
+        });
+        
+        const newFiles = await Promise.all(uploadPromises);
+        setUploadedFiles(prev => [...prev, ...newFiles]);
+        
+        toast.dismiss(loadingToast);
+        toast.success('Files uploaded successfully!');
+      } catch (error) {
+        console.error('File upload error:', error);
+        toast.error('Failed to upload files');
+      }
     }
   };
 

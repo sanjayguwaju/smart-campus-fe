@@ -20,6 +20,15 @@ interface SelectOption {
 const EditSubmissionModal: React.FC<EditSubmissionModalProps> = ({ isOpen, onClose, submission }) => {
   const updateSubmissionMutation = useUpdateSubmission();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+
+  const formatFileSize = (sizeInBytes: number) => {
+    const sizeInMB = sizeInBytes / (1024 * 1024);
+    if (sizeInMB < 1) {
+      const sizeInKB = sizeInBytes / 1024;
+      return `${sizeInKB.toFixed(1)} KB`;
+    }
+    return `${sizeInMB.toFixed(1)} MB`;
+  };
   
   // Fetch data for dropdowns
   const { data: assignmentsData, isLoading: assignmentsLoading } = useAssignments(1, 100, undefined, undefined, isOpen);
@@ -241,7 +250,7 @@ const EditSubmissionModal: React.FC<EditSubmissionModalProps> = ({ isOpen, onClo
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                           </svg>
                           <span className="text-sm text-gray-700">{file.fileName}</span>
-                          <span className="text-xs text-gray-500">({(file.fileSize / 1024 / 1024).toFixed(2)} MB)</span>
+                          <span className="text-xs text-gray-500">({formatFileSize(file.fileSize)})</span>
                         </div>
                         <a
                           href={file.fileUrl}

@@ -38,6 +38,15 @@ const GradeSubmissionModal: React.FC<GradeSubmissionModalProps> = ({
 
   const gradeSubmissionMutation = useGradeSubmission();
 
+  const formatFileSize = (sizeInBytes: number) => {
+    const sizeInMB = sizeInBytes / (1024 * 1024);
+    if (sizeInMB < 1) {
+      const sizeInKB = sizeInBytes / 1024;
+      return `${sizeInKB.toFixed(1)} KB`;
+    }
+    return `${sizeInMB.toFixed(1)} MB`;
+  };
+
   // Initialize form data when submission changes
   useEffect(() => {
     if (submission) {
@@ -381,7 +390,7 @@ const GradeSubmissionModal: React.FC<GradeSubmissionModalProps> = ({
                         <div>
                           <p className="text-sm font-medium text-gray-900">{file.fileName}</p>
                           <p className="text-xs text-gray-500">
-                            {(file.fileSize / 1024 / 1024).toFixed(2)} MB
+                            {formatFileSize(file.fileSize)}
                           </p>
                         </div>
                       </div>

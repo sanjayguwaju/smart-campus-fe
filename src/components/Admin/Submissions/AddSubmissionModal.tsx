@@ -83,7 +83,19 @@ const AddSubmissionModal: React.FC<AddSubmissionModalProps> = ({ isOpen, onClose
   const loadAssignmentOptions = async (inputValue: string) => {
     try {
       console.log('Loading assignments with input:', inputValue);
-      const response = await assignmentService.getMyCourseAssignments(user?._id || '', 1, 100, inputValue, {});
+      
+      let response;
+      if (user?.role === 'faculty') {
+        // Faculty should use faculty assignments endpoint
+        response = await assignmentService.getFacultyAssignments(user._id, 1, 100, inputValue, {});
+      } else if (user?.role === 'student') {
+        // Students should use student assignments endpoint
+        response = await assignmentService.getMyCourseAssignments(user._id, 1, 100, inputValue, {});
+      } else {
+        // Admin can use general assignments endpoint
+        response = await assignmentService.getAssignments(1, 100, inputValue, {});
+      }
+      
       console.log("Assignment response:", response);
       const options = response?.data?.map((a: { _id: string; title: string }) => ({ value: a._id, label: a.title })) || [];
       console.log("Assignment options:", options);

@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Download, FileText, User, Calendar, CheckCircle, AlertCircle } from 'lucide-react';
+import { X, Download, FileText, User, Calendar, CheckCircle, AlertCircle, Eye } from 'lucide-react';
 import { SubmissionData } from '../../../api/types/submissions';
 
 interface ViewSubmissionModalProps {
@@ -25,9 +25,11 @@ const ViewSubmissionModal: React.FC<ViewSubmissionModalProps> = ({
     });
   };
 
-  const formatFileSize = (sizeInMB: number) => {
+  const formatFileSize = (sizeInBytes: number) => {
+    const sizeInMB = sizeInBytes / (1024 * 1024);
     if (sizeInMB < 1) {
-      return `${(sizeInMB * 1024).toFixed(1)} KB`;
+      const sizeInKB = sizeInBytes / 1024;
+      return `${sizeInKB.toFixed(1)} KB`;
     }
     return `${sizeInMB.toFixed(1)} MB`;
   };
@@ -109,11 +111,43 @@ const ViewSubmissionModal: React.FC<ViewSubmissionModalProps> = ({
                     <div>
                       <p className="text-sm font-medium text-gray-900">{file.fileName}</p>
                       <p className="text-xs text-gray-500">{formatFileSize(file.fileSize)} • {file.fileType}</p>
+                      {file.fileUrl && file.fileUrl.startsWith('blob:') && (
+                        <p className="text-xs text-red-500">⚠️ File not properly uploaded</p>
+                      )}
                     </div>
                   </div>
-                  <button className="text-blue-600 hover:text-blue-800">
-                    <Download className="h-4 w-4" />
-                  </button>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => {
+                        console.log('Opening file:', file.fileUrl);
+                        if (file.fileUrl && !file.fileUrl.startsWith('blob:')) {
+                          window.open(file.fileUrl, '_blank');
+                        } else {
+                          alert('File URL not available or file not properly uploaded');
+                        }
+                      }}
+                      className="text-blue-600 hover:text-blue-800 p-1 rounded hover:bg-blue-50"
+                      title="View file"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </button>
+                    <a
+                      href={file.fileUrl}
+                      download={file.fileName}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-green-600 hover:text-green-800 p-1 rounded hover:bg-green-50"
+                      title="Download file"
+                      onClick={(e) => {
+                        if (!file.fileUrl || file.fileUrl.startsWith('blob:')) {
+                          e.preventDefault();
+                          alert('File URL not available or file not properly uploaded');
+                        }
+                      }}
+                    >
+                      <Download className="h-4 w-4" />
+                    </a>
+                  </div>
                 </div>
               ))}
             </div>

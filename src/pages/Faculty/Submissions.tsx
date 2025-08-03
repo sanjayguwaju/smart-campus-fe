@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, Edit, Trash2, Eye, Filter, ChevronLeft, ChevronRight, MoreHorizontal, CheckCircle, AlertCircle, Clock, FileText } from 'lucide-react';
+import { Search, Edit, Trash2, Eye, Filter, ChevronLeft, ChevronRight, MoreHorizontal, CheckCircle, AlertCircle, Clock, FileText } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import Select, { StylesConfig } from 'react-select';
 import { useDebounce } from '@uidotdev/usehooks';
@@ -14,7 +14,6 @@ import { StudentByFaculty } from '../../api/types/users';
 import LoadingSpinner from '../../components/Layout/LoadingSpinner';
 import { useAuthStore } from '../../store/authStore';
 import { 
-  AddSubmissionModal, 
   EditSubmissionModal, 
   DeleteSubmissionModal, 
   ViewSubmissionModal, 
@@ -35,7 +34,7 @@ const Submissions: React.FC = () => {
   const [selectedSubmissions, setSelectedSubmissions] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [isAddSubmissionModalOpen, setIsAddSubmissionModalOpen] = useState(false);
+
   const [isEditSubmissionModalOpen, setIsEditSubmissionModalOpen] = useState(false);
   const [selectedSubmissionForEdit, setSelectedSubmissionForEdit] = useState<SubmissionData | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -271,6 +270,15 @@ const Submissions: React.FC = () => {
     });
   };
 
+  const formatFileSize = (sizeInBytes: number) => {
+    const sizeInMB = sizeInBytes / (1024 * 1024);
+    if (sizeInMB < 1) {
+      const sizeInKB = sizeInBytes / 1024;
+      return `${sizeInKB.toFixed(1)} KB`;
+    }
+    return `${sizeInMB.toFixed(1)} MB`;
+  };
+
   // Pagination handlers
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -305,13 +313,6 @@ const Submissions: React.FC = () => {
           <h1 className="text-2xl font-bold text-gray-900">Assignment Submissions</h1>
           <p className="text-gray-600">Manage assignment submissions for your courses</p>
         </div>
-        <button 
-          onClick={() => setIsAddSubmissionModalOpen(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Add Submission
-        </button>
       </div>
 
       {/* Filters and search */}
@@ -404,9 +405,7 @@ const Submissions: React.FC = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Grade
-                </th>
+
                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
                 </th>
@@ -447,7 +446,7 @@ const Submissions: React.FC = () => {
                       {submission.files.length} file{submission.files.length !== 1 ? 's' : ''}
                     </div>
                     <div className="text-sm text-gray-500">
-                      {submission.files.reduce((total, file) => total + file.fileSize, 0).toFixed(1)} MB total
+                      {formatFileSize(submission.files.reduce((total, file) => total + file.fileSize, 0))} total
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -461,18 +460,7 @@ const Submissions: React.FC = () => {
                       </span>
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {submission.grade ? (
-                      <div>
-                        <span className="font-medium">{submission.grade}</span>
-                        {submission.numericalScore && (
-                          <span className="text-gray-500 ml-1">({submission.numericalScore}%)</span>
-                        )}
-                      </div>
-                    ) : (
-                      <span className="text-gray-400">Not graded</span>
-                    )}
-                  </td>
+
                   <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
                     <div className="relative inline-block dropdown-container">
                       <button
@@ -550,17 +538,7 @@ const Submissions: React.FC = () => {
                           : 'You haven\'t received any assignment submissions yet. Students will appear here once they submit their assignments.'
                         }
                       </p>
-                      {!searchTerm && !Object.values(filters).some(v => v !== '' && v !== undefined) && (
-                        <div className="mt-6">
-                          <button
-                            onClick={() => setIsAddSubmissionModalOpen(true)}
-                            className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                          >
-                            <Plus className="h-4 w-4 mr-2" />
-                            Add Submission
-                          </button>
-                        </div>
-                      )}
+
                     </div>
                   </td>
                 </tr>
@@ -678,11 +656,7 @@ const Submissions: React.FC = () => {
         )}
       </div>
 
-      {/* Add Submission Modal */}
-      <AddSubmissionModal 
-        isOpen={isAddSubmissionModalOpen}
-        onClose={() => setIsAddSubmissionModalOpen(false)}
-      />
+
 
       {/* Edit Submission Modal */}
       <EditSubmissionModal 

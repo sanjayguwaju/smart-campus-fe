@@ -3,7 +3,7 @@ import { X, Filter } from 'lucide-react';
 import Select, { StylesConfig } from 'react-select';
 import AsyncSelect from 'react-select/async';
 import { useCourses } from '../../../api/hooks/useCourses';
-import { useUsers } from '../../../api/hooks/useUsers';
+import { useUsersByRole } from '../../../api/hooks/useUsers';
 import { AssignmentFilters } from '../../../api/types/assignments';
 import { CourseData } from '../../../api/types/courses';
 import { UserData } from '../../../api/types/users';
@@ -33,7 +33,7 @@ const AssignmentsFilterDrawer: React.FC<AssignmentsFilterDrawerProps> = ({
 
   // Hooks
   const { data: coursesData } = useCourses(1, 100, undefined, undefined, isOpen);
-  const { data: usersData } = useUsers(1, 100, '', { role: 'faculty' }, isOpen);
+  const { data: usersData } = useUsersByRole('faculty', isOpen);
 
   const courses = coursesData?.courses || [];
   const faculty = usersData?.users || [];
