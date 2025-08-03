@@ -503,24 +503,9 @@ Do you want to proceed?`;
                     <span className="text-sm text-gray-500">{course.code}</span>
                   </div>
                   
-                  <div className="space-y-3">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Graded:</span>
-                      <span className="font-medium">{course.gradedCount}/{course.totalCount}</span>
-                    </div>
-                    
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div 
-                        className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                        style={{ width: `${course.percentage}%` }}
-                      ></div>
-                    </div>
-                    
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Progress:</span>
-                      <span className="font-medium">{course.percentage}%</span>
-        </div>
-      </div>
+                                    <div className="space-y-3">
+                    {/* Graded and Progress sections removed */}
+                  </div>
 
                   <div className="mt-4 flex space-x-2">
                     <button

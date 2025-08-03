@@ -1,4 +1,5 @@
 import { LogOut, User } from "lucide-react";
+import { Link } from "react-router-dom";
 import { UserData } from "../../api/types/users";
 
 interface AdminHeaderProps {
@@ -19,6 +20,12 @@ export const AdminHeader = ({ user, navigation, isActive, logout }: AdminHeaderP
         </div>
         
         <div className="flex items-center space-x-4">
+          <Link
+            to="/"
+            className="bg-gray-600 text-white px-3 py-2 rounded-lg hover:bg-gray-700 text-sm font-medium"
+          >
+            ← Back to Main Page
+          </Link>
           <div className="flex items-center space-x-3">
             <div className="text-right">
               <p className="text-sm font-medium text-gray-900">{user?.displayName}</p>

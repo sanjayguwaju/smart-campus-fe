@@ -2,10 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { Calendar, User, Tag, ArrowRight, Search, Filter } from 'lucide-react';
 import { useBlogs } from '../api/hooks/useBlogs';
 import { BlogPost } from '../api/services/blogService';
+import ViewBlogModal from '../components/Admin/Blogs/ViewBlogModal';
 
 const Blog: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedBlog, setSelectedBlog] = useState<BlogPost | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const { blogsQuery } = useBlogs();
 
   useEffect(() => {
@@ -52,6 +55,16 @@ const Blog: React.FC = () => {
     { key: 'research', name: 'Research' },
     { key: 'events', name: 'Events' },
   ];
+
+  const handleReadBlog = (blog: BlogPost) => {
+    setSelectedBlog(blog);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedBlog(null);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -106,7 +119,7 @@ const Blog: React.FC = () => {
       {/* Featured Post */}
       {featuredPost && (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+          <div className="bg-white rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-300">
             <div className="md:flex">
               <div className="md:w-1/2">
                 {featuredPost.coverImage?.url ? (
@@ -125,7 +138,7 @@ const Blog: React.FC = () => {
                     <div className="hidden h-64 md:h-80 lg:h-96 bg-gradient-to-br from-blue-400 to-purple-600 flex items-center justify-center">
                       <div className="text-white text-center">
                         <Calendar className="h-16 w-16 mx-auto mb-4" />
-                        <p className="text-lg">Featured Article</p>
+                        <p className="text-lg font-medium">Featured Article</p>
                       </div>
                     </div>
                   </div>
@@ -133,29 +146,43 @@ const Blog: React.FC = () => {
                   <div className="h-64 md:h-full bg-gradient-to-br from-blue-400 to-purple-600 flex items-center justify-center">
                     <div className="text-white text-center">
                       <Calendar className="h-16 w-16 mx-auto mb-4" />
-                      <p className="text-lg">Featured Article</p>
+                      <p className="text-lg font-medium">Featured Article</p>
                     </div>
                   </div>
                 )}
               </div>
-              <div className="md:w-1/2 p-8">
-                <div className="flex items-center text-sm text-gray-500 mb-4">
-                  <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
-                    Blog
+              <div className="md:w-1/2 p-8 md:p-10">
+                <div className="flex items-center gap-3 mb-6">
+                  <span className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-3 py-1 rounded-full text-xs font-medium">
+                    Featured
                   </span>
-                  <span className="mx-2">•</span>
-                  <span>{featuredPost.createdAt ? new Date(featuredPost.createdAt).toLocaleDateString() : ''}</span>
+                  <span className="text-sm text-gray-500">•</span>
+                  <span className="text-sm text-gray-500">
+                    {featuredPost.createdAt ? new Date(featuredPost.createdAt).toLocaleDateString('en-US', {
+                      month: 'long',
+                      day: 'numeric',
+                      year: 'numeric'
+                    }) : ''}
+                  </span>
                 </div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">{featuredPost.title}</h2>
-                <p className="text-gray-600 mb-6">{featuredPost.summary}</p>
+                <h2 className="text-3xl font-bold text-gray-900 mb-4 leading-tight">{featuredPost.title}</h2>
+                <p className="text-gray-600 mb-6 text-lg leading-relaxed">{featuredPost.summary}</p>
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <User className="h-5 w-5 text-gray-400 mr-2" />
-                    <span className="text-sm text-gray-600">{featuredPost.author}</span>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                      <User className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900">{featuredPost.author}</p>
+                      <p className="text-sm text-gray-500">Author</p>
+                    </div>
                   </div>
-                  <button className="text-blue-600 hover:text-blue-800 font-medium flex items-center">
+                  <button 
+                    className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 font-medium flex items-center gap-2 hover:shadow-lg"
+                    onClick={() => handleReadBlog(featuredPost)}
+                  >
                     Read More
-                    <ArrowRight className="h-4 w-4 ml-1" />
+                    <ArrowRight className="h-4 w-4" />
                   </button>
                 </div>
               </div>
@@ -168,13 +195,13 @@ const Blog: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {filteredPosts.map((post: BlogPost) => (
-            <article key={post._id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+            <article key={post._id} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group">
               {post.coverImage?.url ? (
-                <div className="h-40 md:h-44 relative overflow-hidden">
+                <div className="h-48 relative overflow-hidden">
                   <img
                     src={post.coverImage.url}
                     alt={post.coverImage.alt || post.title}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     onError={(e) => {
                       const target = e.target as HTMLImageElement;
                       target.style.display = 'none';
@@ -182,50 +209,71 @@ const Blog: React.FC = () => {
                     }}
                   />
                   {/* Fallback placeholder */}
-                  <div className="hidden h-40 md:h-44 bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
-                    <Tag className="h-12 w-12 text-gray-400" />
+                  <div className="hidden h-48 bg-gradient-to-br from-blue-400 to-purple-600 flex items-center justify-center">
+                    <div className="text-white text-center">
+                      <Tag className="h-12 w-12 mx-auto mb-2" />
+                      <p className="text-sm font-medium">Blog Article</p>
+                    </div>
                   </div>
                 </div>
               ) : (
-                <div className="h-48 bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
-                  <Tag className="h-12 w-12 text-gray-400" />
+                <div className="h-48 bg-gradient-to-br from-blue-400 to-purple-600 flex items-center justify-center">
+                  <div className="text-white text-center">
+                    <Tag className="h-12 w-12 mx-auto mb-2" />
+                    <p className="text-sm font-medium">Blog Article</p>
+                  </div>
                 </div>
               )}
               <div className="p-6">
-                <div className="flex items-center text-sm text-gray-500 mb-3">
-                  <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs font-medium">
+                <div className="flex items-center justify-between mb-4">
+                  <span className="bg-gradient-to-r from-blue-500 to-purple-600 text-white text-xs px-3 py-1 rounded-full font-medium">
                     Blog
                   </span>
-                </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-3 line-clamp-2">
-                  {post.title}
-                </h3>
-                <p className="text-gray-600 mb-4 line-clamp-3">
-                  {post.summary}
-                </p>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <User className="h-4 w-4 text-gray-400 mr-1" />
-                    <span className="text-sm text-gray-600">{post.author}</span>
-                  </div>
                   <span className="text-sm text-gray-500">
-                    {post.createdAt ? new Date(post.createdAt).toLocaleDateString() : ''}
+                    {post.createdAt ? new Date(post.createdAt).toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric'
+                    }) : ''}
                   </span>
                 </div>
-                <div className="mt-4 pt-4 border-t border-gray-200">
-                  <div className="flex flex-wrap gap-2">
-                    {post.tags && post.tags.map((tag: string, index: number) => (
-                      <span
-                        key={index}
-                        className="bg-blue-50 text-blue-700 px-2 py-1 rounded text-xs"
-                      >
-                        {tag}
-                      </span>
-                    ))}
+                <h3 className="text-xl font-bold text-gray-900 mb-3 line-clamp-2 group-hover:text-blue-600 transition-colors">
+                  {post.title}
+                </h3>
+                <p className="text-gray-600 mb-4 line-clamp-3 leading-relaxed">
+                  {post.summary}
+                </p>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                      <User className="h-4 w-4 text-white" />
+                    </div>
+                    <span className="text-sm text-gray-600 font-medium">{post.author}</span>
                   </div>
                 </div>
-                <button className="mt-4 w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">
+                {post.tags && post.tags.length > 0 && (
+                  <div className="mb-4">
+                    <div className="flex flex-wrap gap-2">
+                      {post.tags.slice(0, 3).map((tag: string, index: number) => (
+                        <span
+                          key={index}
+                          className="bg-blue-50 text-blue-700 px-2 py-1 rounded-md text-xs font-medium"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                      {post.tags.length > 3 && (
+                        <span className="text-gray-400 text-xs">+{post.tags.length - 3} more</span>
+                      )}
+                    </div>
+                  </div>
+                )}
+                <button 
+                  className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-4 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 font-medium flex items-center justify-center gap-2 group-hover:shadow-lg"
+                  onClick={() => handleReadBlog(post)}
+                >
                   Read Article
+                  <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                 </button>
               </div>
             </article>
@@ -252,6 +300,13 @@ const Blog: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Blog Detail Modal */}
+      <ViewBlogModal
+        isOpen={isModalOpen}
+        blog={selectedBlog}
+        onClose={handleCloseModal}
+      />
     </div>
   );
 };

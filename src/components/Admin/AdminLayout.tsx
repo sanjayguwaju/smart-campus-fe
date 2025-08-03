@@ -29,8 +29,6 @@ const AdminLayout: React.FC = () => {
     // Courses is now a child of Programs
     { name: 'Courses', href: '/admin/courses', icon: BookOpen},
     { name: 'Enrollments', href: '/admin/enrollments', icon: UserCheck },
-    { name: 'Assignments', href: '/admin/assignments', icon: ClipboardList },
-    { name: 'Submissions', href: '/admin/submissions', icon: Upload },
     { name: 'Events', href: '/admin/events', icon: Calendar },
     { name: 'Notices', href: '/admin/notices', icon: FileText },
     { name: 'Blog', href: '/admin/blog', icon: FileText },
@@ -54,7 +52,7 @@ const AdminLayout: React.FC = () => {
               <li key={item.name}>
                 <Link
                   to={item.href}
-                  className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors ${item.child ? 'pl-8' : ''} ${isActive(item.href)
+                  className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors ${isActive(item.href)
                       ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
                       : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                     }`}

@@ -50,7 +50,10 @@ export const useCreateEvent = () => {
       queryClient.invalidateQueries({ queryKey: ["events"] });
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || "Failed to create event");
+      // Don't show toast for validation errors - they're handled in the component
+      if (!error.response?.data?.errors || !Array.isArray(error.response.data.errors)) {
+        toast.error(error.response?.data?.message || "Failed to create event");
+      }
     },
   });
 };
@@ -72,7 +75,10 @@ export const useUpdateEvent = () => {
       queryClient.invalidateQueries({ queryKey: ["event", variables.id] });
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || "Failed to update event");
+      // Don't show toast for validation errors - they're handled in the component
+      if (!error.response?.data?.errors || !Array.isArray(error.response.data.errors)) {
+        toast.error(error.response?.data?.message || "Failed to update event");
+      }
     },
   });
 };

@@ -4,6 +4,7 @@ import { useCreateEvent } from '../../../api/hooks/useEvents';
 import { CreateEventRequest } from '../../../api/types/events';
 import { useAuthStore } from '../../../store/authStore';
 import MultipleImageUpload from '../../common/MultipleImageUpload';
+import ValidationErrorDisplay, { ValidationError } from '../../common/ValidationErrorDisplay';
 import { dateInputToIso } from '../../../utils/dateUtils';
 
 interface SelectOption {
@@ -19,6 +20,7 @@ interface AddEventModalProps {
 const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose }) => {
   const createEventMutation = useCreateEvent();
   const currentUser = useAuthStore((state) => state.user);
+  const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
   
   // Custom styles for react-select
   const selectStyles: StylesConfig<SelectOption> = {
@@ -96,6 +98,9 @@ const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose }) => {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
     
+    // Clear validation errors for this field when user starts typing
+    setValidationErrors(prev => prev.filter(error => error.field !== name));
+    
     if (name.startsWith('location.')) {
       const locationField = name.split('.')[1];
       setFormData(prev => ({
@@ -117,7 +122,7 @@ const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose }) => {
     } else {
       setFormData(prev => ({
         ...prev,
-        [name]: type === 'number' ? (value ? parseInt(value) : undefined) : value
+        [name]: type === 'number' ? (value === '' ? undefined : Number(value)) : value
       }));
     }
   };
@@ -132,6 +137,8 @@ const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose }) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setValidationErrors([]); // Clear previous errors
+    
     try {
       // Set the primary image URL to imageUrl field for backward compatibility
       const primaryImage = formData.images?.find(img => img.isPrimary);
@@ -184,10 +191,23 @@ const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose }) => {
         imageUrl: '',
         images: []
       });
-    } catch (error) {
-      // Error is handled by the mutation
-      console.error('Error creating event:', error);
+    } catch (error: any) {
+      // Handle validation errors
+      if (error.response?.data?.errors && Array.isArray(error.response.data.errors)) {
+        setValidationErrors(error.response.data.errors);
+      } else {
+        // Handle other errors
+        console.error('Error creating event:', error);
+      }
     }
+  };
+
+  const getFieldError = (fieldName: string): string | undefined => {
+    return validationErrors.find(error => error.field === fieldName)?.message;
+  };
+
+  const hasFieldError = (fieldName: string): boolean => {
+    return validationErrors.some(error => error.field === fieldName);
   };
 
   if (!isOpen) return null;
@@ -223,6 +243,12 @@ const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose }) => {
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6">
+          {/* Validation Errors Summary */}
+          <ValidationErrorDisplay 
+            errors={validationErrors}
+            onClear={() => setValidationErrors([])}
+          />
+
           <form onSubmit={handleSubmit} className="space-y-8">
             {/* Basic Information Section */}
             <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
@@ -249,6 +275,9 @@ const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose }) => {
                     className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
                     placeholder="Enter event title"
                   />
+                  {hasFieldError('title') && (
+                    <p className="mt-1 text-sm text-red-600">{getFieldError('title')}</p>
+                  )}
                 </div>
 
                 <div>
@@ -282,6 +311,9 @@ const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose }) => {
                     styles={selectStyles}
                     className="w-full"
                   />
+                  {hasFieldError('eventType') && (
+                    <p className="mt-1 text-sm text-red-600">{getFieldError('eventType')}</p>
+                  )}
                 </div>
 
                 <div>
@@ -311,6 +343,9 @@ const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose }) => {
                     styles={selectStyles}
                     className="w-full"
                   />
+                  {hasFieldError('category') && (
+                    <p className="mt-1 text-sm text-red-600">{getFieldError('category')}</p>
+                  )}
                 </div>
 
                 <div>
@@ -340,6 +375,9 @@ const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose }) => {
                     styles={selectStyles}
                     className="w-full"
                   />
+                  {hasFieldError('status') && (
+                    <p className="mt-1 text-sm text-red-600">{getFieldError('status')}</p>
+                  )}
                 </div>
               </div>
 
@@ -355,6 +393,9 @@ const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose }) => {
                   className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
                   placeholder="Brief description for preview"
                 />
+                {hasFieldError('shortDescription') && (
+                  <p className="mt-1 text-sm text-red-600">{getFieldError('shortDescription')}</p>
+                )}
               </div>
 
               <div className="mt-6">
@@ -370,6 +411,9 @@ const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose }) => {
                   className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
                   placeholder="Detailed description of the event"
                 />
+                {hasFieldError('description') && (
+                  <p className="mt-1 text-sm text-red-600">{getFieldError('description')}</p>
+                )}
               </div>
             </div>
 
@@ -390,6 +434,9 @@ const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose }) => {
                 maxSize={5}
                 className="max-w-md"
               />
+              {hasFieldError('images') && (
+                <p className="mt-1 text-sm text-red-600">{getFieldError('images')}</p>
+              )}
             </div>
 
             {/* Date and Time Section */}
@@ -416,6 +463,9 @@ const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose }) => {
                     required
                     className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
                   />
+                  {hasFieldError('startDate') && (
+                    <p className="mt-1 text-sm text-red-600">{getFieldError('startDate')}</p>
+                  )}
                 </div>
 
                 <div>
@@ -430,6 +480,9 @@ const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose }) => {
                     required
                     className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
                   />
+                  {hasFieldError('endDate') && (
+                    <p className="mt-1 text-sm text-red-600">{getFieldError('endDate')}</p>
+                  )}
                 </div>
 
                 <div>
@@ -444,6 +497,9 @@ const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose }) => {
                     required
                     className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
                   />
+                  {hasFieldError('startTime') && (
+                    <p className="mt-1 text-sm text-red-600">{getFieldError('startTime')}</p>
+                  )}
                 </div>
 
                 <div>
@@ -458,6 +514,9 @@ const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose }) => {
                     required
                     className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
                   />
+                  {hasFieldError('endTime') && (
+                    <p className="mt-1 text-sm text-red-600">{getFieldError('endTime')}</p>
+                  )}
                 </div>
               </div>
             </div>
@@ -488,6 +547,9 @@ const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose }) => {
                     className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
                     placeholder="Enter venue name"
                   />
+                  {hasFieldError('location.venue') && (
+                    <p className="mt-1 text-sm text-red-600">{getFieldError('location.venue')}</p>
+                  )}
                 </div>
 
                 <div>
@@ -502,6 +564,9 @@ const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose }) => {
                     className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
                     placeholder="Room number or name"
                   />
+                  {hasFieldError('location.room') && (
+                    <p className="mt-1 text-sm text-red-600">{getFieldError('location.room')}</p>
+                  )}
                 </div>
 
                 <div>
@@ -516,6 +581,9 @@ const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose }) => {
                     className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
                     placeholder="Building name"
                   />
+                  {hasFieldError('location.building') && (
+                    <p className="mt-1 text-sm text-red-600">{getFieldError('location.building')}</p>
+                  )}
                 </div>
 
                 <div>
@@ -530,6 +598,9 @@ const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose }) => {
                     className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
                     placeholder="Campus name"
                   />
+                  {hasFieldError('location.campus') && (
+                    <p className="mt-1 text-sm text-red-600">{getFieldError('location.campus')}</p>
+                  )}
                 </div>
               </div>
             </div>
@@ -559,6 +630,9 @@ const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose }) => {
                     className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
                     placeholder="No limit"
                   />
+                  {hasFieldError('maxAttendees') && (
+                    <p className="mt-1 text-sm text-red-600">{getFieldError('maxAttendees')}</p>
+                  )}
                 </div>
 
                 <div>
@@ -572,6 +646,9 @@ const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose }) => {
                     onChange={handleInputChange}
                     className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
                   />
+                  {hasFieldError('registrationDeadline') && (
+                    <p className="mt-1 text-sm text-red-600">{getFieldError('registrationDeadline')}</p>
+                  )}
                 </div>
 
                 <div className="flex items-center justify-center">
@@ -637,6 +714,9 @@ const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose }) => {
                     className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
                     placeholder="contact@example.com"
                   />
+                  {hasFieldError('contactInfo.email') && (
+                    <p className="mt-1 text-sm text-red-600">{getFieldError('contactInfo.email')}</p>
+                  )}
                 </div>
 
                 <div>
@@ -651,6 +731,9 @@ const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose }) => {
                     className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
                     placeholder="+1 (555) 123-4567"
                   />
+                  {hasFieldError('contactInfo.phone') && (
+                    <p className="mt-1 text-sm text-red-600">{getFieldError('contactInfo.phone')}</p>
+                  )}
                 </div>
 
                 <div>
@@ -665,6 +748,9 @@ const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose }) => {
                     className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
                     placeholder="https://example.com"
                   />
+                  {hasFieldError('contactInfo.website') && (
+                    <p className="mt-1 text-sm text-red-600">{getFieldError('contactInfo.website')}</p>
+                  )}
                 </div>
               </div>
             </div>
@@ -707,6 +793,9 @@ const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose }) => {
                     styles={selectStyles}
                     className="w-full"
                   />
+                  {hasFieldError('visibility') && (
+                    <p className="mt-1 text-sm text-red-600">{getFieldError('visibility')}</p>
+                  )}
                 </div>
 
                 <div>
@@ -735,6 +824,9 @@ const AddEventModal: React.FC<AddEventModalProps> = ({ isOpen, onClose }) => {
                     styles={selectStyles}
                     className="w-full"
                   />
+                  {hasFieldError('priority') && (
+                    <p className="mt-1 text-sm text-red-600">{getFieldError('priority')}</p>
+                  )}
                 </div>
               </div>
             </div>
