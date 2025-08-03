@@ -101,10 +101,10 @@ const ViewNoticeModal: React.FC<ViewNoticeModalProps> = ({ isOpen, notice, onClo
           </div>
           
           {/* Close Button */}
-          <button
+        <button
             className="absolute top-4 right-4 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center text-gray-600 hover:text-gray-800 hover:bg-white transition-all duration-200 shadow-lg"
-            onClick={onClose}
-          >
+          onClick={onClose}
+        >
             <X className="h-5 w-5" />
           </button>
 
@@ -243,7 +243,7 @@ const ViewNoticeModal: React.FC<ViewNoticeModalProps> = ({ isOpen, notice, onClo
               className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors text-sm font-medium"
             >
               Close Notice
-            </button>
+        </button>
           </div>
         </div>
       </div>

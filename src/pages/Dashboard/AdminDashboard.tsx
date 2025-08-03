@@ -7,7 +7,7 @@ const AdminDashboard: React.FC = () => {
   const { user } = useAuthStore();
 
   const quickActions = [
-    { name: 'Manage Users', href: '/admin/users', icon: Users, color: 'bg-blue-500' },
+    { name: 'Add User', href: '/admin/users', icon: Users, color: 'bg-blue-500' },
     { name: 'Create Event', href: '/admin/events', icon: Calendar, color: 'bg-green-500' },
     { name: 'Post Notice', href: '/admin/notices', icon: FileText, color: 'bg-yellow-500' },
     { name: 'Add Program', href: '/admin/programs', icon: GraduationCap, color: 'bg-purple-500' },

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Users, Calendar, FileText, GraduationCap, TrendingUp } from 'lucide-react';
 
 const Dashboard: React.FC = () => {
@@ -36,10 +37,10 @@ const Dashboard: React.FC = () => {
 
 
   const quickActions = [
-    { name: 'Add User', href: '/admin/users/new', icon: Users },
-    { name: 'Create Event', href: '/admin/events/new', icon: Calendar },
-    { name: 'Post Notice', href: '/admin/notices/new', icon: FileText },
-    { name: 'Add Program', href: '/admin/programs/new', icon: GraduationCap },
+    { name: 'Add User', href: '/admin/users', icon: Users },
+    { name: 'Create Event', href: '/admin/events', icon: Calendar },
+    { name: 'Post Notice', href: '/admin/notices', icon: FileText },
+    { name: 'Add Program', href: '/admin/programs', icon: GraduationCap },
   ];
 
   return (
@@ -86,9 +87,9 @@ const Dashboard: React.FC = () => {
         <div className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {quickActions.map((action) => (
-              <a
+              <Link
                 key={action.name}
-                href={action.href}
+                to={action.href}
                 className="group relative bg-white border border-gray-200 rounded-lg p-6 hover:border-blue-300 hover:shadow-md transition-all duration-200"
               >
                 <div className="flex flex-col items-center text-center">
@@ -100,7 +101,7 @@ const Dashboard: React.FC = () => {
                   </h3>
                   <div className="mt-2 w-8 h-0.5 bg-blue-600 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-200"></div>
                 </div>
-              </a>
+              </Link>
             ))}
           </div>
         </div>

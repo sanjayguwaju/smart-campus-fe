@@ -10,9 +10,7 @@ const FacultyDashboard: React.FC = () => {
     { name: 'My Courses', href: '/faculty/courses', icon: BookOpen, color: 'bg-blue-500' },
     { name: 'Student List', href: '/faculty/students', icon: Users, color: 'bg-green-500' },
     { name: 'Create Event', href: '/faculty/events', icon: Calendar, color: 'bg-yellow-500' },
-    { name: 'Post Notice', href: '/faculty/notices', icon: FileText, color: 'bg-purple-500' },
     { name: 'Grade Management', href: '/faculty/grades', icon: Award, color: 'bg-indigo-500' },
-    { name: 'Office Hours', href: '/faculty/office-hours', icon: Clock, color: 'bg-red-500' },
   ];
 
   const stats = [
@@ -86,20 +84,25 @@ const FacultyDashboard: React.FC = () => {
                 <h3 className="text-lg font-medium text-gray-900">Quick Actions</h3>
               </div>
               <div className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {quickActions.map((action) => (
-                    <Link
-                      key={action.name}
-                      to={action.href}
-                      className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-                    >
-                      <div className={`p-2 rounded-lg ${action.color}`}>
-                        <action.icon className="h-6 w-6 text-white" />
-                      </div>
-                      <span className="ml-3 text-sm font-medium text-gray-900">{action.name}</span>
-                    </Link>
-                  ))}
-                </div>
+                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                   {quickActions.map((action) => (
+                     <Link
+                       key={action.name}
+                       to={action.href}
+                       className="group relative bg-white border border-gray-200 rounded-lg p-6 hover:border-blue-300 hover:shadow-md transition-all duration-200"
+                     >
+                       <div className="flex flex-col items-center text-center">
+                         <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-lg group-hover:bg-blue-200 transition-colors duration-200">
+                           <action.icon className="h-6 w-6 text-blue-600" />
+                         </div>
+                         <h3 className="mt-4 text-sm font-medium text-gray-900 group-hover:text-blue-600 transition-colors duration-200">
+                           {action.name}
+                         </h3>
+                         <div className="mt-2 w-8 h-0.5 bg-blue-600 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-200"></div>
+                       </div>
+                     </Link>
+                   ))}
+                 </div>
               </div>
             </div>
           </div>
